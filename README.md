@@ -6,7 +6,7 @@
 
 * use `ZMQ` for audio and video streaming
 
-* use **Cap'n Proto** for streaming data serialization 
+* use **Cap'n Proto** as the serialization protocol for streaming data  
 
 ## 📚 References
 
