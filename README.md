@@ -2,9 +2,7 @@
 
 ## 🚧 WIP
 
-* use `libp2p` over `tokio` **TCP** and **UDP** sockets for file sharing feature and `webRTC` based communication
-
-* use **Cap'n Proto** as the serialization protocol for audio and video streaming over `ZMQ`   
+* **Cap'n Proto** as the serialization protocol for audio and video streaming over **ZMQ** and **RPC**   
 
 ## 📚 References
 
