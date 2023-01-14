@@ -1,8 +1,12 @@
 
 
-## 🚧 WIP
+## ✨ Features
 
-* **Cap'n Proto** as the serialization protocol over **ZMQ** and **RPC** for **ffmpeg** based audio and video streaming
+* **Cap'n Proto** as the serialization protocol
+
+* Communication over **ZMQ** pub/sub and **RPC** 
+ 
+* **ffmpeg** for audio and video streaming, codec and compressing
 
 ## 📚 References
 
