@@ -10,6 +10,12 @@
 
 ## 📚 References
 
+* https://docs.peer5.com/guides/production-ready-hls-vod/
+
+* https://blog.tempus-ex.com/hello-video-codec/
+
+* https://stackoverflow.com/a/56475851
+
 * https://github.com/wildonion/cs-concepts
 
 * https://www.quora.com/How-do-you-write-a-video-codec
