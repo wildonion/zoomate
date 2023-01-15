@@ -6,11 +6,11 @@
 
 * Communication over **ZMQ** pub/sub and **RPC** 
  
-* **ffmpeg** for audio and video streaming, codec and compressing
+* **ffmpeg** and **GStreamer** for audio and video streaming, codec and compressing
 
 ## 📚 References
 
-* https://github.com/libp2p/rust-libp2p/blob/master/examples/file-sharing.rs
+* https://coaxion.net/blog/2017/07/writing-gstreamer-applications-in-rust/
 
 * https://github.com/security-union/rust-zoom
 
