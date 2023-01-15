@@ -10,6 +10,8 @@
 
 ## 📚 References
 
+* https://github.com/wildonion/cs-concepts
+
 * https://www.quora.com/How-do-you-write-a-video-codec
 
 * https://coaxion.net/blog/2017/07/writing-gstreamer-applications-in-rust/
