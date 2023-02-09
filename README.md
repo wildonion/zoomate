@@ -4,7 +4,7 @@
 
 * **Cap'n Proto** as the serialization protocol
 
-* Communication over **ZMQ** pub/sub and **RPC** 
+* Communication (video and audio streaming) over **ZMQ** and **RPC** pub/sub 
  
 * **ffmpeg** and **GStreamer** for audio and video streaming, codec and compressing
 
