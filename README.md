@@ -6,7 +6,11 @@
 
 * Communication (video and audio streaming) over **ZMQ** and **RPC** based on pub/sub messaging pattern 
  
-* **ffmpeg** and **GStreamer** for audio and video streaming, codec and compressing
+* **WebRTC**, **ffmpeg** and **GStreamer** for audio and video streaming, codec and compressing
+
+* **P2P** streaming using **gossipsub** and **kademlia** protocols
+
+* **Actor** and **BPF** based engine on top of **Tokio** multithreading tools (`spawn`, `select`, `Arc`, `Mutex`, `RwLock` and jobq channels)
 
 ## 📚 References
 
