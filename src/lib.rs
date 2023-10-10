@@ -10,9 +10,19 @@ https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tl
 https://github.com/foniod/build-images
 
 
+ 
+tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
+bytes like streaming tlps over image chunks (call next on it and async read/write traits 
+must be used) from a source to store in a buffer then map the buffer into a struct using
+tokio(time,spawn,select,mutex,tcp,jobq) to avoid deadlocks and race conditions and using 
+actix_web_actor::ws and actix actors then we can update some logic based on the caught events 
+and notify other parts of the app, threads and scopes by publishing the event into the redis 
+pubsub so other parts and microservices can subscribe to that, webhook means once an event 
+gets triggered an api call will be invoked to notify (it's like a notification to the server) 
+server about the event happend as a result of handling another process in some where like a 
+payment result in which server subscribes to incoming event type and can publish it to 
+redispubsub so other app, threads and scopes can also subscribe to it 
 
-event triggering and streaming tlps over image chunks (call next on it and async read/write traits must be used) 
-system using redispubsub streams, tokio(time,spawn,select,mutex,tcp,jobq), actix-ws/http
 
 blockchain distributed algorithms and scheduling tlps:
 > note that agent is an async and multithreaded based clinet 
@@ -354,6 +364,7 @@ let (tcp_msg_sender, mut tcp_msg_receiver) =
 
     tokio::spawn(async move{
 
+	// streaming over incoming bytes to fill the buffer and then map the buffer to structure 
 	while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
 	    info!("🍐 new peer connection: [{}]", addr);
 
