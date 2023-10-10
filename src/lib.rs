@@ -37,7 +37,8 @@ blockchain distributed algorithms and scheduling tlps:
                                  --- node/agent/bot
 
 
-a realtime and pluging based node monitoring and packet sniffing tools
+a realtime and pluging based node monitoring and packet sniffing tools which
+can heal itself using a DL based algo on top of transformers and VAE techniques
 using tokio/redis/actix/zmq/rpc/libp2p to manage the load of each instance 
 in realtime, in our proxy, zmq subscribers are server app node instances 
 that must be balanced by subscribing on the incoming topic from the balancer 
