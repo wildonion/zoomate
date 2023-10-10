@@ -13,8 +13,6 @@
 * **Actor** and **BPF** based engine on top of **Tokio** multithreading tools (`TcpListener`, `spawn`, `select`, `Arc`, `Mutex`, `RwLock` and jobq channels)
 
 ## 📚 References
-
-* https://github.com/wildonion/redis4
   
 * https://docs.peer5.com/guides/production-ready-hls-vod/
 
