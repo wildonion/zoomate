@@ -377,13 +377,25 @@ let (tcp_msg_sender, mut tcp_msg_receiver) =
 
 		let mut buffer = vec![0; 1024];
 
+		/*
+                    an webhoo/stream/event handler accepts streaming of 
+                    events' data utf8 bytes and can be like: 
+        
+                    // chunk() method returns self.streamer.body_mut().next().await;
+                    tokio::spawn(async move{
+                        while let Some(chunk) = streamer.chunk().await? {
+                            // decod chunk into struct 
+                            // ...
+                        }
+                    });
+  	        */
 		while match api_streamer.read(&mut buffer).await {
 		    Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
 		    Ok(rcvd_bytes) => {
     
-			let string_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-			info!("📺 received data from peer: {}", string_data.clone());
-			job_sender.send(string_data.to_string()).await;
+			let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
+			info!("📺 received event data from peer: {}", string_event_data.clone());
+			job_sender.send(string_event_data.to_string()).await;
     
 			let send_tcp_server_data = tcp_server_data.data.clone();
 			if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
@@ -427,7 +439,8 @@ pub async fn race_condition_avoidance(){
 
     /* ---------------------------------------------------------------------- */
     /* ---------------------- RACE CONDITION AVOIDANCE ---------------------- */
-    /*  
+    /*  more info in: https://github.com/wildonion/zoomate/blob/main/src/dp.rs
+    
         race conditions means that two threads want to mutate the data 
         at the same time, we have to use mutex so tell the other threads
         wait there is a threads that is trying to mutate this type and 
