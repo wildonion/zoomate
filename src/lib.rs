@@ -248,6 +248,15 @@ pub struct ResponseObject{
                 a thread safe global response object  
     since we can't return none const from a static type thus we have to 
     put it inside the lazy as a closure which returns the actual type 
+    because Arc and RwLock are none const types although we can implement 
+    this logic using thread_local!{}, see https://github.com/wildonion/gvm/edit/main/src/lib.rs
+
+    so having this: 
+    	 // can't put the actual data in const since Arc and RwLock are none const types that can mutate data
+    	pub static MULTI_THREAD_THINGS: std::sync::Arc<tokio::sync::RwLock<Vec<u8>>> = 
+     		std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new()));
+    is wrong and we should use the following syntax instead:
+
 */
 pub static RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> = Lazy::new(||{
     std::sync::Arc::new(tokio::sync::RwLock::new(ResponseObject::default()))
