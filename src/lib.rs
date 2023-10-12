@@ -142,53 +142,6 @@ use uuid::Uuid;
 
 
 
-/* 
-
-    reasons rust don't have static global types:
-        
-        Memory Safety: One of Rust's main goals is to ensure memory safety without the need 
-               for a garbage collector. Global state can lead to shared mutable state across 
-               threads, which is a source of data races. By making global state explicit and 
-               synchronized, Rust avoids these issues.
-
-        Concurrency: Rust's concurrency model revolves around the concept of ownership. Global 
-               variables can be problematic in concurrent programs, where multiple threads might 
-                want to modify a global variable simultaneously.
-
-        Predictability and Explicitness: Global mutable state can make programs unpredictable 
-                and hard to reason about. Rust values explicitness over implicitness, so when you 
-                see a piece of Rust code, you can easily understand its behavior without having to 
-                consider hidden global states.
-
-        Lifetimes: Rust uses lifetimes to track how long data is valid. Global state has a complex 
-                lifetime that can easily lead to dangling references if not managed carefully.
-
-        No Garbage Collector: While the presence or absence of a garbage collector (GC) isn't the 
-                main reason Rust is cautious with global state, it's worth noting. Many languages 
-                with GCs allow for more liberal use of global state because the GC can clean up. 
-                In Rust, manual memory management means you need to be more careful.
-
-
-    global state of type requires to have a complex valid lifetime like 'static 
-    and be mutable which this can't be happend since rust doesn't gc and by mutating 
-    an static lifetime type we may face deadlock and race conditions issues in other 
-    threads, instead we can define an static mutex since static types are immutable 
-    by default and because static values must be constant we must put the mutex 
-    inside Lazy, like the following:
-    
-*/
-
-// note that the data we want to share it between threads must be Send + Sync + 'static
-// eg: Lazy<std::sync::Arc<tokio::sync::Mutex<MapDataStruct>>> + Send + Sync + 'static 
-// as a mutable global data will be shared between apis to mutate it safely 
-// to avoid deadlocks and race conditions
-type Db = HashMap<i32, String>; 
-pub static SHARED_STATE_GLOBAL: Lazy<std::sync::Arc<tokio::sync::Mutex<Db>>> = Lazy::new(||{
-    std::sync::Arc::new(tokio::sync::Mutex::new(HashMap::new()))
-});
-
-
-
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Request; //// it can be Option<Vec<hyper::Request<hyper::Body>>> which all the incoming http hyper requests to this node that must be handled
@@ -246,6 +199,38 @@ pub struct ResponseObject{
 }
 /* 
                 a thread safe global response object  
+
+    reasons rust don't have static global types:
+        
+        Memory Safety: One of Rust's main goals is to ensure memory safety without the need 
+               for a garbage collector. Global state can lead to shared mutable state across 
+               threads, which is a source of data races. By making global state explicit and 
+               synchronized, Rust avoids these issues.
+
+        Concurrency: Rust's concurrency model revolves around the concept of ownership. Global 
+               variables can be problematic in concurrent programs, where multiple threads might 
+                want to modify a global variable simultaneously.
+
+        Predictability and Explicitness: Global mutable state can make programs unpredictable 
+                and hard to reason about. Rust values explicitness over implicitness, so when you 
+                see a piece of Rust code, you can easily understand its behavior without having to 
+                consider hidden global states.
+
+        Lifetimes: Rust uses lifetimes to track how long data is valid. Global state has a complex 
+                lifetime that can easily lead to dangling references if not managed carefully.
+
+        No Garbage Collector: While the presence or absence of a garbage collector (GC) isn't the 
+                main reason Rust is cautious with global state, it's worth noting. Many languages 
+                with GCs allow for more liberal use of global state because the GC can clean up. 
+                In Rust, manual memory management means you need to be more careful.
+
+
+    global state of type requires to have a complex valid lifetime like 'static 
+    and be mutable which this can't be happend since rust doesn't gc and by mutating 
+    an static lifetime type we may face deadlock and race conditions issues in other 
+    threads, instead we can define an static mutex since static types are immutable 
+    by default and because static values must be constant we must put the mutex 
+    inside Lazy, like the following:
     since we can't return none const from a static type thus we have to 
     put it inside the lazy as a closure which returns the actual type 
     because Arc and RwLock are none const types although we can implement 
@@ -258,6 +243,10 @@ pub struct ResponseObject{
     is wrong and we should use the following syntax instead:
 
 */
+// note that the data we want to share it between threads must be Send + Sync + 'static
+// eg: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> + Send + Sync + 'static 
+// as a mutable global data will be shared between apis to mutate it safely 
+// to avoid deadlocks and race conditions
 pub static RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> = Lazy::new(||{
     std::sync::Arc::new(tokio::sync::RwLock::new(ResponseObject::default()))
 });
