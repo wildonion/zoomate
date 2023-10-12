@@ -240,6 +240,43 @@ pub struct Pod{ //// a pod is a load balancer which can have one or more contain
 }
 
 
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ResponseObject{
+    data: String,
+}
+/* 
+                a thread safe global response object  
+    since we can't return none const from a static type thus we have to 
+    put it inside the lazy as a closure which returns the actual type 
+*/
+pub static RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> = Lazy::new(||{
+    std::sync::Arc::new(tokio::sync::RwLock::new(ResponseObject::default()))
+});
+
+
+pub async fn set<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
+    /* since T is a FnMut closure, the cls param must be defined mutablly */
+    (mut cls: T){
+
+    /* T is a closure which returns G and can be shared between threads safely */
+    let callback = cls();
+
+    let mut res = RESPONE.write().await;
+    let new_data = vec![1,2,4];
+    let strigified_data = serde_json::to_string_pretty(&new_data).unwrap();
+    
+    /* overriding the response object globally without having deadlocks and race conditions */
+    (*res).data = strigified_data;
+
+    // tokio crontab scheduler
+    let mut time = tokio::time::interval(tokio::time::Duration::from_secs(5));
+    loop{
+        time.tick().await;
+        println!("tick 1 sec");
+    }
+
+}
+
 
 pub async fn agent_simulation(){
 
