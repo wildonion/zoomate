@@ -38,7 +38,7 @@ rust-argon2 = "1"
 borsh = "0.10"
 once_cell = "1.17.1"
 # redbpf = "2.3.0"
-hadead = "0.1.2"
+hadead = "0.1.3"
 redis-async = "0.16.1"
 
 [lib]

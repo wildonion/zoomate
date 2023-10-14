@@ -1183,9 +1183,9 @@ dependencies = [
 
 [[package]]
 name = "hadead"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1ca7476ce22fb1aaeb47ef91ceb6e1fa2d59e9c5b43e269db8b6dc4684d0da5"
+checksum = "edc0d34be88a2222887f5fa0940c16b4ba41e37b983d140cdc81ce9c29297f6e"
 dependencies = [
  "chrono",
  "env_logger 0.10.0",

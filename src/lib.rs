@@ -156,7 +156,8 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
         redis_password: Some(redis_password),
         redis_username: None,
         chill_zone_duration_in_seconds, /* default is 5 miliseconds */
-        id: None
+        id: None,
+        contract: None,
     };
 
     hadead_instance
@@ -166,6 +167,8 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
 pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     let hadead = HADEAD.clone();
+    println!("hadead contract info: {:?}", hadead.contract.as_ref().unwrap());
+
     let check_rate_limited = hadead.check(hadead.id.as_ref().unwrap()).await;
     
     let Ok(flag) = check_rate_limited else{
