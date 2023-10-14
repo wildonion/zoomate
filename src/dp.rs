@@ -69,10 +69,10 @@ fn init(){
 
     struct Fork;
     let (mutex_fork_request_sender, mut mutex_fork_request_receiver) = 
-        tokio::sync::mpsc::channel::<tokio::sync::Mutex<Fork>>();
+        tokio::sync::mpsc::channel::<tokio::sync::Mutex<Fork>>(1024);
 
     let (rwlock_fork_request_sender, mut rwlock_fork_request_receiver) = 
-        tokio::sync::mpsc::channel::<tokio::sync::RwLock<Fork>>();
+        tokio::sync::mpsc::channel::<tokio::sync::RwLock<Fork>>(1024);
   
 }
 

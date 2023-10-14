@@ -128,18 +128,74 @@ of tcp and udp socket stream of io future objects
 
 
     
+use actix_web::HttpResponse;
+use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
-
+use redis_async::{resp::FromResp, client::ConnectionBuilder};
 mod dp;
 use dp::*;
-
 mod acter;
 use acter::*;
-
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use uuid::Uuid;
+use hadead::*;
+use once_cell::sync::Lazy;
 
+pub static HADEAD: Lazy<Config> = Lazy::new(||{
 
+    let redis_password = "REDIS_PASSWORD".to_string();
+    let redis_username = "REDIS_USERNAME".to_string();
+    let redis_host = "REDIS_HOST".to_string();
+    let redis_port = "REDIS_PORT".to_string();
+    let chill_zone_duration_in_seconds = 5;
+
+    let hadead_instance = hadead::Config{
+        redis_host,
+        redis_port,
+        redis_password: Some(redis_password),
+        redis_username: None,
+        chill_zone_duration_in_seconds, /* default is 5 miliseconds */
+        id: None
+    };
+
+    hadead_instance
+
+});
+
+pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
+
+    let hadead = HADEAD.clone();
+    let check_rate_limited = hadead.check(hadead.id.as_ref().unwrap()).await;
+    
+    let Ok(flag) = check_rate_limited else{
+        
+        let why = check_rate_limited.unwrap_err();
+        return Ok(
+            HttpResponse::NotAcceptable().json(why.to_string())
+        );
+    };
+
+    if flag{
+
+        // rate limited
+
+        return Ok(
+            HttpResponse::NotAcceptable().json("rate limited")
+        );
+
+    } else{
+
+        // other api logic
+        // ...
+
+        return Ok(
+            HttpResponse::Ok().json("json data")
+        );
+
+    }
+
+}
 
 
 
@@ -304,7 +360,7 @@ pub async fn agent_simulation(){
 	struct Agent<'j> where Task: Send + Sync + 'static{
 	    pub aid: String, // keccak256 bist hash of the whole data
 	    pub jobs: &'j [Task],
-	    pub pipeline: PipeLine
+	    pub pipeline: Pipeline
 	}
 	impl<'j> Agent<'j>{
 	    async fn execute(&'static mut self, new_commit_data: &[u8]) -> Result<(), ()>{
@@ -324,10 +380,15 @@ pub async fn agent_simulation(){
 		Ok(())
 	    }
 
-	    async fn subscribe_to_new_commit(commit_id: &str) -> Result<(), ()>{
+	    async fn subscribe_to_new_commit(commit_id: &'static str) -> Result<(), ()>{
 		    
 		let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(15));
-		    tokio::spawn(async move{
+		    
+        let mut redis_conn_builder = ConnectionBuilder::new("redis_host", 6379 as u16).unwrap();
+        redis_conn_builder.password("redis_password");
+        let async_redis_pubsub_conn = std::sync::Arc::new(redis_conn_builder.pubsub_connect().await.unwrap());
+
+            tokio::spawn(async move{
 			    
 			    loop{
 
@@ -336,14 +397,14 @@ pub async fn agent_simulation(){
 			
 				    // setup async redis subscription process to subscribe to 
 				    // ...
-				    
-				    let get_stream_messages = redis_async_pubsubconn
+                    
+				    let get_stream_messages = async_redis_pubsub_conn
 					.subscribe(commit_id)
 					.await;
 				    
 				    let Ok(mut get_stream_messages) = get_stream_messages else{
 					    
-					return Err(());
+					return Err::<(), ()>(());
 			
 				    };
 				
@@ -353,10 +414,10 @@ pub async fn agent_simulation(){
 				    */
 				    while let Some(message) = get_stream_messages.next().await{ 
 	
-					let resp_val = message.unwrap();
-					let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
+                        let resp_val = message.unwrap();
+                        let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
 
-					self.execute(stringified_new_commit_topic.as_bytes()).await;
+                        // self.execute(stringified_new_commit_topic.as_bytes()).await;
 				    
 				    }
 			   
@@ -395,13 +456,13 @@ let (tcp_msg_sender, mut tcp_msg_receiver) =
     let (job_sender, mut job_receiver) = tokio::sync::mpsc::channel::<String>(1024);
 
     let api_listener = api_listener.unwrap();
-    info!("➔ 🚀 tcp listener is started at [{}]", bind_address);
+    println!("➔ 🚀 tcp listener is started at [{}]", bind_address);
 
     tokio::spawn(async move{
 
 	// streaming over incoming bytes to fill the buffer and then map the buffer to structure 
 	while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
-	    info!("🍐 new peer connection: [{}]", addr);
+	    println!("🍐 new peer connection: [{}]", addr);
 
 	    // cloning those types that we want to move them into async move{} scopes
 	    // of tokio::spawn cause tokio::spawn will capture these into its closure scope
@@ -429,21 +490,21 @@ let (tcp_msg_sender, mut tcp_msg_receiver) =
 		    Ok(rcvd_bytes) => {
     
 			let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-			info!("📺 received event data from peer: {}", string_event_data.clone());
+			println!("📺 received event data from peer: {}", string_event_data.clone());
 			job_sender.send(string_event_data.to_string()).await;
     
 			let send_tcp_server_data = tcp_server_data.data.clone();
 			if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-			    error!("❌ failed to write to api_streamer; {}", why);
+			    eprintln!("❌ failed to write to api_streamer; {}", why);
 			    return;
 			} else{
-			    info!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
+			    println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
 			    return;
 			}
 		    
 		    },
 		    Err(e) => {
-			error!("❌ failed to read from api_streamer; {:?}", e);
+			eprintln!("❌ failed to read from api_streamer; {:?}", e);
 			return;
 		    }
 		    

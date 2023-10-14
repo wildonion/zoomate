@@ -73,7 +73,7 @@ pub struct Data{id: String}
 
 pub async fn start_server<F, A>(mut api: F, redis_pubsub_msg_sender: tokio::sync::mpsc::Sender<String>, redis_client: redis::Client) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
     where F: FnMut(Request, Response) -> A + Send + Sync + 'static + Clone,
-    A: futures::future::Future<Output=Result<Response, ()>> + Send + Sync + 'static
+    A: futures_util::future::Future<Output=Result<Response, ()>> + Send + Sync + 'static
     {
     
     /* ----------------------------------------------------------------------------------------------- */
