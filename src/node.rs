@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use once_cell::sync::Lazy;
+use ppap::api;
 use rand::{Rng, SeedableRng, RngCore};
 use rand_chacha::{rand_core, ChaCha12Rng};
 use tokio::io::{AsyncWriteExt, AsyncReadExt};
@@ -42,28 +43,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     */
 
 
-    tokio::spawn(async move{
+    // tokio::spawn(async move{
 
-        while let Some(data) = redis_pubsubs_msg_receiver.recv().await{
+    //     while let Some(data) = redis_pubsubs_msg_receiver.recv().await{
 
-            // receiving data from the redis pubsub mpsc sender
-            // ...
+    //         // receiving data from the redis pubsub mpsc sender
+    //         // ...
 
-        }
+    //     }
 
-    });
+    // });
 
 
-    tokio::spawn(async move{
+    // tokio::spawn(async move{
 
-        /* start an async and concurrent server to handle socket packets from clients concurrently */ 
-        start_server(|req, res| async move{
-            Ok(
-                Response{}
-            )
-        }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await
+    //     /* start an async and concurrent server to handle socket packets from clients concurrently */ 
+    //     start_server(|req, res| async move{
+    //         Ok(
+    //             Response{}
+    //         )
+    //     }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await
     
-    });
+    // });
+
+
+    let res = api().await;
+
+    println!("res {:?}", res);
 
 
 
