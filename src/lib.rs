@@ -128,6 +128,7 @@ of tcp and udp socket stream of io future objects
 
 
     
+use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -223,6 +224,43 @@ pub struct Node{ //// this contains server info
     pub weights: Option<Vec<Weight>>, //// load of requests
 }
 
+
+/* ----------------------------------------------------------------------- */
+/* --------- actix ws stream and message handler for Node struct --------- */
+/* ----------------------------------------------------------------------- */
+/* 
+    realtime networking and event driven coding using redispubsub, tokio stuffs 
+    and actix web/ws stream/event handler like aggregate streaming of resp.boy 
+    bytes into buffer then decode into struct
+*/
+#[derive(Message)]
+#[rtype(result = "()")]
+pub struct NodeMsg(pub String);
+
+impl Actor for Node{
+    type Context = actix_web_actors::ws::WebsocketContext<Node>;
+}
+
+impl Handler<NodeMsg> for Node {
+   
+    type Result = ();
+
+    fn handle(&mut self, msg: NodeMsg, ctx: &mut Self::Context){
+        ctx.text(msg.0);
+    }
+}
+
+impl StreamHandler<Result<actix_web_actors::ws::Message, actix_web_actors::ws::ProtocolError>> for Node{
+    
+    fn handle(&mut self, item: Result<actix_web_actors::ws::Message, actix_web_actors::ws::ProtocolError>, ctx: &mut Self::Context) {
+        
+        todo!()
+    
+    }
+}
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Container{
@@ -417,12 +455,12 @@ pub async fn agent_simulation(){
 				    */
 				    while let Some(message) = get_stream_messages.next().await{ 
 	
-                        let resp_val = message.unwrap();
-                        let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
+                            let resp_val = message.unwrap();
+                            let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
 
-                        // self.execute(stringified_new_commit_topic.as_bytes()).await;
+                            // self.execute(stringified_new_commit_topic.as_bytes()).await;
 				    
-				    }
+				        }
 			   
 		    		}
 	    
@@ -477,23 +515,23 @@ let (tcp_msg_sender, mut tcp_msg_receiver) =
 		let mut buffer = vec![0; 1024];
 
 		/*
-                    an webhoo/stream/event handler accepts streaming of 
-                    events' data utf8 bytes and can be like: 
-        
-                    // chunk() method returns self.streamer.body_mut().next().await;
-                    tokio::spawn(async move{
-                        while let Some(chunk) = streamer.chunk().await? {
-                            // decod chunk into struct 
-                            // ...
-                        }
-                    });
-  	        */
+            a webhook/stream/event handler which accepts streaming of 
+            events' data utf8 bytes can be like: 
+
+            // chunk() method returns streamer.body_mut().next().await;
+            tokio::spawn(async move{
+                while let Some(chunk) = streamer.chunk().await? {
+                    // decod chunk into struct as they're coming 
+                    // ...
+                }
+            });
+        */
 		while match api_streamer.read(&mut buffer).await {
 		    Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
 		    Ok(rcvd_bytes) => {
     
 			let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-			println!("📺 received event data from peer: {}", string_event_data.clone());
+			println!("📺 received event data from peer: {}", string_event_data);
 			job_sender.send(string_event_data.to_string()).await;
     
 			let send_tcp_server_data = tcp_server_data.data.clone();
