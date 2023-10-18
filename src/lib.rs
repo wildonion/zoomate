@@ -9,6 +9,19 @@ https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
 https://github.com/foniod/build-images
 
+
+--------------
+main features:
+--------------
+rusty ltgs pointers, hadead and wallexerr in ssh login, api rate limiting 
+and webhook registery, async stream/event bytes handler using tokio stuffs/actix 
+ws actor/redispubsub for parallel tasks and storing unique encrypted data on with 
+global data[arcmutexrwlock concept based on .so and .wasm vms also unique 
+assets and nodes detection by feature extraction algos like VAE in such a way that 
+we must generate a vector of 8000 numbers of each node or assets using VAE latent
+space then compare the node with incoming nodes to check that if they're unique or not
+
+
 event driven architecture:
 tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
 bytes like streaming tlps over image chunks (call next on it and async read/write traits 
@@ -128,6 +141,7 @@ of tcp and udp socket stream of io future objects
 
 
     
+use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
 use futures_util::StreamExt;
@@ -142,6 +156,10 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use uuid::Uuid;
 use hadead::*;
 use once_cell::sync::Lazy;
+use base64::{engine::general_purpose, Engine as _};
+use crypto::{sha3::Sha3, digest::Digest, ed25519};
+
+
 
 pub static HADEAD: Lazy<Config> = Lazy::new(||{
 
@@ -164,6 +182,7 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
     hadead_instance
 
 });
+
 
 pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
@@ -215,15 +234,68 @@ pub struct Weight{
 }
 
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Node{ //// this contains server info 
     pub dns: String,
     pub peer_id: String, 
     pub cost_per_api_call: u128, //// this is based on the load of the weights
     pub init_at: i64,
     pub weights: Option<Vec<Weight>>, //// load of requests
+    pub hash: String
 }
 
+impl Node{
+
+    pub fn generate_ed25519_webhook_keypair(&self) -> (String, String){
+
+        let data_obj = wallexerr::DataBucket::default();
+        let data_obj_str = serde_json::to_string_pretty(&data_obj).unwrap();
+        
+        let mut sha3 = Sha3::keccak512();
+        let _ = sha3.input_str(&data_obj_str);
+        let hash = sha3.result_str();
+
+        println!("webhook seed keccak512 hash : {:?}", hash.clone());
+
+        let ed25519_keypair = ed25519::keypair(hash.as_bytes());
+        let wh_pubkey = ed25519_keypair.1;
+        let wh_sec = ed25519_keypair.0;
+
+        let base64_pubkey_string = general_purpose::URL_SAFE_NO_PAD.encode(wh_pubkey);
+        let base64_prvkey_string = general_purpose::URL_SAFE_NO_PAD.encode(wh_sec);
+
+        println!("webhook pub key : {:?}", base64_pubkey_string);
+        println!("webhook prv key : {:?}", base64_prvkey_string);
+
+        (base64_pubkey_string.clone(), base64_prvkey_string.clone())
+
+    }
+
+    pub fn wh_sign(&self, data: &str, prvkey: &str) -> String{
+
+        let base64_prvkey_bytes = general_purpose::URL_SAFE_NO_PAD.decode(prvkey).unwrap();
+        let signature = ed25519::signature(data.as_bytes(), base64_prvkey_bytes.as_slice());
+
+        let sig_base64 = general_purpose::URL_SAFE_NO_PAD.encode(signature);
+        println!("signature : {:?}", sig_base64);
+        
+        sig_base64
+
+    } 
+
+    pub fn wh_verify(&self, data: &str, pubkey: &str, sig: &str) -> bool{
+
+        let base64_sig_bytes = general_purpose::URL_SAFE_NO_PAD.decode(sig).unwrap();
+        let base64_pubkey_bytes = general_purpose::URL_SAFE_NO_PAD.decode(pubkey).unwrap();
+
+        let is_verified = ed25519::verify(data.as_bytes(), base64_pubkey_bytes.as_slice(), base64_sig_bytes.as_slice());
+        println!("is verified : {:?}", is_verified);
+
+        is_verified
+
+    }
+
+}
 
 /* ----------------------------------------------------------------------- */
 /* --------- actix ws stream and message handler for Node struct --------- */
@@ -256,6 +328,28 @@ impl StreamHandler<Result<actix_web_actors::ws::Message, actix_web_actors::ws::P
         
         todo!()
     
+    }
+}
+
+// custom stream handler for an actor
+trait CustomStreamHandler{
+    type Context;
+    fn handle(&self, ctx: &mut Self::Context) -> ();
+}
+enum EnumTor{}
+struct ActorStruct{
+    pub enumtor: EnumTor
+} 
+impl ActorStruct{
+    pub fn start(&self){
+        
+    }
+}
+impl CustomStreamHandler for ActorStruct{
+
+    type Context = ActorStruct;
+    fn handle(&self, ctx: &mut Self::Context) -> (){
+        self.start();
     }
 }
 /* ----------------------------------------------------------------------- */
@@ -349,9 +443,18 @@ pub static RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> = 
 });
 
 
+pub static GLOBAL_MUTEXED: Lazy<std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>> = 
+    Lazy::new(|| { std::sync::Arc::new(tokio::sync::Mutex::new(HashMap::new())) });
+
 pub async fn set<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     /* since T is a FnMut closure, the cls param must be defined mutablly */
     (mut cls: T){
+
+    {
+        let data = self::GLOBAL_MUTEXED.clone();
+        let mut map = data.lock().await;
+        (*map).insert(100, "key".to_string());
+    }
 
     /* T is a closure which returns G and can be shared between threads safely */
     let callback = cls();

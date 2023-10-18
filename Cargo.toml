@@ -1,5 +1,5 @@
 [package]
-name = "ppap"
+name = "zoomate"
 version = "0.1.0"
 edition = "2021"
 
@@ -28,13 +28,28 @@ tokio-cron-scheduler = "0.9.1"
 env_logger = "0.10.0"
 bytes = { version = "1", features = ["serde"] }
 hex = "0.4"
-ring = "0.16.20"
 is_type = "0.2.1"
-rust-crypto = "0.2.36"
-sha2 = "0.10.6"
+wasmer = "4.1.1"
+wasmer-wasi = "3.1.1"
+
+# ------------------
+#    crypto libs
+# ------------------
 rand = "0.8"
+rust-argon2 = "2"
+rust-crypto = "0.2.36"
+ring = "0.17"
+sha2 = "0.10"
+themis = "0.14.0"
+secp256k1 = { version = "0.27", features = ["rand", "bitcoin-hashes-std"] }
+tiny-keccak = "1.4"
 rand_chacha = "0.3.1"
-rust-argon2 = "1"
+chacha20 = "0.9.1"
+web3 = "0.19.0"
+wallexerr = "0.2.0"
+base64 = "0.21.4"
+# ------------------
+
 borsh = "0.10"
 once_cell = "1.17.1"
 # redbpf = "2.3.0"
@@ -48,7 +63,7 @@ crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [[bin]]
-name = "ppap"
+name = "zoomate"
 path = "src/node.rs"
 
 [profile.release]

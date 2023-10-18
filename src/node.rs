@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use once_cell::sync::Lazy;
-use ppap::api;
+use zoomate::api;
 use rand::{Rng, SeedableRng, RngCore};
 use rand_chacha::{rand_core, ChaCha12Rng};
 use tokio::io::{AsyncWriteExt, AsyncReadExt};
@@ -8,10 +8,12 @@ use tokio::sync::broadcast;
 use tokio::sync::futures;
 use tokio::sync::mpsc;
 use serde::{Serialize, Deserialize};
+use zoomate::Node;
 use std::collections::HashMap;
 use log::{error, info};
 use dotenv::dotenv;
 use std::env;
+use sha2::{Sha256, Digest};
 
 mod redis4;
 use crate::redis4::*;
@@ -43,35 +45,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     */
 
 
-    // tokio::spawn(async move{
+    tokio::spawn(async move{
 
-    //     while let Some(data) = redis_pubsubs_msg_receiver.recv().await{
+        while let Some(data) = redis_pubsubs_msg_receiver.recv().await{
 
-    //         // receiving data from the redis pubsub mpsc sender
-    //         // ...
+            // receiving data from the redis pubsub mpsc sender
+            // ...
 
-    //     }
+        }
 
-    // });
+    });
 
 
-    // tokio::spawn(async move{
+    tokio::spawn(async move{
 
-    //     /* start an async and concurrent server to handle socket packets from clients concurrently */ 
-    //     start_server(|req, res| async move{
-    //         Ok(
-    //             Response{}
-    //         )
-    //     }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await
+        /* start an async and concurrent server to handle socket packets from clients concurrently */ 
+        start_server(|req, res| async move{
+            Ok(
+                Response{}
+            )
+        }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await
     
-    // });
+    });
 
 
-    let res = api().await;
+    // let res = api().await;
+    // println!("hadead res {:?}", res);
 
-    println!("res {:?}", res);
 
+    // node webhook signature
+    let node = Node::default();
+    let node_obj_str = serde_json::to_string_pretty(&node).unwrap();
+    
+    let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();
 
+    let sig = node.wh_sign(&node_obj_str, &prvkey);
+
+    let is_verified = node.wh_verify(&node_obj_str, &pubkey, &sig);
 
     Ok(())
 
