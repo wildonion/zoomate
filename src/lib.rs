@@ -8,18 +8,7 @@ https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
 https://github.com/foniod/build-images
-
-
---------------
-main features:
---------------
-rusty ltgs pointers, hadead and wallexerr in ssh login, api rate limiting 
-and webhook registery, async stream/event bytes handler using tokio stuffs/actix 
-ws actor/redispubsub for parallel tasks and storing unique encrypted data on with 
-global data[arcmutexrwlock concept based on .so and .wasm vms also unique 
-assets and nodes detection by feature extraction algos like VAE in such a way that 
-we must generate a vector of 8000 numbers of each node or assets using VAE latent
-space then compare the node with incoming nodes to check that if they're unique or not
+https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 
 
 event driven architecture:
@@ -49,7 +38,7 @@ blockchain distributed algorithms and scheduling tlps:
                                  --- node/agent/bot
 
 
-a realtime and pluging based node monitoring and packet sniffing tools which
+1) a realtime and pluging based node monitoring and packet sniffing tools which
 can heal itself using a DL based algo on top of transformers and VAE techniques
 using tokio/redis/actix/zmq/rpc/libp2p to manage the load of each instance 
 in realtime, in our proxy, zmq subscribers are server app node instances 
@@ -57,7 +46,17 @@ that must be balanced by subscribing on the incoming topic from the balancer
 publishers, like spread requests between node server instances using different 
 balancing algorithms and pubsub pattern to manage the total load of the VPS 
 also we can build zmq using tokio socket actors and build libp2p and rpc 
-system using zmq pub/sub sockets  
+system using zmq pub/sub sockets,
+
+2) using rusty ltgs pointers, hadead and wallexerr in ssh login, api rate limiting 
+and webhook registery, async stream/event bytes handler using tokio stuffs/actix 
+ws actor/redispubsub for parallel tasks and storing unique encrypted data on with 
+global data[arcmutexrwlock concept based on .so and .wasm vms also unique 
+assets and nodes detection by feature extraction algos like VAE in such a way that 
+we must generate a vector of 8000 numbers of each node or assets using VAE latent
+space then compare the node with incoming nodes to check that if they're unique or not
+also a packet loss correction engine like raptorq forward error correction system
+to reconstruct the packets using VAE in video and audio streaming (raptor.rs)
 
 
 codec like serde, borsh and capnp also send notif (publish backonline topic) 
@@ -140,10 +139,10 @@ of tcp and udp socket stream of io future objects
 */
 
 
-    
 use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
+use chacha20::cipher::KeyInit;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -157,7 +156,9 @@ use uuid::Uuid;
 use hadead::*;
 use once_cell::sync::Lazy;
 use base64::{engine::general_purpose, Engine as _};
-use crypto::{sha3::Sha3, digest::Digest, ed25519};
+use wallexerr::{DataBucket, Contract, Wallet};
+use sha3::{Digest, Keccak256, Keccak256Core};
+use ring::rand as ring_rand;
 
 
 
@@ -246,53 +247,61 @@ pub struct Node{ //// this contains server info
 
 impl Node{
 
-    pub fn generate_ed25519_webhook_keypair(&self) -> (String, String){
+    pub async fn broadcast_to_other_nodes(node_obj: &str){
 
-        let data_obj = wallexerr::DataBucket::default();
-        let data_obj_str = serde_json::to_string_pretty(&data_obj).unwrap();
-        
-        let mut sha3 = Sha3::keccak512();
-        let _ = sha3.input_str(&data_obj_str);
-        let hash = sha3.result_str();
+        let node_obj_hash = web3::signing::keccak256(node_obj.as_bytes());
+        let node_obj_hash_hex = hex::encode(node_obj_hash);
 
-        println!("webhook seed keccak512 hash : {:?}", hash.clone());
-
-        let ed25519_keypair = ed25519::keypair(hash.as_bytes());
-        let wh_pubkey = ed25519_keypair.1;
-        let wh_sec = ed25519_keypair.0;
-
-        let base64_pubkey_string = general_purpose::URL_SAFE_NO_PAD.encode(wh_pubkey);
-        let base64_prvkey_string = general_purpose::URL_SAFE_NO_PAD.encode(wh_sec);
-
-        println!("webhook pub key : {:?}", base64_pubkey_string);
-        println!("webhook prv key : {:?}", base64_prvkey_string);
-
-        (base64_pubkey_string.clone(), base64_prvkey_string.clone())
-
+        println!("node obj keccak256 hash : {:?}", node_obj_hash_hex);
     }
 
-    pub fn wh_sign(&self, data: &str, prvkey: &str) -> String{
+    pub fn generate_ed25519_webhook_keypair(&self) -> (String, String){
 
-        let base64_prvkey_bytes = general_purpose::URL_SAFE_NO_PAD.decode(prvkey).unwrap();
-        let signature = ed25519::signature(data.as_bytes(), base64_prvkey_bytes.as_slice());
+        let mut data = DataBucket{
+            value: serde_json::to_string_pretty(&self).unwrap(), /* json stringify */ 
+            signature: "".to_string(),
+            signed_at: 0,
+        };
+        let stringify_data = serde_json::to_string_pretty(&data).unwrap();
 
-        let sig_base64 = general_purpose::URL_SAFE_NO_PAD.encode(signature);
-        println!("signature : {:?}", sig_base64);
+        /* wallet operations */
+
+        let contract = Contract::new_with_ed25519("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4");
+        Wallet::save_to_json(&contract.wallet, "ed25519").unwrap();
         
-        sig_base64
+        let signature_hex = Wallet::ed25519_sign(
+            stringify_data.clone().as_str(), 
+            contract.wallet.ed25519_secret_key.as_ref().unwrap().as_str());
+        
+        let verify_res = Wallet::verify_ed25519_signature(
+            signature_hex.clone().unwrap().as_str(), stringify_data.as_str(),
+            contract.wallet.ed25519_public_key.as_ref().unwrap().as_str());
 
-    } 
+        let keypair = Wallet::retrieve_ed25519_keypair(
+            /* 
+                unwrap() takes the ownership of the type hence we must borrow 
+                the type before calling it using as_ref() 
+            */
+            contract.wallet.ed25519_secret_key.as_ref().unwrap().as_str()
+        );
 
-    pub fn wh_verify(&self, data: &str, pubkey: &str, sig: &str) -> bool{
+        
+        match verify_res{
+            Ok(is_verified) => {
+                
+                /* fill the signature and signed_at fields if the signature was valid */
+                data.signature = signature_hex.unwrap();
+                data.signed_at = chrono::Local::now().timestamp_nanos_opt().unwrap();
+                
+                (
+                    contract.wallet.ed25519_public_key.unwrap(), 
+                    contract.wallet.ed25519_secret_key.unwrap()
+                )
 
-        let base64_sig_bytes = general_purpose::URL_SAFE_NO_PAD.decode(sig).unwrap();
-        let base64_pubkey_bytes = general_purpose::URL_SAFE_NO_PAD.decode(pubkey).unwrap();
-
-        let is_verified = ed25519::verify(data.as_bytes(), base64_pubkey_bytes.as_slice(), base64_sig_bytes.as_slice());
-        println!("is verified : {:?}", is_verified);
-
-        is_verified
-
+            },
+            Err(e) => (String::from(""), String::from(""))
+        }
+    
     }
 
 }

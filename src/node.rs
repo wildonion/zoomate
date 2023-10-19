@@ -18,6 +18,13 @@ use sha2::{Sha256, Digest};
 mod redis4;
 use crate::redis4::*;
 
+mod raptor;
+use crate::raptor::*;
+
+
+
+
+
 
 /* 
     if we want to use Result<(), impl std::error::Error + Send + Sync + 'static>
@@ -75,13 +82,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
 
     // node webhook signature
     let node = Node::default();
-    let node_obj_str = serde_json::to_string_pretty(&node).unwrap();
-    
     let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();
 
-    let sig = node.wh_sign(&node_obj_str, &prvkey);
-
-    let is_verified = node.wh_verify(&node_obj_str, &pubkey, &sig);
+    println!("ed25519 pubkey: {}", pubkey);
+    println!("ed25519 pubkey: {}", prvkey);
 
     Ok(())
 
