@@ -76,4 +76,33 @@ fn init(){
   
 }
 
+mod sealer{
 
+  trait Sealed{}
+
+  pub trait PubSealed{
+      fn do_me(&self);
+  }
+
+  pub struct PubStruct;
+
+  impl Sealed for PubStruct{}
+
+  impl PubSealed for PubStruct where PubStruct: Sealed{
+      fn do_me(&self) {
+          
+      }
+  }
+
+}
+
+
+fn exec(){
+
+  struct AnotherPubType;
+  impl sealer::PubSealed for AnotherPubType{
+      fn do_me(&self) {
+          
+      }
+  } 
+}

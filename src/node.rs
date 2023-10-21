@@ -76,14 +76,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     });
 
 
-    // let res = api().await;
-    // println!("hadead res {:?}", res);
+    // hadead rate limiter 
+    let res = api().await;
+    println!("hadead res {:?}", res);
 
 
     // node webhook signature
     let node = Node::default();
     let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();
-
     println!("ed25519 pubkey: {}", pubkey);
     println!("ed25519 pubkey: {}", prvkey);
 

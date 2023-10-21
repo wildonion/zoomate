@@ -56,7 +56,7 @@ assets and nodes detection by feature extraction algos like VAE in such a way th
 we must generate a vector of 8000 numbers of each node or assets using VAE latent
 space then compare the node with incoming nodes to check that if they're unique or not
 also a packet loss correction engine like raptorq forward error correction system
-to reconstruct the packets using VAE in video and audio streaming (raptor.rs)
+to reconstruct the packets using VAE and transformers in video and audio streaming (raptor.rs)
 
 
 codec like serde, borsh and capnp also send notif (publish backonline topic) 
@@ -161,30 +161,29 @@ use sha3::{Digest, Keccak256, Keccak256Core};
 use ring::rand as ring_rand;
 
 
-
+// global rate limiter
 pub static HADEAD: Lazy<Config> = Lazy::new(||{
 
-    let redis_password = "REDIS_PASSWORD".to_string();
-    let redis_username = "REDIS_USERNAME".to_string();
-    let redis_host = "REDIS_HOST".to_string();
-    let redis_port = "REDIS_PORT".to_string();
+    let redis_password = "geDteDd0Ltg2135FJYQ6rjNYHYkGQa70".to_string();
+    let redis_username = "".to_string();
+    let redis_host = "localhost".to_string();
+    let redis_port = "6379".to_string();
     let chill_zone_duration_in_seconds = 5;
 
-    let hadead_instance = hadead::Config{
-        redis_host,
-        redis_port,
-        redis_password: Some(redis_password),
-        redis_username: None,
+    let hadead_instance = hadead::Config::new(
+        &redis_password,
+        &redis_username,
+        &redis_host,
+        &redis_port,
         chill_zone_duration_in_seconds, /* default is 5 miliseconds */
-        id: None,
-        contract: None,
-    };
+    );
 
     hadead_instance
 
 });
 
 
+/* the ok arm of return type is an HttpResponse object which can be parsed in any server or client */
 pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     let hadead = HADEAD.clone();
@@ -249,16 +248,17 @@ impl Node{
 
     pub async fn broadcast_to_other_nodes(node_obj: &str){
 
+        /* hash of keccak256 of node_obj to send in network */
         let node_obj_hash = web3::signing::keccak256(node_obj.as_bytes());
         let node_obj_hash_hex = hex::encode(node_obj_hash);
 
-        println!("node obj keccak256 hash : {:?}", node_obj_hash_hex);
+        println!("boradcast node obj keccak256 hash : {:?}", node_obj_hash_hex);
     }
 
     pub fn generate_ed25519_webhook_keypair(&self) -> (String, String){
 
         let mut data = DataBucket{
-            value: serde_json::to_string_pretty(&self).unwrap(), /* json stringify */ 
+            value: serde_json::to_string_pretty(&self).unwrap(), /* json stringifing the self */ 
             signature: "".to_string(),
             signed_at: 0,
         };
@@ -791,6 +791,4 @@ pub mod bpf{
     // ... 
     
 }
-
-
 
