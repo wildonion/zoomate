@@ -2,7 +2,8 @@
 
 /*
 
-
+https://github.com/actix/examples/tree/master/websockets
+https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
 https://github.com/wildonion/cs-concepts
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
@@ -105,7 +106,7 @@ of tcp and udp socket stream of io future objects
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
    • gateway and proxy using hyper: https://github.com/hyperium/hyper/tree/master/examples
-   • rpc capnp to communicate between each balancer
+   • rpc capnp to communicate between each balancer, cause with rpc we can call actor methods directly from client and other servers without having apis on top of http protocols
    • decompress encoded packet using borsh and serde 
    • cpu task scheduling, 
    • vod streaming
@@ -142,7 +143,6 @@ of tcp and udp socket stream of io future objects
 use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
-use chacha20::cipher::KeyInit;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -220,17 +220,31 @@ pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
 }
 
-
+/* 
+    Send and Sync can only be implement for a type that is inside the current crate 
+    thus can't be implemented for actix_web::HttpResponse
+*/
+unsafe impl Send for ZoomateResponse{}
+unsafe impl Sync for ZoomateResponse{}
+pub static ACTIX_RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ZoomateResponse>>> = 
+Lazy::new(||{
+    std::sync::Arc::new(
+        tokio::sync::RwLock::new(
+            ZoomateResponse
+        )
+    )
+});
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-pub struct Request; //// it can be Option<Vec<hyper::Request<hyper::Body>>> which all the incoming http hyper requests to this node that must be handled
+pub struct ZoomateRequest; //// it can be Option<Vec<actix_web::HttpResponse>> which all the incoming actix http requests to this node that must be handled
 
-
+#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+pub struct ZoomateResponse;
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Weight{
     pub n: u16,
-    pub requests: Request,
+    pub requests: ZoomateRequest,
 }
 
 
@@ -245,6 +259,24 @@ pub struct Node{ //// this contains server info
 }
 
 impl Node{
+
+    pub async fn encoder(data: impl Serialize){
+
+        /* 
+            note that the data param must implement the Serialize trait 
+            so we can encode it to bytes
+        */
+
+    }
+
+    pub async fn decoder(data: impl Deserialize<'_>){
+
+        /* 
+            note that the data param must implement the Deserialize trait 
+            so we can decode it to the actual type
+        */
+
+    }
 
     pub async fn broadcast_to_other_nodes(node_obj: &str){
 
@@ -517,29 +549,29 @@ pub async fn agent_simulation(){
 	}
 	impl<'j> Agent<'j>{
 	    async fn execute(&'static mut self, new_commit_data: &[u8]) -> Result<(), ()>{
-		let jobs = self.jobs.clone();
-		/* 
-		    accessing element inside array must be done behind pointer cause by accessing
-		    the element we're creating an slice which must be behind pointer cause they have
-		    no fixed size at compile time
-		*/
-		let t = &jobs[0].task.0;
-		tokio::spawn(async move{
-		    let data = *t.lock().await;
-		    // mutate data in here with new_commit_data
-		    // ...
-		});
-	
-		Ok(())
+            let jobs = self.jobs.clone();
+            /* 
+                accessing element inside array must be done behind pointer cause by accessing
+                the element we're creating an slice which must be behind pointer cause they have
+                no fixed size at compile time
+            */
+            let t = &jobs[0].task.0;
+            tokio::spawn(async move{
+                let data = *t.lock().await;
+                // mutate data in here with new_commit_data
+                // ...
+            });
+        
+            Ok(())
 	    }
 
 	    async fn subscribe_to_new_commit(commit_id: &'static str) -> Result<(), ()>{
 		    
-		let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(15));
-		    
-        let mut redis_conn_builder = ConnectionBuilder::new("redis_host", 6379 as u16).unwrap();
-        redis_conn_builder.password("redis_password");
-        let async_redis_pubsub_conn = std::sync::Arc::new(redis_conn_builder.pubsub_connect().await.unwrap());
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(15));
+                
+            let mut redis_conn_builder = ConnectionBuilder::new("redis_host", 6379 as u16).unwrap();
+            redis_conn_builder.password("redis_password");
+            let async_redis_pubsub_conn = std::sync::Arc::new(redis_conn_builder.pubsub_connect().await.unwrap());
 
             tokio::spawn(async move{
 			    
@@ -590,97 +622,105 @@ pub async fn agent_simulation(){
 
 pub async fn start_tcp_listener(){
 
-// more info in start_tcp_listener() api in gem admin access
-	
-#[derive(Default, Serialize, Deserialize, Debug, Clone)]
-pub struct TcpServerData{
-    pub data: String,
-}
-let tcp_server_data = TcpServerData::default();
-let (tcp_msg_sender, mut tcp_msg_receiver) = 
-	tokio::sync::mpsc::channel::<String>(1024);
-    
-    /* ----------------------------------------- */
-    /* starting a tcp listener in the background */
-    /* ----------------------------------------- */
+    // more info in start_tcp_listener() api in gem admin access
+        
+    #[derive(Default, Serialize, Deserialize, Debug, Clone)]
+    pub struct TcpServerData{
+        pub data: String,
+    }
+    let tcp_server_data = TcpServerData::default();
+    let (tcp_msg_sender, mut tcp_msg_receiver) = 
+        tokio::sync::mpsc::channel::<String>(1024);
+        
+        /* ----------------------------------------- */
+        /* starting a tcp listener in the background */
+        /* ----------------------------------------- */
 
-    let bind_address = format!("0.0.0.0:2323");
-    let mut api_listener = tokio::net::TcpListener::bind(bind_address.as_str()).await;
-    let (job_sender, mut job_receiver) = tokio::sync::mpsc::channel::<String>(1024);
+        let bind_address = format!("0.0.0.0:2323");
+        let mut api_listener = tokio::net::TcpListener::bind(bind_address.as_str()).await;
+        let (job_sender, mut job_receiver) = tokio::sync::mpsc::channel::<String>(1024);
 
-    let api_listener = api_listener.unwrap();
-    println!("➔ 🚀 tcp listener is started at [{}]", bind_address);
+        let api_listener = api_listener.unwrap();
+        println!("➔ 🚀 tcp listener is started at [{}]", bind_address);
 
-    tokio::spawn(async move{
+        tokio::spawn(async move{
 
-	// streaming over incoming bytes to fill the buffer and then map the buffer to structure 
-	while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
-	    println!("🍐 new peer connection: [{}]", addr);
+        // streaming over incoming bytes to fill the buffer and then map the buffer to structure 
+        while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
+            println!("🍐 new peer connection: [{}]", addr);
 
-	    // cloning those types that we want to move them into async move{} scopes
-	    // of tokio::spawn cause tokio::spawn will capture these into its closure scope
-	    let tcp_server_data = tcp_server_data.clone();
-	    let job_sender = job_sender.clone();
-		
-	    tokio::spawn(async move {
+            // cloning those types that we want to move them into async move{} scopes
+            // of tokio::spawn cause tokio::spawn will capture these into its closure scope
+            let tcp_server_data = tcp_server_data.clone();
+            let job_sender = job_sender.clone();
+            
+            tokio::spawn(async move {
 
-		let mut buffer = vec![0; 1024];
+            let mut buffer = vec![0; 1024];
 
-		/*
-            a webhook/stream/event handler which accepts streaming of 
-            events' data utf8 bytes can be like: 
+            /*
+                a webhook/stream/event handler which accepts streaming of 
+                events' data utf8 bytes can be like: 
 
-            // chunk() method returns streamer.body_mut().next().await;
-            tokio::spawn(async move{
-                while let Some(chunk) = streamer.chunk().await? {
-                    // decod chunk into struct as they're coming 
-                    // ...
+                // chunk() method returns streamer.body_mut().next().await;
+                tokio::spawn(async move{
+                    while let Some(chunk) = streamer.chunk().await? {
+                        // decod chunk into struct as they're coming 
+                        // ...
+                    }
+                });
+            */
+            while match api_streamer.read(&mut buffer).await {
+                Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
+                Ok(rcvd_bytes) => {
+        
+                let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
+                println!("📺 received event data from peer: {}", string_event_data);
+                job_sender.send(string_event_data.to_string()).await;
+        
+                let send_tcp_server_data = tcp_server_data.data.clone();
+                if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
+                    eprintln!("❌ failed to write to api_streamer; {}", why);
+                    return;
+                } else{
+                    println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
+                    return;
                 }
+                
+                },
+                Err(e) => {
+                eprintln!("❌ failed to read from api_streamer; {:?}", e);
+                return;
+                }
+                
+            }{}
+        
             });
-        */
-		while match api_streamer.read(&mut buffer).await {
-		    Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
-		    Ok(rcvd_bytes) => {
-    
-			let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-			println!("📺 received event data from peer: {}", string_event_data);
-			job_sender.send(string_event_data.to_string()).await;
-    
-			let send_tcp_server_data = tcp_server_data.data.clone();
-			if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-			    eprintln!("❌ failed to write to api_streamer; {}", why);
-			    return;
-			} else{
-			    println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
-			    return;
-			}
-		    
-		    },
-		    Err(e) => {
-			eprintln!("❌ failed to read from api_streamer; {:?}", e);
-			return;
-		    }
-		    
-		}{}
-    
-	    });
-	}{}
-	
-    });
+        }{}
+        
+        });
 
 
-    tokio::spawn(async move{
+        tokio::spawn(async move{
 
-	while let Some(job) = job_receiver.recv().await{
+            /* write the incoming data from channel to file constanly */
+            let f = tokio::fs::File::open("readmeasync.txt").await;
+            if let Err(why) = f.as_ref(){
+                println!("can't create file cause: {}", why.to_string());
+            }
+            let mut funwrapped = f.unwrap();
 
-		// we have job in here
-		// ...
-	
-	}
-	    
-    });
+            while let Some(job) = job_receiver.recv().await{
 
 
+                if let Err(why) = funwrapped.write(job.as_bytes()).await{
+                    println!("can't write to file cause: {}", why.to_string());
+                }
+
+            
+            }
+            
+        });
 	
 }
 
