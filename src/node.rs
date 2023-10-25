@@ -86,7 +86,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();
     println!("ed25519 pubkey: {}", pubkey);
     println!("ed25519 pubkey: {}", prvkey);
-    
+
     Ok(())
 
 

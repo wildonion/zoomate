@@ -1457,9 +1457,9 @@ dependencies = [
 
 [[package]]
 name = "hadead"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b40fb39bdd9aa5a882bbcd74f8ec0330d14c76fdc546cec04ece61cd486d94cd"
+checksum = "65306490350796bf6b5201e08b207d893795cd29f5a31ad1c71e79e728c6d6cb"
 dependencies = [
  "chrono",
  "env_logger 0.10.0",
@@ -3769,9 +3769,9 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wallexerr"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd40b6f1b2fdd886bda17b033451f766419f6a3c4665009b2425a98ab0db7bb8"
+checksum = "298c627b678fcf0943a93e2ce1587c2e51f49299a821915742ae9fd8a61a3ae1"
 dependencies = [
  "base64 0.21.4",
  "chrono",

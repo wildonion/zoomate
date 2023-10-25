@@ -12,31 +12,74 @@ https://github.com/foniod/build-images
 https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 
 
-event driven architecture:
-tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
-bytes like streaming tlps over image chunks (call next on it and async read/write traits 
-must be used) from a source to store in a buffer then map the buffer into a struct using
-tokio(time,spawn,select,mutex,tcp,jobq) to avoid deadlocks and race conditions and using 
-actix_web_actor::ws and actix actors then we can update some logic based on the caught events 
-and notify other parts of the app, threads and scopes by publishing the event as a notification
-using redis pubsub so other parts and microservices can subscribe to that, webhook means once 
-an event gets triggered an api call will be invoked to notify (it's like a notification to the server) 
-server about the event happend as a result of handling another process in some where like a 
-payment result in which server subscribes to incoming event type and can publish it to 
-redispubsub so other app, threads and scopes can also subscribe to it 
+rust in:
+    - game engine
+        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
+    - blockchain distributed algorithms and scheduling tlps:
+        > crypto,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select
+        > actix::actor,rpc,ws,http
+        > libp2p::kademlia,gossipsub,noise protocol,quic,p2pwebsocket
+        > redis::pubsub,streams
+        > note that agent is an async and multithreaded based clinet&&server
+        node/agent/bot
+                |
+                |
+                 ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/rpc-capnp/actix-https
+                        libp2p quic,gossipsub,kademlia,noise/redis pubsub strams
+                        noise,tokio-rustl,wallexerr,web3
+                                        |
+                                        |
+                                         --- node/agent/bot
+        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
+    - event driven architecture:
+        tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
+        bytes like streaming tlps over image chunks (call next on it and async read/write traits 
+        must be used) from a source to store in a buffer then map the buffer into a struct using
+        tokio(time,spawn,select,mutex,tcp,jobq) to avoid deadlocks and race conditions and using 
+        actix_web_actor::ws and actix actors then we can update some logic based on the caught events 
+        and notify other parts of the app, threads and scopes by publishing the event as a notification
+        using redis pubsub so other parts and microservices can subscribe to that, webhook means once 
+        an event gets triggered an api call will be invoked to notify (it's like a notification to the server) 
+        server about the event happend as a result of handling another process in some where like a 
+        payment result in which server subscribes to incoming event type and can publish it to 
+        redispubsub so other app, threads and scopes can also subscribe to it 
+        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
+    - stream/wh/event handler and loop to stream over incoming future io utf8 byte objects as payload, asyncly 
+        > note that we must implement and StreamHandler trait for every
+            ws actor struct so it can handle the incoming utf8 bytes from
+            a client in realtime since actor execute streaming of async 
+            tasks in their threadpool and we can send results between different 
+            parts of the app and other actors by pre defined message passing logic
+            based on mpsc jobq channel so the streaming syntax is as follows:
+            tokio::spawn(async move{
+
+                let mut bytes = web::BytesMut::new();
+                let mut buffer = vec![];
+                
+                ////---------------------------------------------------------
+                ////---- handling websocket payload in an actix route
+                ////---------------------------------------------------------
+                while let Some(item) = payload_stream.next().await {
+                
+                    bytes.extend_from_slice(&item?);
+                
+                }
+
+                ////-----------------------------------------------
+                ////---- handling an stream from a socket 
+                ////-----------------------------------------------
+                
+                while let Some(chunk) = streamer.chunk().await? {
+                
+                    buffer.extend_from_slice(chunk);
+                    // decod buffer into struct as they're coming 
+                    // ...
+        
+                }  
+
+            });
 
 
-blockchain distributed algorithms and scheduling tlps:
-> note that agent is an async and multithreaded based clinet 
-   node/agent/bot
-          |
-          |
-           ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/rpc-capnp/actix-https
-                libp2p quic,gossipsub,kademlia,noise/redis pubsub strams
-			noise,tokio-rustl,wallexerr,web3
-                                |
-                                |
-                                 --- node/agent/bot
 
 
 1) a realtime and pluging based node monitoring and packet sniffing tools which
@@ -49,18 +92,18 @@ balancing algorithms and pubsub pattern to manage the total load of the VPS
 also we can build zmq using tokio socket actors and build libp2p and rpc 
 system using zmq pub/sub sockets,
 
-2) using rusty ltgs pointers, hadead and wallexerr in ssh login, api rate limiting 
-and webhook registery, async stream/event bytes handler using tokio stuffs/actix 
-ws actor/redispubsub for parallel tasks and storing unique encrypted data on with 
-global data[arcmutexrwlock concept based on .so and .wasm vms also unique 
-assets and nodes detection by feature extraction algos like VAE in such a way that 
-we must generate a vector of 8000 numbers of each node or assets using VAE latent
-space then compare the node with incoming nodes to check that if they're unique or not
-also a packet loss correction engine like raptorq forward error correction system
-to reconstruct the packets using VAE and transformers in video and audio streaming (raptor.rs)
+2) using rusty ltgs pointers (https://github.com/wildonion/rusty/blob/main/src/retbyref.rs#L17), 
+hadead and wallexerr in ssh login, api rate limiting and webhook registery, updating app and server 
+verification apis async stream/event bytes handler using tokio stuffs/actix ws actor/redispubsub 
+for parallel tasks and storing unique encrypted data on with global data[arcmutexrwlock concept 
+based on .so and .wasm vms also unique assets and nodes detection by feature extraction algos 
+like VAE in such a way that we must generate a vector of 8000 numbers of each node or 
+assets using VAE latent space then compare the node with incoming nodes to check that 
+if they're unique or not also a packet loss correction engine like raptorq forward 
+error correction system to reconstruct the packets using VAE and transformers in video 
+and audio streaming (raptor.rs)
 
-
-codec like serde, borsh and capnp also send notif (publish backonline topic) 
+3) codec like serde, borsh and capnp also send notif (publish backonline topic) 
 to other pods if another one gets back online or finding online pods 
 using following flow:
     - actix ws actor event and stream handler/loop using tokio spawn, 
@@ -91,17 +134,7 @@ using following flow:
 	select, spawn, mutex, pubsub, tcp stream, hex, serding 
 	to_string vs from utf8
 
-
-sha256, sha3, Keccak256 and argon2, multipart, base64, rustls to load trusted ssl certs from /etc/ssl/certs/ca-certificates.crt 
-and ssh RSA ECC curves keypair with simple-hyper-server-tls, openssl, tokio-rustls and noise-protocol we can create a secured communication 
-streaming channel between our hyper, ws, tcp or udp servers and clients based on the created certificate 
-and the key by implementing the tls protocols for the raw underlying 
-of tcp and udp socket stream of io future objects
-
-
-➙ we can setup exit codes with enum to know which error caused the program to stopped when using Box<dyn Error> which can be implemented for the type that will cause the error at runtime 
-➙ public key digital signature ring ed25519 verification for updating app and server verification apis 
-➙ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
+4)‌ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
    • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, rpc capnp, zmq, libp2p stacks, ws, tcp and udp
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
@@ -159,6 +192,9 @@ use base64::{engine::general_purpose, Engine as _};
 use wallexerr::{DataBucket, Contract, Wallet};
 use sha3::{Digest, Keccak256, Keccak256Core};
 use ring::rand as ring_rand;
+mod constants;
+use constants::*;
+
 
 
 // global rate limiter
@@ -226,20 +262,14 @@ pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 */
 unsafe impl Send for ZoomateResponse{}
 unsafe impl Sync for ZoomateResponse{}
-pub static ACTIX_RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ZoomateResponse>>> = 
-Lazy::new(||{
-    std::sync::Arc::new(
-        tokio::sync::RwLock::new(
-            ZoomateResponse
-        )
-    )
-});
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct ZoomateRequest; //// it can be Option<Vec<actix_web::HttpResponse>> which all the incoming actix http requests to this node that must be handled
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
-pub struct ZoomateResponse;
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ZoomateResponse{
+    pub data: String,
+}
 
 #[derive(Serialize, Deserialize, Copy, Clone, Debug)]
 pub struct Weight{
@@ -259,6 +289,27 @@ pub struct Node{ //// this contains server info
 }
 
 impl Node{
+
+    pub async fn verify_update_signature(data: &[u8], signature: &str, pubkey: &str){
+
+        // data: sha256 hash as_bytes
+        // signature
+        // pubkey
+    }
+
+    pub async fn verify_api_signature(data: &[u8], signature: &str, pubkey: &str) -> RuntimeCode{
+
+        // data: sha256 hash as_bytes
+        // signature
+        // pubkey
+
+        let is_verified = true;
+        if is_verified{
+            RuntimeCode::Ok(1)
+        } else{
+            RuntimeCode::Err(1)
+        }
+    }
 
     pub async fn encoder(data: impl Serialize){
 
@@ -305,8 +356,9 @@ impl Node{
             stringify_data.clone().as_str(), 
             contract.wallet.ed25519_secret_key.as_ref().unwrap().as_str());
         
+        let hash_of_data = Wallet::generate_sha256_from(&stringify_data);
         let verify_res = Wallet::verify_ed25519_signature(
-            signature_hex.clone().unwrap().as_str(), stringify_data.as_str(),
+            signature_hex.clone().unwrap().as_str(), hash_of_data.as_slice(),
             contract.wallet.ed25519_public_key.as_ref().unwrap().as_str());
 
         let keypair = Wallet::retrieve_ed25519_keypair(
@@ -429,70 +481,13 @@ pub struct Pod{ //// a pod is a load balancer which can have one or more contain
 pub struct ResponseObject{
     data: String,
 }
-/* 
-                a thread safe global response object  
 
-    reasons rust don't have static global types:
-        
-        Memory Safety: One of Rust's main goals is to ensure memory safety without the need 
-               for a garbage collector. Global state can lead to shared mutable state across 
-               threads, which is a source of data races. By making global state explicit and 
-               synchronized, Rust avoids these issues.
-
-        Concurrency: Rust's concurrency model revolves around the concept of ownership. Global 
-               variables can be problematic in concurrent programs, where multiple threads might 
-                want to modify a global variable simultaneously.
-
-        Predictability and Explicitness: Global mutable state can make programs unpredictable 
-                and hard to reason about. Rust values explicitness over implicitness, so when you 
-                see a piece of Rust code, you can easily understand its behavior without having to 
-                consider hidden global states.
-
-        Lifetimes: Rust uses lifetimes to track how long data is valid. Global state has a complex 
-                lifetime that can easily lead to dangling references if not managed carefully.
-
-        No Garbage Collector: While the presence or absence of a garbage collector (GC) isn't the 
-                main reason Rust is cautious with global state, it's worth noting. Many languages 
-                with GCs allow for more liberal use of global state because the GC can clean up. 
-                In Rust, manual memory management means you need to be more careful.
-
-
-    global state of type requires to have a complex valid lifetime like 'static 
-    and be mutable which this can't be happend since rust doesn't gc and by mutating 
-    an static lifetime type we may face deadlock and race conditions issues in other 
-    threads, instead we can define an static mutex since static types are immutable 
-    by default and because static values must be constant we must put the mutex 
-    inside Lazy, like the following:
-    since we can't return none const from a static type thus we have to 
-    put it inside the lazy as a closure which returns the actual type 
-    because Arc and RwLock are none const types although we can implement 
-    this logic using thread_local!{}, see https://github.com/wildonion/gvm/edit/main/src/lib.rs
-
-    so having this: 
-    	 // can't put the actual data in const since Arc and RwLock are none const types that can mutate data
-    	pub static MULTI_THREAD_THINGS: std::sync::Arc<tokio::sync::RwLock<Vec<u8>>> = 
-     		std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new()));
-    is wrong and we should use the following syntax instead:
-
-*/
-// note that the data we want to share it between threads must be Send + Sync + 'static
-// eg: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> + Send + Sync + 'static 
-// as a mutable global data will be shared between apis to mutate it safely 
-// to avoid deadlocks and race conditions
-pub static RESPONE: Lazy<std::sync::Arc<tokio::sync::RwLock<ResponseObject>>> = Lazy::new(||{
-    std::sync::Arc::new(tokio::sync::RwLock::new(ResponseObject::default()))
-});
-
-
-pub static GLOBAL_MUTEXED: Lazy<std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>> = 
-    Lazy::new(|| { std::sync::Arc::new(tokio::sync::Mutex::new(HashMap::new())) });
-
-pub async fn set<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
+pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     /* since T is a FnMut closure, the cls param must be defined mutablly */
     (mut cls: T){
 
     {
-        let data = self::GLOBAL_MUTEXED.clone();
+        let data = constants::GLOBAL_MUTEXED.clone();
         let mut map = data.lock().await;
         (*map).insert(100, "key".to_string());
     }
@@ -500,7 +495,7 @@ pub async fn set<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     /* T is a closure which returns G and can be shared between threads safely */
     let callback = cls();
 
-    let mut res = RESPONE.write().await;
+    let mut res = ZOOMATE_RESPONE_STORAGE.write().await;
     let new_data = vec![1,2,4];
     let strigified_data = serde_json::to_string_pretty(&new_data).unwrap();
     
@@ -520,7 +515,8 @@ pub async fn set<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
 pub async fn agent_simulation(){
 
 	let new_rt = tokio::runtime::Builder::new_multi_thread();
-	#[derive(Clone)]
+	
+    #[derive(Clone)]
 	struct BuildQueue{
 		pub agent_id: String,
 	}
@@ -528,6 +524,11 @@ pub async fn agent_simulation(){
 	struct Pipeline{
 		pub pid: String, // keccak256 bits hash of the whole data
 	}
+    #[derive(Clone)]
+    /* trait objects are heap data and must be beind pointer, eiter Box<dyn or &dyn */
+    struct JobTor<'j>(pub &'j dyn FnMut() -> ());
+    struct JobTorBox<'j>(pub Box<&'j dyn FnMut() -> ()>);
+
 	/*
 	    interior mutablity, we can mutate the field at runtime
 	    it's usefull for mutating the content data inside an account
@@ -577,19 +578,19 @@ pub async fn agent_simulation(){
 			    
 			    loop{
 
-				/* tick every 15 seconds */
-				interval.tick().await;
+                    /* tick every 15 seconds */
+                    interval.tick().await;
 			
 				    // setup async redis subscription process to subscribe to 
 				    // ...
                     
 				    let get_stream_messages = async_redis_pubsub_conn
-					.subscribe(commit_id)
-					.await;
+                        .subscribe(commit_id)
+                        .await;
 				    
 				    let Ok(mut get_stream_messages) = get_stream_messages else{
 					    
-					return Err::<(), ()>(());
+					    return Err::<(), ()>(());
 			
 				    };
 				
@@ -656,44 +657,60 @@ pub async fn start_tcp_listener(){
             
             tokio::spawn(async move {
 
-            let mut buffer = vec![0; 1024];
+                /* this buffer will be filled up with incoming bytes from the socket */
+                let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
 
-            /*
-                a webhook/stream/event handler which accepts streaming of 
-                events' data utf8 bytes can be like: 
+                /*  
+                    streaming over a socket to fill the buffer with incoming u8 future byte objs and 
+                    then map into a struct can be done with tokio(mpsc,select,spawn,mutex,rwlock,tcp)
+                    actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event handler which 
+                    accepts streaming of events' data utf8 bytes can be like: 
 
-                // chunk() method returns streamer.body_mut().next().await;
-                tokio::spawn(async move{
-                    while let Some(chunk) = streamer.chunk().await? {
-                        // decod chunk into struct as they're coming 
-                        // ...
+                    // streaming over bytes runs in a separate thread
+                    // chunk() method returns streamer.body_mut().next().await;
+                    tokio::spawn(async move{
+                        while let Some(chunk) = streamer.chunk().await? {
+                            // decod chunk into struct as they're coming 
+                            // ...
+                        }
+                    });
+
+
+                    the nature of rust codes are not async and multithreaded by default we must use
+                    a runtime for that like tokio thus if we have a condition like
+                    if condition {
+                        return something to the caller;
                     }
-                });
-            */
-            while match api_streamer.read(&mut buffer).await {
-                Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
-                Ok(rcvd_bytes) => {
-        
-                let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-                println!("📺 received event data from peer: {}", string_event_data);
-                job_sender.send(string_event_data.to_string()).await;
-        
-                let send_tcp_server_data = tcp_server_data.data.clone();
-                if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-                    eprintln!("❌ failed to write to api_streamer; {}", why);
+
+                    the rest of the code after if won't get executed with this nature we can 
+                    only have one if, provided that it terminate the method body with an statement,
+                    otherwise we have to provide the else part since rust needs to know the if
+                    not this type then what type?!
+                */
+                while match api_streamer.read(&mut buffer).await {
+                    Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
+                    Ok(rcvd_bytes) => {
+            
+                    let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
+                    println!("📺 received event data from peer: {}", string_event_data);
+                    job_sender.send(string_event_data.to_string()).await;
+            
+                    let send_tcp_server_data = tcp_server_data.data.clone();
+                    if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
+                        eprintln!("❌ failed to write to api_streamer; {}", why);
+                        return;
+                    } else{
+                        println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
+                        return;
+                    }
+                    
+                    },
+                    Err(e) => {
+                    eprintln!("❌ failed to read from api_streamer; {:?}", e);
                     return;
-                } else{
-                    println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
-                    return;
-                }
-                
-                },
-                Err(e) => {
-                eprintln!("❌ failed to read from api_streamer; {:?}", e);
-                return;
-                }
-                
-            }{}
+                    }
+                    
+                }{}
         
             });
         }{}
