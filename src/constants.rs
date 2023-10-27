@@ -86,6 +86,26 @@ Lazy::new(||{
     ) 
 });
 
+/* a global mutex that must be in RwLock in order to be mutable safely in threadpool */
+pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
+    HashMap::new()
+});
+
+// following is incorrect since std::sync::Arc<tokio::sync::RwLock<Lazy<String>>>
+// is not constant and the whole type must be wrapped into the Lazy<>
+/* 
+pub static MUTABLE_USER_RATELIMIT: std::sync::Arc<tokio::sync::RwLock<Lazy<String>>> = 
+    std::sync::Arc::new(
+        tokio::sync::RwLock::new(
+            /* 
+                since USER_RATELIMIT is not constant we can't have it here because
+                static types must have constant values
+            */
+            Lazy::new(||{String::from("")})
+        )
+    );
+*/
+
 
 #[derive(Debug, Clone)]
 pub enum RuntimeCode{

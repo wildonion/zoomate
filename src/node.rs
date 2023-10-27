@@ -64,6 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     });
 
 
+    /* start redis4 server in tokio::spawn() threads */
     tokio::spawn(async move{
 
         /* start an async and concurrent server to handle socket packets from clients concurrently */ 
