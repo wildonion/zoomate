@@ -2,6 +2,7 @@
 
 /*
 
+https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master/websockets
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
 https://github.com/wildonion/cs-concepts
@@ -12,12 +13,12 @@ https://github.com/foniod/build-images
 https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 
 
-rust in:
-    - game engine
+rust cli zoomate contains:
+    - multithreaded and async node, agent and balancer engines
         --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - blockchain distributed algorithms and scheduling tlps:
         > crypto,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select
-        > actix::actor,rpc,ws,http
+        > actix::actor,rpccapnp,ws,http
         > libp2p::kademlia,gossipsub,noise protocol,quic,p2pwebsocket
         > redis::pubsub,streams
         > note that agent is an async and multithreaded based clinet&&server
@@ -55,7 +56,7 @@ rust in:
 
                 let mut bytes = web::BytesMut::new();
                 let mut buffer = vec![];
-                
+
                 ////---------------------------------------------------------
                 ////---- handling websocket payload in an actix route
                 ////---------------------------------------------------------
@@ -290,18 +291,23 @@ pub struct Node{ //// this contains server info
 
 impl Node{
 
-    pub async fn verify_update_signature(data: &[u8], signature: &str, pubkey: &str){
+    pub async fn verify_update_signature(data: &str, signature: &str, pubkey: &str){
 
-        // data: sha256 hash as_bytes
+        // data: raw stringified data
         // signature
         // pubkey
+
+        let data_hash = Wallet::generate_sha256_from(data);
+
     }
 
-    pub async fn verify_api_signature(data: &[u8], signature: &str, pubkey: &str) -> RuntimeCode{
+    pub async fn verify_api_signature(data: &str, signature: &str, pubkey: &str) -> RuntimeCode{
 
-        // data: sha256 hash as_bytes
+        // data: raw stringified data
         // signature
         // pubkey
+
+        let data_hash = Wallet::generate_sha256_from(data);
 
         let is_verified = true;
         if is_verified{
@@ -620,6 +626,10 @@ pub async fn agent_simulation(){
 
 }
 
+
+pub async fn start_grpc_server(){
+    
+}
 
 pub async fn start_tcp_listener(){
 
