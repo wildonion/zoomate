@@ -46,12 +46,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
 
 
     /* 
-        for each async and heavy tasks we must use 
-        tokio::spawn(async move{}) channel to avoid 
-        blocking issues, stuck and halting situations 
+        for handling and streaming over each coming async and heavy tasks we must use 
+        tokio::spawn(async move{}) to avoid blocking issues, stuck and halting situations 
     */
-
-
     tokio::spawn(async move{
 
         while let Some(data) = redis_pubsubs_msg_receiver.recv().await{

@@ -137,6 +137,7 @@ using following flow:
 
 4)‌ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
    • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, rpc capnp, zmq, libp2p stacks, ws, tcp and udp
+   • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
    • gateway and proxy using hyper: https://github.com/hyperium/hyper/tree/master/examples
@@ -149,7 +150,7 @@ using following flow:
    • event loop
    • iptables and ssh tunneling
    • zmq pub/sub with borsh serialization 
-   • simd divide and conquer based vectorization
+   • simd divide and conquer based vectorization using rayon multithreading (each vector can be analyzed in a separate thread)
    • language binding
    • reverse proxy for NAT traversal implemented in Rust based macros
    • implement DNS Server in Rust (DNS hijacking and spoofing using mitm tools)
@@ -290,6 +291,28 @@ pub struct Node{ //// this contains server info
 }
 
 impl Node{
+
+    pub async fn proof_of_chain(chain_addresses: Vec<String>, chain_addresses_from_other_servers: Vec<String>){
+
+        /*  
+            having two different mutable pointer to instances are not allowed in a single scope
+            based on this we're ok to call calculate_root_hash() method which takes a mutable pointer 
+            of the struct instance method two times on the same instance 
+        */
+        let mut merkle_tree_wl = constants::MerkleNode::new();
+        let old_merkle_hash = merkle_tree_wl.calculate_root_hash(chain_addresses_from_other_servers);  
+        let merkle_hash = merkle_tree_wl.calculate_root_hash(chain_addresses);
+        if old_merkle_hash == merkle_hash{
+            
+            // fork allowed
+            // ...
+
+        } else{
+            
+            // fork not allowed unknown address in the passed in addresses
+            // ...
+        }
+    }
 
     pub async fn verify_update_signature(data: &str, signature: &str, pubkey: &str){
 
@@ -656,81 +679,96 @@ pub async fn start_tcp_listener(){
 
         tokio::spawn(async move{
 
-        // streaming over incoming bytes to fill the buffer and then map the buffer to structure 
-        while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
-            println!("🍐 new peer connection: [{}]", addr);
+            // streaming over incoming bytes to fill the buffer and then map the buffer to structure 
+            while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
+                println!("🍐 new peer connection: [{}]", addr);
 
-            // cloning those types that we want to move them into async move{} scopes
-            // of tokio::spawn cause tokio::spawn will capture these into its closure scope
-            let tcp_server_data = tcp_server_data.clone();
-            let job_sender = job_sender.clone();
-            
-            tokio::spawn(async move {
+                // cloning those types that we want to move them into async move{} scopes
+                // of tokio::spawn cause tokio::spawn will capture these into its closure scope
+                let tcp_server_data = tcp_server_data.clone();
+                let job_sender = job_sender.clone();
+                
+                tokio::spawn(async move {
 
-                /* this buffer will be filled up with incoming bytes from the socket */
-                let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
+                    /* this buffer will be filled up with incoming bytes from the socket */
+                    let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
 
-                /*  
-                    streaming over a socket to fill the buffer with incoming u8 future byte objs and 
-                    then map into a struct can be done with tokio(mpsc,select,spawn,mutex,rwlock,tcp)
-                    actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event handler which 
-                    accepts streaming of events' data utf8 bytes can be like: 
+                    /*  
+                        streaming over a socket to fill the buffer with incoming u8 future byte objs and 
+                        then map into a struct can be done with tokio(mpsc,select,spawn,mutex,rwlock,tcp)
+                        actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event handler which 
+                        accepts streaming of events' data utf8 bytes can be like: 
 
-                    // streaming over bytes runs in a separate thread
-                    // chunk() method returns streamer.body_mut().next().await;
-                    tokio::spawn(async move{
-                        while let Some(chunk) = streamer.chunk().await? {
-                            // decod chunk into struct as they're coming 
-                            // ...
+                        // streaming over bytes runs in a separate thread
+                        // chunk() method returns streamer.body_mut().next().await;
+                        tokio::spawn(async move{
+                            while let Some(chunk) = streamer.chunk().await? {
+                                // decod chunk into struct as they're coming 
+                                // ...
+                            }
+                        });
+
+
+                        the nature of rust codes are not asynced and multithreaded by default we must use
+                        a runtime for that like tokio and run async tasks inside tokio::spawn() threadpool
+                        which takes care of running an async context in a free thread behind the scene and 
+                        won't let other codes in other scopes get halted and waited for this job to be
+                        finished, they get exectued on their own thus if we have a condition like
+                        if condition {
+                            return something to the caller;
                         }
-                    });
 
+                        the rest of the code after if won't get executed with this nature we can 
+                        only have one if, provided that it terminate the method body with an statement,
+                        and respond the caller with a value; once the body get terminated the rest of
+                        the code won't be executed cause we don't have async context by default, 
+                        other than that we have to provide the else part since rust needs to know 
+                        that if not this type then what type?!
+                    */
+                    while match api_streamer.read(&mut buffer).await { /* streaming over socket to fill the buffer */
+                        Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
+                        Ok(rcvd_bytes) => {
+                
+                        let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
+                        println!("📺 received event data from peer: {}", string_event_data);
 
-                    the nature of rust codes are not async and multithreaded by default we must use
-                    a runtime for that like tokio thus if we have a condition like
-                    if condition {
-                        return something to the caller;
-                    }
-
-                    the rest of the code after if won't get executed with this nature we can 
-                    only have one if, provided that it terminate the method body with an statement,
-                    otherwise we have to provide the else part since rust needs to know the if
-                    not this type then what type?!
-                */
-                while match api_streamer.read(&mut buffer).await {
-                    Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
-                    Ok(rcvd_bytes) => {
-            
-                    let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-                    println!("📺 received event data from peer: {}", string_event_data);
-                    job_sender.send(string_event_data.to_string()).await;
-            
-                    let send_tcp_server_data = tcp_server_data.data.clone();
-                    if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-                        eprintln!("❌ failed to write to api_streamer; {}", why);
+                        /*  
+                            sending the decoded bytes into the mpsc channel so we could receive it  
+                            in other scopes or threads
+                        */
+                        if let Err(why) = job_sender.send(string_event_data.to_string()).await{
+                            eprintln!("❌ failed to send to the mpsc channel; {}", why);
+                        }
+                
+                        let send_tcp_server_data = tcp_server_data.data.clone();
+                        if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
+                            eprintln!("❌ failed to write to api_streamer; {}", why);
+                            return;
+                        } else{
+                            println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
+                            return;
+                        }
+                        
+                        },
+                        Err(e) => {
+                        eprintln!("❌ failed to read from api_streamer; {:?}", e);
                         return;
-                    } else{
-                        println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
-                        return;
-                    }
-                    
-                    },
-                    Err(e) => {
-                    eprintln!("❌ failed to read from api_streamer; {:?}", e);
-                    return;
-                    }
-                    
-                }{}
-        
-            });
-        }{}
+                        }
+                        
+                    }{}
+            
+                });
+            }{}
         
         });
 
 
         tokio::spawn(async move{
 
-            /* write the incoming data from channel to file constanly */
+            /* 
+                write the incoming data from channel to file constanly 
+                as they're coming from the mpsc channel 
+            */
             let f = tokio::fs::File::open("readmeasync.txt").await;
             if let Err(why) = f.as_ref(){
                 println!("can't create file cause: {}", why.to_string());

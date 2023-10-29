@@ -86,7 +86,11 @@ Lazy::new(||{
     ) 
 });
 
-/* a global mutex that must be in RwLock in order to be mutable safely in threadpool */
+/* 
+    an static global mutex must be in RwLock in order to be mutable safely in threadpool 
+    since static types can't be mutated since rust doesn't have gc and by mutating an static
+    type we might have race conditions in other scopes.
+*/
 pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
     HashMap::new()
 });
@@ -112,4 +116,58 @@ pub enum RuntimeCode{
     Err(u8),
     Ok(u8),
 
+}
+
+pub struct MerkleNode{}
+impl MerkleNode{
+
+    pub fn new() -> Self{
+        MerkleNode {  }
+    }
+
+    pub fn calculate_root_hash(&mut self, chain: Vec<String>){
+
+    } 
+}
+
+
+/*  ----------------------------------------------------------------------
+    implementing a dynamic type handler for structs and enums using traits
+    ----------------------------------------------------------------------
+*/
+trait TypeTrait{
+    type Value;
+
+    fn get_data(&self) -> Self::Value;
+}
+
+impl TypeTrait for MerkleNode{
+    
+    type Value = std::sync::Arc<tokio::sync::RwLock<HashMap<u32, String>>>;
+
+    fn get_data(&self) -> Self::Value {
+        
+        let mutexed_data = std::sync::Arc::new(
+            tokio::sync::RwLock::new(
+                HashMap::new()
+            )
+        );
+        mutexed_data
+    }
+}
+
+impl TypeTrait for RuntimeCode{
+    
+    type Value = std::sync::Arc<tokio::sync::RwLock<String>>;
+    
+    fn get_data(&self) -> Self::Value {
+        
+        let mutexed_data = std::sync::Arc::new(
+            tokio::sync::RwLock::new(
+                String::from("")
+            )
+        );
+        mutexed_data
+
+    }
 }
