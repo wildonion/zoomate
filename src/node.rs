@@ -25,15 +25,27 @@ use crate::raptor::*;
 
 
 
-
-/* 
-    if we want to use Result<(), impl std::error::Error + Send + Sync + 'static>
-    as the return type thus the error variable must be sepecified also the Error trait
-    must be implemented for the error type (impl Error for ErrorType{}) since 
-    we're implementing the Error trait for the error type in return type   
+/*  
+    instead of addin' #[tokio::main] macro on top of the main method which will run 
+    the whole method in a threadpool context we can remove the macro to have a none 
+    async main method but still in order to run async methods inside of it we can't 
+    just call them and put .await on them cause rust is not a async lang by nature and
+    in order to solve async method we must be inside an async context thus we need an 
+    async env to do so which can be solved by sending the async method or job into the 
+    tokio::spawn() which is a async job or task handler in it's threadpool context
+    behind the scene without having deadlocks and race conditions
 */
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
+// #[tokio::main]
+// async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
+fn main() 
+    
+    /* 
+        if we want to use Result<(), impl std::error::Error + Send + Sync + 'static>
+        as the return type thus the error variable must be sepecified also the Error trait
+        must be implemented for the error type (impl Error for ErrorType{}) since 
+        we're implementing the Error trait for the error type in return type   
+    */
+    -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
 
     dotenv().expect("⚠️ .env file not found");
     let io_buffer_size = env::var("IO_BUFFER_SIZE").expect("⚠️ no io buffer size variable set").parse::<u32>().unwrap() as usize; //// usize is the minimum size in os which is 32 bits
@@ -74,9 +86,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>
     });
 
 
-    // hadead rate limiter 
-    let res = api().await;
-    println!("hadead res {:?}", res);
+    /* 
+        the bad part of using tokio::spawn() is if we need a data inside the 
+        spawned task we have to use channel to move it between other scopes,
+        with tokio::spawn() we can run async tasks in another threadpool
+        other than main threads which prevent other codes from being halted
+        while we're running the async task    
+    */
+    tokio::spawn(async move{
+        
+        // hadead rate limiter 
+        let res = api().await;
+        println!("hadead res {:?}", res);
+
+    });
 
 
     // node webhook signature
