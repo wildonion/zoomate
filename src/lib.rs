@@ -679,6 +679,8 @@ pub async fn start_tcp_listener(){
 
         tokio::spawn(async move{
 
+            println!("➔ start receiving asyncly and concurrently in tokio green threadpool");
+
             // streaming over incoming bytes to fill the buffer and then map the buffer to structure 
             while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
                 println!("🍐 new peer connection: [{}]", addr);
@@ -713,7 +715,8 @@ pub async fn start_tcp_listener(){
                         a runtime for that like tokio and run async tasks inside tokio::spawn() threadpool
                         which takes care of running an async context in a free thread behind the scene and 
                         won't let other codes in other scopes get halted and waited for this job to be
-                        finished, they get exectued on their own thus if we have a condition like
+                        finished and, they get exectued on their own without blocking the scopes  
+                        thus if we have a condition like
                         if condition {
                             return something to the caller;
                         }

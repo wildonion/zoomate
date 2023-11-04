@@ -26,14 +26,14 @@ use crate::raptor::*;
 
 
 /*  
-    instead of addin' #[tokio::main] macro on top of the main method which will run 
-    the whole method in a threadpool context we can remove the macro to have a none 
-    async main method but still in order to run async methods inside of it we can't 
-    just call them and put .await on them cause rust is not a async lang by nature and
-    in order to solve async method we must be inside an async context thus we need an 
-    async env to do so which can be solved by sending the async method or job into the 
-    tokio::spawn() which is a async job or task handler in it's threadpool context
-    behind the scene without having deadlocks and race conditions
+    instead of addin' #[tokio::main] macro on top of the main method which will execute
+    the whole main method and all of its functions inside of it in a threadpool context 
+    we can remove the macro to have a none async main method but still in order to run 
+    async methods inside of it we can't just call them and put .await on them cause rust 
+    is not a async lang by nature and in order to solve async method we must be inside an 
+    async context thus we need an async env to do so which can be solved by sending the 
+    async method or job into the tokio::spawn() which is a async job or task handler in 
+    it's threadpool context behind the scene without having deadlocks and race conditions
 */
 // #[tokio::main]
 // async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
@@ -87,11 +87,13 @@ fn main()
 
 
     /* 
-        the bad part of using tokio::spawn() is if we need a data inside the 
-        spawned task we have to use channel to move it between other scopes,
-        with tokio::spawn() we can run async tasks in another threadpool
-        other than main threads which prevent other codes from being halted
-        while we're running the async task    
+        if we need a data to be shared with other scopes which is inside of
+        spawned task we have to use mpsc like channel to move it between other 
+        scopes, with tokio::spawn() we can run async tasks in another threadpool
+        using green threads other than main threads which prevent other codes 
+        from being halted in their execution while we're running the async task 
+        also std::thread by default handles the multi-processing manner when the
+        task is heavy enough so it can switch to another navtive core.
     */
     tokio::spawn(async move{
         
@@ -101,7 +103,7 @@ fn main()
 
     });
 
-
+    actix is a multithreaded and async tasks handler on top of tokio executor 
     // node webhook signature
     let node = Node::default();
     let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();

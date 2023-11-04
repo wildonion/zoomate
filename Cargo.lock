@@ -456,6 +456,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4cbbc9d0964165b47557570cce6c952866c2678457aca742aafc9fb771d30270"
 
 [[package]]
+name = "base58"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6107fe1be6682a68940da878d9e9f5e90ca5745b3dec9fd1bb393c8777d4f581"
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1457,9 +1463,9 @@ dependencies = [
 
 [[package]]
 name = "hadead"
-version = "0.1.8"
+version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65306490350796bf6b5201e08b207d893795cd29f5a31ad1c71e79e728c6d6cb"
+checksum = "2d6c8f30c7c02568110050a79f9e3e522cf219d0735decba0dc560aa2e1dcf74"
 dependencies = [
  "chrono",
  "env_logger 0.10.0",
@@ -3769,10 +3775,11 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wallexerr"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "298c627b678fcf0943a93e2ce1587c2e51f49299a821915742ae9fd8a61a3ae1"
+checksum = "81f41e6ab4762cb7d81e4af653f5f121cb77692374388b45def23c2f5a542dd4"
 dependencies = [
+ "base58",
  "base64 0.21.4",
  "chrono",
  "hex",
