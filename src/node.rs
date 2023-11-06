@@ -103,7 +103,7 @@ fn main()
 
     });
 
-    actix is a multithreaded and async tasks handler on top of tokio executor 
+
     // node webhook signature
     let node = Node::default();
     let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();

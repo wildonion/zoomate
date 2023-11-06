@@ -6,6 +6,51 @@ use crate::*;
 
 /*      
            --------------------------------------------------
+                             Mutex Vs RwLock
+           --------------------------------------------------
+
+
+    Mutex (Mutual Exclusion Lock):
+
+    A Mutex allows only one thread to access some data at any given time.
+    Every time a thread wants to access the data, it must first lock the Mutex.
+    If you have a situation where you have more writes than reads, or if the 
+    reads and writes are roughly equal, a Mutex is usually the better choice.
+    tokio::sync::Mutex is an asynchronous Mutex that is designed to work 
+    with async code within tokio.
+    
+    RWLock (Read-Write Lock):
+
+    A RWLock allows any number of threads to read the data if there isn't a thread writing to it.
+    If a thread wants to write to the data, it must wait for all the readers to finish before it 
+    can obtain the lock. If you have a situation where you have many more reads than writes, a RWLock 
+    can be more efficient because it allows multiple readers to access the data simultaneously.
+    tokio::sync::RwLock is an asynchronous Read-Write Lock that works within the async ecosystem of tokio.
+    
+    When to choose tokio::sync::Mutex:
+
+    You have frequent writes.
+    The critical section (the part of the code that needs exclusive access to the data) is quick.
+    You want simplicity. Using a Mutex is straightforward and avoids the complexity of dealing with 
+    multiple lock types.
+    
+    When to choose tokio::sync::RwLock:
+
+    You have many more reads than writes.
+    You want to allow concurrent reads for efficiency.
+    The critical section for reads is fast, but it’s still beneficial to have multiple readers at the same time.
+    In many scenarios, a Mutex might be sufficient and can be the simpler choice, especially if write operations 
+    are as common as reads or if the critical section is very short, thus not justifying the overhead of managing 
+    a RWLock.
+
+    However, if your specific case involves a lot of concurrent reads with infrequent writes and the read operations 
+    are substantial enough to create a bottleneck, a RWLock might be a better choice.
+
+
+*/
+
+/*      
+           --------------------------------------------------
                  a thread safe global response objects
            --------------------------------------------------
 
@@ -92,6 +137,17 @@ Lazy::new(||{
     type we might have race conditions in other scopes.
 */
 pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
+    // futures are trait that must be behind a valid pointer 
+    // and pinned to ram to solve them later in other scopes
+    let fut = 
+        async move{
+            String::from("")
+        };
+
+    let fut_: std::pin::Pin<Box<dyn std::future::Future<Output=String>>>
+        = Box::pin(
+            fut 
+        );
     HashMap::new()
 });
 

@@ -22,6 +22,7 @@ rust cli zoomate contains:
         > libp2p::kademlia,gossipsub,noise protocol,quic,p2pwebsocket
         > redis::pubsub,streams
         > note that agent is an async and multithreaded based clinet&&server
+        > note that kademlia will be used to find nodes on the whole network
         node/agent/bot
                 |
                 |
@@ -82,6 +83,11 @@ rust cli zoomate contains:
 
 
 
+0) VPS configuration according to the source usage of each node 
+    • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
+    • OS and a security management app(malware detection) using RL
+    • our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
+    • our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm
 
 1) a realtime and pluging based node monitoring and packet sniffing tools which
 can heal itself using a DL based algo on top of transformers and VAE techniques
