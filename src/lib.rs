@@ -9,18 +9,21 @@ https://github.com/wildonion/cs-concepts
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
+https://github.com/libp2p/rust-libp2p/tree/master/examples
 https://github.com/foniod/build-images
 https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 
 
+
+
 rust cli zoomate contains:
-    - multithreaded and async node, agent and balancer engines
+    - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,rpccapnp
         --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - blockchain distributed algorithms and scheduling tlps:
-        > crypto,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select
+        > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time
         > actix::actor,rpccapnp,ws,http
-        > libp2p::kademlia,gossipsub,noise protocol,quic,p2pwebsocket
-        > redis::pubsub,streams
+        > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,rpccapnp
+        > redis::pubsub,streams,queue
         > note that agent is an async and multithreaded based clinet&&server
         > note that kademlia will be used to find nodes on the whole network
         node/agent/bot
@@ -293,10 +296,71 @@ pub struct Node{ //// this contains server info
     pub cost_per_api_call: u128, //// this is based on the load of the weights
     pub init_at: i64,
     pub weights: Option<Vec<Weight>>, //// load of requests
-    pub hash: String
+    pub hash: String,
+    pub nodes: Vec<Node>
 }
 
 impl Node{
+
+    pub async fn get_node_address(&mut self){
+
+        /*
+            by default every heap data will be moved into new type 
+            when we're putting them inside another type thus we must 
+            either clone or borrow them using & or as_ref() 
+        */
+        let nodes: &Vec<Node> = self.nodes.as_ref();
+    }
+
+    pub async fn hash_node(&mut self){
+
+        let stringified_obj = serde_json::to_string_pretty(&self).unwrap();
+        let hash = Wallet::generate_sha256_from(&stringified_obj);
+        self.hash = hex::encode(&hash);
+    }
+
+    pub async fn connect(addr: &str){
+
+        let queue = Queue{
+            vector: vec![
+                Queue::default()
+            ]
+        };
+        let get_queue = (
+            |mut old_vec: Vec<Queue>|{
+                let vec = Queue{
+                    vector: vec![
+                        Queue::default()
+                    ]
+                };
+                old_vec.push(vec);
+                old_vec
+            }
+        )(queue.vector);
+
+        #[derive(Default)]
+        struct Queue{
+            pub vector: Vec<Queue>
+        }
+
+
+        let tcp_stream = tokio::net::TcpStream::connect(addr).await;
+        if let Ok(mut streamer) = tcp_stream{
+
+            let f = tokio::fs::File::open("readmeasync.txt").await;
+            if let Err(why) = f.as_ref(){
+                println!("can't create file cause: {}", why.to_string());
+            }
+
+            let mut buffer: Vec<u8> = vec![];
+            let buf_bytes = buffer.as_mut_slice();
+            f.unwrap().read(buf_bytes).await;
+
+            /* write the fulfilled buffer from file bytes into the streamer */
+            streamer.write_all(buf_bytes).await;
+        }
+
+    }
 
     pub async fn proof_of_chain(chain_addresses: Vec<String>, chain_addresses_from_other_servers: Vec<String>){
 
@@ -656,8 +720,11 @@ pub async fn agent_simulation(){
 }
 
 
-pub async fn start_grpc_server(){
+pub async fn start_grpc_server(cmd: &str, mut node: Node){
     
+    if cmd == "getNodeAddress"{
+        node.get_node_address().await
+    }
 }
 
 pub async fn start_tcp_listener(){
