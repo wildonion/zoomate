@@ -19,7 +19,7 @@ rust cli zoomate features:
     - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,rpccapnp
         --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - blockchain distributed algorithms and scheduling tlps:
-        > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time
+        > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time,asynciotraits
         > actix::actor,rpccapnp,ws,http
         > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,rpccapnp
         > redis::pubsub,streams,queue
@@ -788,13 +788,27 @@ pub async fn start_tcp_listener(){
 
                         // streaming over bytes runs in a separate thread
                         // chunk() method returns streamer.body_mut().next().await;
-                        tokio::spawn(async move{
-                            while let Some(chunk) = streamer.chunk().await? {
-                                // decod chunk into struct as they're coming 
-                                // ...
+                        let (data_sender, mut data_receiver) 
+                            = tokio::sync::mpsc::channel::<std::sync::Arc<tokio::sync::Mutex<Data>>>(1024);
+                        let buffer = vec![];
+                        tokio::task::spawn(async move{ 
+                            while let Ok(chunk) = streamer.next().await{
+                                let byte = chunk.as_slice();
+                                buffer.extend_from_slice(byte);
+                                let decoded_data = serde_json::from_slice::<Data>(&buffer).unwrap();
+                                data_sender.clone().send(
+                                    std::sync::Arc::new(
+                                        tokio::sync::Mutex::new(
+                                            Some(decoded_data)
+                                        )
+                                    )
+                                ).await;
                             }
                         });
-
+                        while let Some(received_data) = data_receiver.recv().await{
+                            let mut data = received_data.lock().await;
+                            *data = Default::default();
+                        }
 
                         the nature of rust codes are not asynced and multithreaded by default we must use
                         a runtime for that like tokio and run async tasks inside tokio::spawn() threadpool
