@@ -15,8 +15,7 @@ https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_T
 
 
 
-
-rust cli zoomate contains:
+rust cli zoomate features:
     - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,rpccapnp
         --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - blockchain distributed algorithms and scheduling tlps:
@@ -230,7 +229,11 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
 });
 
 
-/* the ok arm of return type is an HttpResponse object which can be parsed in any server or client */
+/* 
+    the ok arm of return type is an HttpResponse object which can be 
+    parsed in any server or client application and can be sent through
+    the tcp socket to either ckient or seerver
+*/
 pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     let hadead = HADEAD.clone();
@@ -256,11 +259,15 @@ pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     } else{
 
-        // other api logic
-        // ...
+        tokio::spawn(async move{
+
+            // other api logics
+            // ...
+        
+        });
 
         return Ok(
-            HttpResponse::Ok().json("json data")
+            HttpResponse::Ok().json("some json data")
         );
 
     }
@@ -274,10 +281,10 @@ pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 unsafe impl Send for ZoomateResponse{}
 unsafe impl Sync for ZoomateResponse{}
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug , Default)]
 pub struct ZoomateRequest; //// it can be Option<Vec<actix_web::HttpResponse>> which all the incoming actix http requests to this node that must be handled
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct ZoomateResponse{
     pub data: String,
 }
@@ -297,10 +304,18 @@ pub struct Node{ //// this contains server info
     pub init_at: i64,
     pub weights: Option<Vec<Weight>>, //// load of requests
     pub hash: String,
-    pub nodes: Vec<Node>
+    pub nodes: Vec<Node>,
+    pub req: ZoomateRequest,
+    pub res: ZoomateResponse
 }
 
 impl Node{
+
+    pub async fn get_agents<'lifetime, G: ?Sized>() -> Self 
+        where G: Send + Sync + 'lifetime + Clone + std::fmt::Debug{
+
+            Node::default()
+    }
 
     pub async fn get_node_address(&mut self){
 
@@ -319,7 +334,7 @@ impl Node{
         self.hash = hex::encode(&hash);
     }
 
-    pub async fn connect(addr: &str){
+    pub async fn connect_to_peer(addr: &str){
 
         let queue = Queue{
             vector: vec![
@@ -342,7 +357,6 @@ impl Node{
         struct Queue{
             pub vector: Vec<Queue>
         }
-
 
         let tcp_stream = tokio::net::TcpStream::connect(addr).await;
         if let Ok(mut streamer) = tcp_stream{
@@ -594,7 +608,7 @@ pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     /* T is a closure which returns G and can be shared between threads safely */
     let callback = cls();
 
-    let mut res = ZOOMATE_RESPONE_STORAGE.write().await;
+    let mut res = ZOOMATE_RESPONE_STORAGE.lock().await;
     let new_data = vec![1,2,4];
     let strigified_data = serde_json::to_string_pretty(&new_data).unwrap();
     
@@ -728,8 +742,6 @@ pub async fn start_grpc_server(cmd: &str, mut node: Node){
 }
 
 pub async fn start_tcp_listener(){
-
-    // more info in start_tcp_listener() api in gem admin access
         
     #[derive(Default, Serialize, Deserialize, Debug, Clone)]
     pub struct TcpServerData{
@@ -951,25 +963,4 @@ pub async fn race_condition_avoidance(){
 
 }
 
-
-pub mod bpf{
-
-
-    /* 
-    
-        with BPF VM we can compile the whole node 
-        into an .elf or .so which contains the 
-        BPF bytecode that can be executed from 
-        the linux kernel. LLVM13 is needed 
-        to compile BPF bytecode for Rust version
-    
-        https://blog.redsift.com/labs/writing-bpf-code-in-rust/
-        binding using .so and https://crates.io/crates/pyo3
-
-    */
-    
-    // bpf loader
-    // ... 
-    
-}
 

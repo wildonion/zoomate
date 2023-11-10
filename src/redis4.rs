@@ -248,13 +248,13 @@ pub async fn start_server<F, A>(mut api: F, redis_pubsub_msg_sender: tokio::sync
 
 pub async fn sharded_shared_state_storage(
     data: Arc<tokio::sync::Mutex<Data>>,
-    map_shards: &mut Vec<Arc<tokio::sync::Mutex<HashMap<i32, String>>>>,
+    map_shards: &mut Vec<Arc<tokio::sync::Mutex<HashMap<i32, String>>>>, /* will be mutated */
     rand_generator: Arc<tokio::sync::Mutex<ChaCha12Rng>>, 
     mutex_data_sender: mpsc::Sender<HashMap<i32, String>>,
     mut mutex_data_receiver: mpsc::Receiver<HashMap<i32, String>>,
     map_shards_sender: broadcast::Sender<Vec<Arc<tokio::sync::Mutex<HashMap<i32, String>>>>>,
     mut map_shards_receiver: broadcast::Receiver<Vec<Arc<tokio::sync::Mutex<HashMap<i32, String>>>>>,
-    current_data_length: &mut usize,
+    current_data_length: &mut usize, /* will be mutated */
 ){
 
 

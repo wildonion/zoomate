@@ -24,10 +24,16 @@ actors have:
     - pub sub channels for broadcasting messages and tasks scheduling
     - jobq like celery and the one inside the rabbitmq and zmq or tokio jobq algos
 and actix actors be like:
-they are smart objects have jobq controller like in workers.rs which have a threadpool 
-in their schema that can handle async tasks inside their own spawned free thread also 
-they can communicate with each other through message sending pattern to send signals to 
-other actors between different parts of the app also in actix multithreaded based web server:
+actors are smart data structures and a combination of async and multithreaded io to build smart 
+objects that have the ability to execute tasks in their threadpool which is a method like: 
+async fn execute(task: Box<dyn FnMut()->()>){ tokio::spawn(asynch move{task()})} and also they 
+can communicate with each other through message passing algos like mailbox and mpsc logics because
+they don't have access into each other's threads and in order to access a data outside of a thread
+we must pass the data throught the mpsc channel and receive it in another scope or thread so
+they are smart objects have jobq controller which have a threadpool in their schema that can handle 
+async tasks inside their own spawned free thread also they can communicate with each other through 
+message sending pattern to send signals to other actors between different parts of the app also in 
+actix multithreaded based web server:
 every api is an async task which gets solved inside a free thread of actix server
 thus all the params passed to that api method must be send sync and static and be 
 shreable between threads so we can move them between different parts of the app or 

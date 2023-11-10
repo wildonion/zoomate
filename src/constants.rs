@@ -111,10 +111,10 @@ use crate::*;
     is wrong and we should use the following syntaxes instead:
 */
 
-pub static ZOOMATE_RESPONE_STORAGE: Lazy<std::sync::Arc<tokio::sync::RwLock<ZoomateResponse>>> = 
+pub static ZOOMATE_RESPONE_STORAGE: Lazy<std::sync::Arc<tokio::sync::Mutex<ZoomateResponse>>> = 
 Lazy::new(||{
     std::sync::Arc::new(
-        tokio::sync::RwLock::new(
+        tokio::sync::Mutex::new(
             ZoomateResponse{
                 data: String::from("")
             }
@@ -199,12 +199,12 @@ trait TypeTrait{
 
 impl TypeTrait for MerkleNode{
     
-    type Value = std::sync::Arc<tokio::sync::RwLock<HashMap<u32, String>>>;
+    type Value = std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>;
 
     fn get_data(&self) -> Self::Value {
         
         let mutexed_data = std::sync::Arc::new(
-            tokio::sync::RwLock::new(
+            tokio::sync::Mutex::new(
                 HashMap::new()
             )
         );
@@ -214,12 +214,12 @@ impl TypeTrait for MerkleNode{
 
 impl TypeTrait for RuntimeCode{
     
-    type Value = std::sync::Arc<tokio::sync::RwLock<String>>;
+    type Value = std::sync::Arc<tokio::sync::Mutex<String>>;
     
     fn get_data(&self) -> Self::Value {
         
         let mutexed_data = std::sync::Arc::new(
-            tokio::sync::RwLock::new(
+            tokio::sync::Mutex::new(
                 String::from("")
             )
         );
