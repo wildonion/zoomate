@@ -625,9 +625,13 @@ pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
 }
 
 
-pub async fn agent_simulation(){
+pub async fn agent_simulation<N>(){
 
 	let new_rt = tokio::runtime::Builder::new_multi_thread();
+
+    type Cls<G> = Box<dyn std::future::Future<Output=G> + Send + Sync + 'static>;
+    fn execute<V>(cls: Cls<V>){} 
+    let method: fn(Cls<N>) -> () = execute;
 	
     #[derive(Clone)]
 	struct BuildQueue{
@@ -780,21 +784,28 @@ pub async fn start_tcp_listener(){
                     /* this buffer will be filled up with incoming bytes from the socket */
                     let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
 
-                    /*  
-                        streaming over a socket to fill the buffer with incoming u8 future byte objs and 
-                        then map into a struct can be done with tokio(mpsc,select,spawn,mutex,rwlock,tcp)
-                        actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event handler which 
-                        accepts streaming of events' data utf8 bytes can be like: 
+                    /*     
+                        -----------------------------------------------------------------------------
+                        see misc::store_file() and misc::convert_multipart_to_json functions which handle 
+                        incoming multipart form data asyncly by streaming over each field to gather the 
+                        field's bytes then map it into a data type.
+                        -----------------------------------------------------------------------------
+                        
+                        streaming over a realtiming source like a socket to fill the buffer with incoming u8 
+                        future byte objs chunks and then map into a struct can be done with tokio(mpsc,select,spawn,
+                        mutex,rwlock,tcp) actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event 
+                        handler which accepts streaming of events' data utf8 bytes can be like: 
 
-                        // streaming over bytes runs in a separate thread
-                        // chunk() method returns streamer.body_mut().next().await;
                         let (data_sender, mut data_receiver) 
                             = tokio::sync::mpsc::channel::<std::sync::Arc<tokio::sync::Mutex<Data>>>(1024);
                         let buffer = vec![];
+                        let mut bytes = web::BytesMut::new();
+                        let streamer_body: web::Payload;
                         tokio::task::spawn(async move{ 
-                            while let Ok(chunk) = streamer.next().await{
+                            while let Some(chunk) = streamer_body.next().await{
                                 let byte = chunk.as_slice();
                                 buffer.extend_from_slice(byte);
+                                bytes.extend_from_slice(byte);
                                 let decoded_data = serde_json::from_slice::<Data>(&buffer).unwrap();
                                 data_sender.clone().send(
                                     std::sync::Arc::new(
