@@ -92,9 +92,12 @@ use crate::*;
     a mutable pointer will mutate the actual type
 
     global state of type requires to have a complex valid lifetime like 'static and be mutable which this can't 
-    be happend since rust doesn't gc and by mutating an static lifetime type we may face deadlock and race conditions 
-    issues in other threads, instead we can define an static mutex since static types are immutable by default and 
-    because static values must be constant we must put the mutex inside Lazy, like the following:
+    be happend since rust doesn't have gc logic to track the lifetime of the type based on the references to that 
+    type instead it uses the concept of borrowing and ownership which is about destroying the type and drop its 
+    lifetime from the ram once the type goes out of the scope like by moving heap data types into a function scope
+    in essence by mutating an static lifetime type we may face deadlock and race conditions issues in other threads, 
+    instead we can define an static mutex since static types are immutable by default and because static values 
+    must be constant we must put the mutex inside Lazy, like the following:
     since we can't return none const from a static type thus we have to 
     put it inside the lazy as a closure which returns the actual type 
     because Arc and RwLock are none const types although we can implement 

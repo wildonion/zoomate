@@ -6,6 +6,7 @@ https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master/websockets
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
 https://github.com/wildonion/cs-concepts
+https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
@@ -15,9 +16,22 @@ https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_T
 
 
 
-rust cli zoomate features:
+rust cli zoomate features and ownership, borrowing rules:
+    0 - use tokio, actixwshttp, redispubsubstreamqueue, libp2p tools for streamer, listener, static lazy mutexed
+    1 - rusty ltg pointers, box pin trait and stackless, ret ref and slice from method, &mut type, codec, async io traits then coerce heap data to slice form, pass slice form in method param
+    2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool
+    3 - decode the gathered bytes into desire structure or form of data
+        let buffer: Vec<u8>;
+        let json_data = serde_json::to_value(&buffer[..]).unwrap();                    ----- convert buffer slice into json data (useful when we're sending json data to and receiving json response from a server)
+        let json_string = serde_json::to_string_pretty(&buffer[..]).unwrap();          ----- convert buffer slice into json stringify
+        let data_from_slice = serde_json::from_slice::<DataBucket>(&buffer).unwrap();  ----- convert buffer slice into structure instance
+        let data_from_str = serde_json::from_str::<DataBucket>(&json_string).unwrap(); ----- convert json stringified into structure instance
+        let data_str_from_slice = std::str::from_utf8(&buffer[..]).unwrap();           ----- convert buffer slice into &str when we can't map it into an structure (useful when we're receiving unstructured data from a source)
+    4 - share the Arc<Mutex<DataBucket>> between threads using mpsc jobq channel
+    5 - receiving data inside other threads from the mpsc receiver using while let Ok(data) = receiver.recv().next().await{} syntax
+    --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
+    --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,rpccapnp
-        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - blockchain distributed algorithms and scheduling tlps:
         > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time,asynciotraits
         > actix::actor,rpccapnp,ws,http
@@ -34,7 +48,6 @@ rust cli zoomate features:
                                         |
                                         |
                                          --- node/agent/bot
-        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - event driven architecture:
         tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
         bytes like streaming tlps over image chunks (call next on it and async read/write traits 
@@ -186,6 +199,7 @@ using following flow:
 use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
+use chacha20::cipher::typenum::Len;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -666,6 +680,7 @@ pub async fn agent_simulation<N>(){
 	    pub pipeline: Pipeline
 	}
 	impl<'j> Agent<'j>{
+
 	    async fn execute(&'static mut self, new_commit_data: &[u8]) -> Result<(), ()>{
             let jobs = self.jobs.clone();
             /* 
@@ -712,8 +727,8 @@ pub async fn agent_simulation<N>(){
 				    };
 				
 				    /* 
-					iterating through the msg future object streams as they're 
-					coming to the stream channel, we select the some ones
+                        iterating through the msg future object streams as they're 
+                        coming to the stream channel, we select the some ones
 				    */
 				    while let Some(message) = get_stream_messages.next().await{ 
 	
@@ -925,8 +940,8 @@ pub async fn race_condition_avoidance(){
         pub actual: D
     }
     let mut data_instance = Data::<ArcedMutexed>{
-        actual: std::sync::Arc::new(tokio::sync::
-            Mutex::new(
+        actual: std::sync::Arc::new(
+            tokio::sync::Mutex::new(
                 String::from("a mutexed data")
             )
         ),
