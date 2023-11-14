@@ -22,11 +22,15 @@ rust cli zoomate features and ownership, borrowing rules:
     2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool
     3 - decode the gathered bytes into desire structure or form of data
         let buffer: Vec<u8>;
-        let json_data = serde_json::to_value(&buffer[..]).unwrap();                    ----- convert buffer slice into json data (useful when we're sending json data to and receiving json response from a server)
+        let json_data = serde_json::to_value(&buffer[..]).unwrap();                    ----- convert buffer slice into json data (useful when want to send and parse response as json value instead of mapping into structure)
         let json_string = serde_json::to_string_pretty(&buffer[..]).unwrap();          ----- convert buffer slice into json stringify
         let data_from_slice = serde_json::from_slice::<DataBucket>(&buffer).unwrap();  ----- convert buffer slice into structure instance
         let data_from_str = serde_json::from_str::<DataBucket>(&json_string).unwrap(); ----- convert json stringified into structure instance
         let data_str_from_slice = std::str::from_utf8(&buffer[..]).unwrap();           ----- convert buffer slice into &str when we can't map it into an structure (useful when we're receiving unstructured data from a source)
+        let name = "wildonion";
+        let hex_name = hex::encode(name.as_bytes());
+        let decode_hex_name = hex::decode(hex_name).unwrap();
+        let real_name = std::str::from_utf8(&decode_hex_name).unwrap();
     4 - share the Arc<Mutex<DataBucket>> between threads using mpsc jobq channel
     5 - receiving data inside other threads from the mpsc receiver using while let Ok(data) = receiver.recv().next().await{} syntax
     --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
