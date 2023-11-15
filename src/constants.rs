@@ -199,6 +199,7 @@ trait TypeTrait{
     type Value;
 
     fn get_data(&self) -> Self::Value;
+    fn get_ctx_data(&self, ctx: Self::Value) -> Self;
 }
 
 impl TypeTrait for MerkleNode{
@@ -214,6 +215,26 @@ impl TypeTrait for MerkleNode{
         );
         mutexed_data
     }
+
+    fn get_ctx_data(&self, ctx: Self::Value) -> Self {
+        todo!()
+    }
+}
+
+struct Streamer;
+struct Context<T>{data: T}
+impl TypeTrait for Streamer{
+    
+    type Value = Context<Self>; /* Context data is of type Streamer */
+
+    fn get_ctx_data(&self, ctx: Self::Value) -> Self {
+        ctx.data
+    }
+
+    fn get_data(&self) -> Self::Value {
+        todo!()
+    }
+
 }
 
 impl TypeTrait for RuntimeCode{
@@ -229,5 +250,9 @@ impl TypeTrait for RuntimeCode{
         );
         mutexed_data
 
+    }
+
+    fn get_ctx_data(&self, ctx: Self::Value) -> Self {
+        todo!()
     }
 }

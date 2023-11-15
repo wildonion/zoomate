@@ -2,6 +2,7 @@
 
 /*
 
+https://crates.io/crates/actix-protobuf
 https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master/websockets
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
@@ -35,18 +36,18 @@ rust cli zoomate features and ownership, borrowing rules:
     5 - receiving data inside other threads from the mpsc receiver using while let Ok(data) = receiver.recv().next().await{} syntax
     --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
-    - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,rpccapnp
+    - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,(g)rpccapnp
     - blockchain distributed algorithms and scheduling tlps:
         > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time,asynciotraits
-        > actix::actor,rpccapnp,ws,http
-        > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,rpccapnp
+        > actix::actor,(g)rpccapnp,ws,http
+        > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,(g)rpccapnp
         > redis::pubsub,streams,queue
         > note that agent is an async and multithreaded based clinet&&server
         > note that kademlia will be used to find nodes on the whole network
         node/agent/bot
                 |
                 |
-                 ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/rpc-capnp/actix-https
+                 ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/(g)rpccapnp/actix-https
                         libp2p quic,gossipsub,kademlia,noise/redis pubsub strams
                         noise,tokio-rustl,wallexerr,web3
                                         |
@@ -110,7 +111,7 @@ rust cli zoomate features and ownership, borrowing rules:
 
 1) a realtime and pluging based node monitoring and packet sniffing tools which
 can heal itself using a DL based algo on top of transformers and VAE techniques
-using tokio/redis/actix/zmq/rpc/libp2p to manage the load of each instance 
+using tokio/redis/actix/zmq/(g)rpccapnp/libp2p to manage the load of each instance 
 in realtime, in our proxy, zmq subscribers are server app node instances 
 that must be balanced by subscribing on the incoming topic from the balancer 
 publishers, like spread requests between node server instances using different 
@@ -146,7 +147,7 @@ using following flow:
 
 	>>>> look start_tcp_listener() method <<<<
 	streaming over incoming encoded io future object of utf8 bytes 
- 	using actix actor ws/rpc/tcp/http and tokio(tcp,spawn,jobq mpsc,select,time,mutex,rwlock)
+ 	using actix actor ws/(g)rpccapnp/tcp/http and tokio(tcp,spawn,jobq mpsc,select,time,mutex,rwlock)
 	to decode them into structs to mutate them concurrently by moving
 	them between tokio threads using jobq channels and mutex 
 			    or 
@@ -161,12 +162,12 @@ using following flow:
 	to_string vs from utf8
 
 4)‌ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
-   • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, rpc capnp, zmq, libp2p stacks, ws, tcp and udp
+   • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, (g)rpccapnp, zmq, libp2p stacks, ws, tcp and udp
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
    • gateway and proxy using hyper: https://github.com/hyperium/hyper/tree/master/examples
-   • rpc capnp to communicate between each balancer, cause with rpc we can call actor methods directly from client and other servers without having apis on top of http protocols
+   • (g)rpccapnp to communicate between each balancer, cause with rpc we can call actor methods directly from client and other servers without having apis on top of http protocols
    • decompress encoded packet using borsh and serde 
    • cpu task scheduling, 
    • vod streaming
@@ -758,6 +759,13 @@ pub async fn agent_simulation<N>(){
 
 
 pub async fn start_grpc_server(cmd: &str, mut node: Node){
+    
+    if cmd == "getNodeAddress"{
+        node.get_node_address().await
+    }
+}
+
+pub async fn start_rpccapnp_server(cmd: &str, mut node: Node){
     
     if cmd == "getNodeAddress"{
         node.get_node_address().await
