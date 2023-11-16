@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use std::sync::Arc;
 use once_cell::sync::Lazy;
 use rand::{Rng, SeedableRng, RngCore};
@@ -76,29 +77,6 @@ async fn main()
         we're implementing the Error trait for the error type in return type   
     */
     -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
-    
-
-    /* ------------------------------ */
-    /*      start grpc server         */
-    /* ------------------------------ */
-    let cli = ServerCli::parse();
-    let addr = format!("{}:{}", cli.server, cli.port).parse()?;
-    let node = EchoServer::default();
-    info!("gRPC Server listening on {}", addr);
-
-    // node webhook signature
-    let node_instance = Node::default();
-    let (pubkey, prvkey) = node_instance.generate_ed25519_webhook_keypair();
-    println!("ed25519 pubkey: {}", pubkey);
-    println!("ed25519 prvkey: {}", prvkey);
-    
-    Server::builder()
-        .add_service(EchoServiceServer::new(node))
-        .serve(addr)
-        .await
-        .unwrap();
-    
-
 
     dotenv().expect("⚠️ .env file not found");
     let io_buffer_size = env::var("IO_BUFFER_SIZE").expect("⚠️ no io buffer size variable set").parse::<u32>().unwrap() as usize; //// usize is the minimum size in os which is 32 bits
@@ -156,6 +134,27 @@ async fn main()
 
     });
 
+
+    /* ------------------------------ */
+    /*      start grpc server         */
+    /* ------------------------------ */
+    // cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
+    let cli = ServerCli::parse();
+    let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
+    let node = EchoServer::default();
+    info!("gRPC Server listening on {}", addr);
+
+    // node webhook signature
+    let node_instance = Node::default();
+    let (pubkey, prvkey) = node_instance.generate_ed25519_webhook_keypair();
+    println!("ed25519 pubkey: {}", pubkey);
+    println!("ed25519 prvkey: {}", prvkey);
+    
+    Server::builder()
+        .add_service(EchoServiceServer::new(node))
+        .serve(addr)
+        .await
+        .unwrap();
 
     
 

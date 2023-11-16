@@ -9,7 +9,7 @@ use crate::{*, api::echo_service_server::EchoService};
 pub struct EchoServer{}
 
 
-/* 
+/* ---------------------------------------------------------------------------------------
     node.proto is an actor which contains message structs and service handlers
     EchoService contains a method called echo which can be used to handle incoming 
     requests and send back the response, we're implementing its trait for the EchoServer 
@@ -18,6 +18,10 @@ pub struct EchoServer{}
 #[tonic::async_trait]
 impl EchoService for EchoServer{
 
+    /* --------------------------------------------------------------
+        echo is a method of the EchoService actor that can be called
+        directly by the gRPC client
+    */
     async fn echo(&self, request: TonicRequest<EchoRequest>) -> Result<TonicResponse<EchoResponse>, Status> {
 
         info!("Got a request {:?}", request);

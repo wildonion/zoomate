@@ -5,6 +5,6 @@
   "secp256k1_mnemonic": null,
   "secp256r1_secret_key": null,
   "secp256r1_public_key": null,
-  "ed25519_secret_key": "GD8M1Qm17WXoukx8QqqfvX1jUVHvMqFJHG4hSUU7SKoWh3HQyAmHPiuvBMRzp73PE18RP3oEMMqXY73v1xrneJJse4z1G3pwCxxecgAmYk7uTTenkGJr",
-  "ed25519_public_key": "952bYpGpdp7Z6WuNN98ved5StHLgPJ9kjGC5eKacK8fQ"
+  "ed25519_secret_key": "GD8M1Qm17WXoukx8QqqfvYUF2MXkqkwtFj51dNEy2mig6ZbMgd5vsvWrCPWfekAMWpAyg8nW1HFzaXauNZQ2X2CruCAgopLLatFvTcmzLfHkBCU26ivR",
+  "ed25519_public_key": "BmYLnFBRfRsJD5juYxRQfYGdbGUo1hnk4zNN7AZSHJ3o"
 }
