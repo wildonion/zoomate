@@ -1,6 +1,5 @@
 use std::sync::Arc;
 use once_cell::sync::Lazy;
-use zoomate::api;
 use rand::{Rng, SeedableRng, RngCore};
 use rand_chacha::{rand_core, ChaCha12Rng};
 use tokio::io::{AsyncWriteExt, AsyncReadExt};
@@ -14,9 +13,18 @@ use log::{error, info};
 use dotenv::dotenv;
 use std::env;
 use sha2::{Sha256, Digest};
+use tonic::{transport::Server, Request as TonicRequest, Response as TonicResponse, Status};
+use crate::api::echo_service_server::EchoServiceServer;
+use crate::grpc::server::EchoServer;
+use crate::redis4::*;
+use api::{EchoRequest, EchoResponse, echo_service_client, echo_service_server};
+use ::clap::{Parser};
+use zoomate::api;
+
 
 mod redis4;
-use crate::redis4::*;
+
+mod grpc;
 
 mod raptor;
 use crate::raptor::*;
@@ -25,6 +33,26 @@ mod bpf;
 use crate::bpf::*;
 
 
+
+/* ---------------------------------------------------------
+    loading the compiled proto file into rust code in here 
+    contains traits and data structures to use them in here 
+    to create rpc server and client
+*/
+pub mod api{
+    tonic::include_proto!("api");
+}
+
+
+#[derive(Parser)]
+#[command(author, version)]
+#[command(about = "zoomate grpc server", long_about = None)]
+struct ServerCli {
+    #[arg(short = 's', long = "server", default_value = "127.0.0.1")]
+    server: String,
+    #[arg(short = 'p', long = "port", default_value = "50052")]
+    port: u16,
+}
 
 
 /*  
@@ -48,6 +76,29 @@ async fn main()
         we're implementing the Error trait for the error type in return type   
     */
     -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
+    
+
+    /* ------------------------------ */
+    /*      start grpc server         */
+    /* ------------------------------ */
+    let cli = ServerCli::parse();
+    let addr = format!("{}:{}", cli.server, cli.port).parse()?;
+    let node = EchoServer::default();
+    info!("gRPC Server listening on {}", addr);
+
+    // node webhook signature
+    let node_instance = Node::default();
+    let (pubkey, prvkey) = node_instance.generate_ed25519_webhook_keypair();
+    println!("ed25519 pubkey: {}", pubkey);
+    println!("ed25519 prvkey: {}", prvkey);
+    
+    Server::builder()
+        .add_service(EchoServiceServer::new(node))
+        .serve(addr)
+        .await
+        .unwrap();
+    
+
 
     dotenv().expect("⚠️ .env file not found");
     let io_buffer_size = env::var("IO_BUFFER_SIZE").expect("⚠️ no io buffer size variable set").parse::<u32>().unwrap() as usize; //// usize is the minimum size in os which is 32 bits
@@ -106,11 +157,7 @@ async fn main()
     });
 
 
-    // node webhook signature
-    let node = Node::default();
-    let (pubkey, prvkey) = node.generate_ed25519_webhook_keypair();
-    println!("ed25519 pubkey: {}", pubkey);
-    println!("ed25519 pubkey: {}", prvkey);
+    
 
     Ok(())
 

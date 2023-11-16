@@ -2,7 +2,14 @@
 
 /*
 
-https://crates.io/crates/actix-protobuf
+-----------------------------------------------------------------
+JSON, Multipart, Protobuf, Payload based http, tcp and rpc server
+-----------------------------------------------------------------
+
+https://crates.io/crates/capnp-rpc
+https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
+https://github.com/actix/examples/tree/master
+https://github.com/actix/examples/tree/master/protobuf
 https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master/websockets
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
@@ -39,7 +46,7 @@ rust cli zoomate features and ownership, borrowing rules:
     - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,(g)rpccapnp
     - blockchain distributed algorithms and scheduling tlps:
         > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time,asynciotraits
-        > actix::actor,(g)rpccapnp,ws,http
+        > actix::actor,(g)rpccapnp,ws,http,Multipart,Payload,serde Json,Protobuf extractor
         > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,(g)rpccapnp
         > redis::pubsub,streams,queue
         > note that agent is an async and multithreaded based clinet&&server
@@ -130,7 +137,7 @@ if they're unique or not also a packet loss correction engine like raptorq forwa
 error correction system to reconstruct the packets using VAE and transformers in video 
 and audio streaming (raptor.rs)
 
-3) codec like serde, borsh and capnp also send notif (publish backonline topic) 
+3) codec like serde, borsh, protobuf and capnp also send notif (publish backonline topic) 
 to other pods if another one gets back online or finding online pods 
 using following flow:
     - actix ws actor event and stream handler/loop using tokio spawn, 
@@ -166,8 +173,12 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
-   • gateway and proxy using hyper: https://github.com/hyperium/hyper/tree/master/examples
-   • (g)rpccapnp to communicate between each balancer, cause with rpc we can call actor methods directly from client and other servers without having apis on top of http protocols
+   • gateway and proxy using actix
+   • (g)rpccapnp to communicate between each balancer:
+        protobuf is an IDL based and serding data structure that can be used between services to send and receive packets
+        based on the same structure which has been defined in proto file, each structure is an actor object which allows 
+        services to call each structure's method directly without having any extra api and packet handlers through the 
+        rpc protocol, they can be used to handle message streaming in realtime and bi directional manner
    • decompress encoded packet using borsh and serde 
    • cpu task scheduling, 
    • vod streaming
@@ -293,6 +304,7 @@ pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
 
 }
 
+
 /* 
     Send and Sync can only be implement for a type that is inside the current crate 
     thus can't be implemented for actix_web::HttpResponse
@@ -314,6 +326,10 @@ pub struct Weight{
     pub requests: ZoomateRequest,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+pub struct Streamer<'s>{
+    pub body: &'s [u8]
+}
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Node{ //// this contains server info 
@@ -528,7 +544,7 @@ impl Node{
 /* 
     realtime networking and event driven coding using redispubsub, tokio stuffs 
     and actix web/ws stream/event handler like aggregate streaming of resp.boy 
-    bytes into buffer then decode into struct
+    bytes into a buffer then decode the fulfilled into struct
 */
 #[derive(Message)]
 #[rtype(result = "()")]
@@ -644,13 +660,20 @@ pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
 }
 
 
-pub async fn agent_simulation<N>(){
+pub async fn agent_simulation<N>() where N: Send + Sync + 'static + Clone{
 
 	let new_rt = tokio::runtime::Builder::new_multi_thread();
 
     type Cls<G> = Box<dyn std::future::Future<Output=G> + Send + Sync + 'static>;
-    fn execute<V>(cls: Cls<V>){} 
+    fn execute<V>(cls: Cls<V>) where V: Send + Sync + 'static + Clone{} 
     let method: fn(Cls<N>) -> () = execute;
+    fn executeMe<N>(func: fn(Cls<N>) -> ()) -> Result<(), ()> 
+    {
+        
+        Ok(())
+    }
+    executeMe(method);
+    
 	
     #[derive(Clone)]
 	struct BuildQueue{
@@ -757,21 +780,6 @@ pub async fn agent_simulation<N>(){
 
 }
 
-
-pub async fn start_grpc_server(cmd: &str, mut node: Node){
-    
-    if cmd == "getNodeAddress"{
-        node.get_node_address().await
-    }
-}
-
-pub async fn start_rpccapnp_server(cmd: &str, mut node: Node){
-    
-    if cmd == "getNodeAddress"{
-        node.get_node_address().await
-    }
-}
-
 pub async fn start_tcp_listener(){
         
     #[derive(Default, Serialize, Deserialize, Debug, Clone)]
@@ -869,30 +877,30 @@ pub async fn start_tcp_listener(){
                         Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
                         Ok(rcvd_bytes) => {
                 
-                        let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-                        println!("📺 received event data from peer: {}", string_event_data);
+                            let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
+                            println!("📺 received event data from peer: {}", string_event_data);
 
-                        /*  
-                            sending the decoded bytes into the mpsc channel so we could receive it  
-                            in other scopes or threads
-                        */
-                        if let Err(why) = job_sender.send(string_event_data.to_string()).await{
-                            eprintln!("❌ failed to send to the mpsc channel; {}", why);
-                        }
-                
-                        let send_tcp_server_data = tcp_server_data.data.clone();
-                        if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-                            eprintln!("❌ failed to write to api_streamer; {}", why);
-                            return;
-                        } else{
-                            println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
-                            return;
-                        }
+                            /*  
+                                sending the decoded bytes into the mpsc channel so we could receive it  
+                                in other scopes or threads
+                            */
+                            if let Err(why) = job_sender.send(string_event_data.to_string()).await{
+                                eprintln!("❌ failed to send to the mpsc channel; {}", why);
+                            }
+                    
+                            let send_tcp_server_data = tcp_server_data.data.clone();
+                            if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
+                                eprintln!("❌ failed to write to api_streamer; {}", why);
+                                return;
+                            } else{
+                                println!("🗃️ sent {}, wrote {} bytes to api_streamer", tcp_server_data.data.clone(), send_tcp_server_data.len());
+                                return;
+                            }
                         
                         },
                         Err(e) => {
-                        eprintln!("❌ failed to read from api_streamer; {:?}", e);
-                        return;
+                            eprintln!("❌ failed to read from api_streamer; {:?}", e);
+                            return;
                         }
                         
                     }{}
@@ -917,11 +925,9 @@ pub async fn start_tcp_listener(){
 
             while let Some(job) = job_receiver.recv().await{
 
-
                 if let Err(why) = funwrapped.write(job.as_bytes()).await{
                     println!("can't write to file cause: {}", why.to_string());
                 }
-
             
             }
             

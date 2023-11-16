@@ -18,6 +18,8 @@ sudo make install
 brew install libthemis
 ```
 
+compile `.proto` files in `proto` folder using ```cargo build``` command.
+
 ## ✨ Features
 
 * **Cap'n Proto** as the serialization protocol

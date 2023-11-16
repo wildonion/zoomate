@@ -14,6 +14,7 @@ redis-async = "0.16.1"
 actix-redis = "0.12.0"
 actix = "0.13.0"
 actix-cors = "0.6.4"
+actix-protobuf = "0.10.0"
 actix-web = { version = "4", features = ["openssl"] }
 actix-web-actors = "4.2.0"
 futures = "0.3"
@@ -36,6 +37,11 @@ hex = "0.4"
 is_type = "0.2.1"
 wasmer = "4.1.1"
 wasmer-wasi = "3.1.1"
+tonic = "0.10.2"
+clap = { version = "4.4.8", features = ["derive"] }
+prost = "0.12"
+# Only necessary if using Protobuf well-known types:
+prost-types = "0.12"
 
 # ------------------
 #    crypto libs
@@ -72,3 +78,6 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 overflow-checks = true # panic on any overflow
+
+[build-dependencies]
+tonic-build = "0.10.2"
