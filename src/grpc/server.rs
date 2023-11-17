@@ -1,32 +1,36 @@
 
 
 
-use crate::{*, api::echo_service_server::EchoService};
+use crate::{*, node::node_service_server::NodeService};
 
 
 /* this is our server */
 #[derive(Clone, Debug, Default)]
-pub struct EchoServer{}
+pub struct NodeServer{}
 
 
-/* ---------------------------------------------------------------------------------------
-    node.proto is an actor which contains message structs and service handlers
-    EchoService contains a method called echo which can be used to handle incoming 
-    requests and send back the response, we're implementing its trait for the EchoServer 
-    in here so we can handle the requests and send tonic response back to the caller
+/* -----------------------------------------------------------------------------------------
+    every actor like actix actors must have some message structs to send pre defined message
+    to other actors or send message from different parts of the app to the actor also it must
+    contains a handler to handle the incoming messages or streams and respond the caller with
+    appropriate message, node.proto is an actor which contains message structs and service 
+    handlers NodeService handler contains a method called echo which can be used to handle 
+    incoming requests and send a response back to the caller, we're implementing the NodeService 
+    handlder trait for the NodeServer struct in here which allows us to handle and accept the 
+    requests and send tonic response directly back to the caller of the echo method
 */
 #[tonic::async_trait]
-impl EchoService for EchoServer{
+impl NodeService for NodeServer{
 
     /* --------------------------------------------------------------
-        echo is a method of the EchoService actor that can be called
+        echo is a method of the NodeService actor that can be called
         directly by the gRPC client
     */
-    async fn echo(&self, request: TonicRequest<EchoRequest>) -> Result<TonicResponse<EchoResponse>, Status> {
+    async fn echo(&self, request: TonicRequest<NodeRequest>) -> Result<TonicResponse<NodeResponse>, Status> {
 
         info!("Got a request {:?}", request);
 
-        let resp = EchoResponse{
+        let resp = NodeResponse{
             message: format!("{}", request.into_inner().message),
         };
 

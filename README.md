@@ -18,7 +18,14 @@ sudo make install
 brew install libthemis
 ```
 
-compile `.proto` files in `proto` folder using ```cargo build``` command.
+compile `build.rs` codes which contains the `.proto` files in `proto` folder using ```cargo build``` command to generate the rust codes.
+
+## 🥙 Usage
+
+```bash
+# run gRPC server
+cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
+```
 
 ## ✨ Features
 

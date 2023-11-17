@@ -15,10 +15,9 @@ use dotenv::dotenv;
 use std::env;
 use sha2::{Sha256, Digest};
 use tonic::{transport::Server, Request as TonicRequest, Response as TonicResponse, Status};
-use crate::api::echo_service_server::EchoServiceServer;
-use crate::grpc::server::EchoServer;
+use crate::grpc::server::NodeServer;
 use crate::redis4::*;
-use api::{EchoRequest, EchoResponse, echo_service_client, echo_service_server};
+use node::{NodeRequest, NodeResponse, node_service_client::NodeServiceClient, node_service_server::NodeServiceServer};
 use ::clap::{Parser};
 use zoomate::api;
 
@@ -26,6 +25,7 @@ use zoomate::api;
 mod redis4;
 
 mod grpc;
+mod capnp;
 
 mod raptor;
 use crate::raptor::*;
@@ -40,8 +40,8 @@ use crate::bpf::*;
     contains traits and data structures to use them in here 
     to create rpc server and client
 */
-pub mod api{
-    tonic::include_proto!("api");
+pub mod node{
+    tonic::include_proto!("node");
 }
 
 
@@ -138,10 +138,9 @@ async fn main()
     /* ------------------------------ */
     /*      start grpc server         */
     /* ------------------------------ */
-    // cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
     let cli = ServerCli::parse();
     let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
-    let node = EchoServer::default();
+    let node = NodeServer::default();
     info!("gRPC Server listening on {}", addr);
 
     // node webhook signature
@@ -151,7 +150,8 @@ async fn main()
     println!("ed25519 prvkey: {}", prvkey);
     
     Server::builder()
-        .add_service(EchoServiceServer::new(node))
+        /* creating a new server service actor from the EchoServer structure which is our rpc server */
+        .add_service(NodeServiceServer::new(node))
         .serve(addr)
         .await
         .unwrap();

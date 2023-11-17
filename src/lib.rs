@@ -7,10 +7,8 @@ JSON, Multipart, Protobuf, Payload based http, tcp and rpc server
 -----------------------------------------------------------------
 
 https://crates.io/crates/capnp-rpc
-https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master
 https://github.com/actix/examples/tree/master/protobuf
-https://blog.ediri.io/creating-a-microservice-in-rust-using-grpc
 https://github.com/actix/examples/tree/master/websockets
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
 https://github.com/wildonion/cs-concepts
@@ -25,41 +23,54 @@ https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_T
 
 
 rust cli zoomate features and ownership, borrowing rules:
-    0 - use tokio, actixwshttp, redispubsubstreamqueue, libp2p tools for streamer, listener, static lazy mutexed
-    1 - rusty ltg pointers, box pin trait and stackless, ret ref and slice from method, &mut type, codec, async io traits then coerce heap data to slice form, pass slice form in method param
-    2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool
-    3 - decode the gathered bytes into desire structure or form of data
-        let buffer: Vec<u8>;
-        let json_data = serde_json::to_value(&buffer[..]).unwrap();                    ----- convert buffer slice into json data (useful when want to send and parse response as json value instead of mapping into structure)
-        let json_string = serde_json::to_string_pretty(&buffer[..]).unwrap();          ----- convert buffer slice into json stringify
-        let data_from_slice = serde_json::from_slice::<DataBucket>(&buffer).unwrap();  ----- convert buffer slice into structure instance
-        let data_from_str = serde_json::from_str::<DataBucket>(&json_string).unwrap(); ----- convert json stringified into structure instance
-        let data_str_from_slice = std::str::from_utf8(&buffer[..]).unwrap();           ----- convert buffer slice into &str when we can't map it into an structure (useful when we're receiving unstructured data from a source)
-        let name = "wildonion";
-        let hex_name = hex::encode(name.as_bytes());
-        let decode_hex_name = hex::decode(hex_name).unwrap();
-        let real_name = std::str::from_utf8(&decode_hex_name).unwrap();
-    4 - share the Arc<Mutex<DataBucket>> between threads using mpsc jobq channel
-    5 - receiving data inside other threads from the mpsc receiver using while let Ok(data) = receiver.recv().next().await{} syntax
-    --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
-    --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
-    - multithreaded and async node, agent and balancer engines using libp2p,tcp,quic,actorws,(g)rpccapnp
-    - blockchain distributed algorithms and scheduling tlps:
-        > wallexerr,tokio::tcp,udp,mutex,rwlock,mpsc,spawn,select,time,asynciotraits
-        > actix::actor,(g)rpccapnp,ws,http,Multipart,Payload,serde Json,Protobuf extractor
-        > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc,(g)rpccapnp
-        > redis::pubsub,streams,queue
-        > note that agent is an async and multithreaded based clinet&&server
-        > note that kademlia will be used to find nodes on the whole network
-        node/agent/bot
-                |
-                |
-                 ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/(g)rpccapnp/actix-https
-                        libp2p quic,gossipsub,kademlia,noise/redis pubsub strams
-                        noise,tokio-rustl,wallexerr,web3
-                                        |
-                                        |
-                                         --- node/agent/bot
+    - multithreaded and async node, agent and balancer engines with blockchain distributed algorithms and scheduling tlps using:
+        > actor based coding for async message sending and realtime stream message handlers and listeners using
+            > --------------------------------------------------------------------------------------------
+            | with actors we can communicate between different parts of the app by sending async 
+            | messages to each other through jobq channels, they also must have a handler for each 
+            | type of incoming messages like redis streams and pubsub patterns with ws actors and 
+            | tokio concepts (jobq channels, spawn, select, time interval) by streaming over io 
+            | future object of bytes to register a push notif also protobuf is an IDL based and 
+            | serding data structure that can be used between services to send and receive packets
+            | based on the same structure which has been defined in proto file, each structure is an
+            | actor object which allows services to call each structure's method directly through the rpc 
+            | protocol without having any extra api and packet handlers , they can be used to handle 
+            | message streaming in realtime and bi directional manner
+             --------------------------------------------------------------------------------------------
+            > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits
+            > actix::http,actor,ws,multipart,payload,Protobuf extractor
+            > rpc::protobuf,capnp
+            > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
+            > redis::pubsub,streams,queue
+            > then:
+                1 - static lazy mutexed, rusty ltg pointers, box pin trait and stackless, ret ref and slice from method, &mut type, codec, async io traits then coerce heap data to slice form, pass slice form in method param
+                2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool
+                3 - decode the gathered bytes into desire structure or form of data (protobuf, bson, serdecodec, multipart, payload)
+                    let buffer: Vec<u8>;
+                    let json_data = serde_json::to_value(&buffer[..]).unwrap();                    ----- convert buffer slice into json data (useful when want to send and parse response as json value instead of mapping into structure)
+                    let json_string = serde_json::to_string_pretty(&buffer[..]).unwrap();          ----- convert buffer slice into json stringify
+                    let data_from_slice = serde_json::from_slice::<DataBucket>(&buffer).unwrap();  ----- convert buffer slice into structure instance
+                    let data_from_str = serde_json::from_str::<DataBucket>(&json_string).unwrap(); ----- convert json stringified into structure instance
+                    let data_str_from_slice = std::str::from_utf8(&buffer[..]).unwrap();           ----- convert buffer slice into &str when we can't map it into an structure (useful when we're receiving unstructured data from a source)
+                    let name = "wildonion";
+                    let hex_name = hex::encode(name.as_bytes());
+                    let decode_hex_name = hex::decode(hex_name).unwrap();
+                    let real_name = std::str::from_utf8(&decode_hex_name).unwrap();
+                4 - share the Arc<Mutex<DataBucket>> between threads using mpsc jobq channel
+                5 - receiving data inside other threads from the mpsc receiver using while let Ok(data) = receiver.recv().next().await{} syntax
+        > node/agent/bot (
+                > note that agent is an async and multithreaded based clinet&&server
+                > note that kademlia will be used to find nodes on the whole network
+            )
+            |
+            |
+             ---actix-wss/tokio mutex,select,jobq,spawn,tcp,udp)/(g)rpccapnp/actix-https
+                libp2p quic,gossipsub,kademlia,noise/redis pubsub strams
+                noise,tokio-rustl,wallexerr,web3
+                                |
+                                |
+                                 --- node/agent/bot
+        --=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--=--
     - event driven architecture:
         tcp and websocket webhook/stream/event handler for realtiming push notif to get the inomcing 
         bytes like streaming tlps over image chunks (call next on it and async read/write traits 
@@ -174,11 +185,7 @@ using following flow:
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
    • gateway and proxy using actix
-   • (g)rpccapnp to communicate between each balancer:
-        protobuf is an IDL based and serding data structure that can be used between services to send and receive packets
-        based on the same structure which has been defined in proto file, each structure is an actor object which allows 
-        services to call each structure's method directly without having any extra api and packet handlers through the 
-        rpc protocol, they can be used to handle message streaming in realtime and bi directional manner
+   • (g)rpccapnp to communicate between each balancer
    • decompress encoded packet using borsh and serde 
    • cpu task scheduling, 
    • vod streaming

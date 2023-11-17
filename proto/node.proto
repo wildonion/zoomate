@@ -1,14 +1,14 @@
 syntax = "proto3";
-package api;
+package node;
 
-message EchoRequest {
+message NodeRequest {
   string message = 1;
 }
 
-message EchoResponse {
+message NodeResponse {
   string message = 1;
 }
 
-service EchoService {
-  rpc Echo(EchoRequest) returns (EchoResponse);
+service NodeService {
+  rpc Echo(NodeRequest) returns (NodeResponse);
 }
