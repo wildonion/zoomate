@@ -120,13 +120,6 @@ rust cli zoomate features and ownership, borrowing rules:
             });
 
 
-
-0) VPS configuration according to the source usage of each node 
-    • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
-    • OS and a security management app(malware detection) using RL
-    • our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
-    • our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm
-
 1) a realtime and pluging based node monitoring and packet sniffing tools which
 can heal itself using a DL based algo on top of transformers and VAE techniques
 using tokio/redis/actix/zmq/(g)rpccapnp/libp2p to manage the load of each instance 
@@ -216,6 +209,11 @@ using following flow:
 	    • udp and quic for packet sending   
 	    • argo routing to send packets to cloudflare gateways
 	    • ed25519 digital signature pubkey with chacha20 in noise protocol for making vpn
+   • VPS configuration according to the source usage of each node 
+    ➙ like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
+    ➙ OS and a security management app(malware detection) using RL
+    ➙ our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
+    ➙ our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm
 */
 
 
@@ -1028,4 +1026,30 @@ pub async fn race_condition_avoidance(){
 
 }
 
+pub mod network{
 
+    pub mod rpc{
+        
+    }
+
+    pub mod tcp{
+
+    }
+
+    pub mod udp{
+
+    }
+
+    pub mod http{
+
+    }
+
+    pub mod ws{
+        
+    }
+
+    pub mod libp2p{
+        
+    }
+
+}
