@@ -17,7 +17,9 @@ pub struct NodeServer{}
     handlers NodeService handler contains a method called echo which can be used to handle 
     incoming requests and send a response back to the caller, we're implementing the NodeService 
     handlder trait for the NodeServer struct in here which allows us to handle and accept the 
-    requests and send tonic response directly back to the caller of the echo method
+    requests and send tonic response directly back to the caller of the echo method, for every
+    service handler in proto file we have to implement the trait in here for the server struct
+    so client can call the methods directly.
 */
 #[tonic::async_trait]
 impl NodeService for NodeServer{

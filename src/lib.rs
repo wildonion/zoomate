@@ -2,15 +2,15 @@
 
 /*
 
------------------------------------------------------------------
-JSON, Multipart, Protobuf, Payload based http, tcp and rpc server
------------------------------------------------------------------
+---------------------------------------------------------------------
+JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
+---------------------------------------------------------------------
 
+https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
 https://crates.io/crates/capnp-rpc
 https://github.com/actix/examples/tree/master
 https://github.com/actix/examples/tree/master/protobuf
-https://github.com/actix/examples/tree/master/websockets
-https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs
+https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs => run session actor in a separate tokio::spawn thread using tcp server and custom codec
 https://github.com/wildonion/cs-concepts
 https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://connectivity.libp2p.io/
@@ -38,10 +38,10 @@ rust cli zoomate features and ownership, borrowing rules:
             | message streaming in realtime and bi directional manner
              --------------------------------------------------------------------------------------------
             > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits
-            > actix::http,actor,ws,multipart,payload,Protobuf extractor
-            > rpc::protobuf,capnp
+            > actix::brokerpubsub,http,actor,ws,multipart,payload,Protobuf extractor
             > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
             > redis::pubsub,streams,queue
+            > rpc::protobuf,capnp
             > then:
                 1 - static lazy mutexed, rusty ltg pointers, box pin trait and stackless, ret ref and slice from method, &mut type, codec, async io traits then coerce heap data to slice form, pass slice form in method param
                 2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool

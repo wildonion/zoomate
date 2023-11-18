@@ -256,3 +256,22 @@ impl TypeTrait for RuntimeCode{
         todo!()
     }
 }
+
+trait NodeReceptor{
+    type InnerReceptor;
+}
+trait Activation<C>{
+    type Acivator;
+}
+struct Synapse<A>{id: A}
+struct Neuron<A=u8>{data: Synapse<A>}
+
+impl<A> NodeReceptor for Neuron<Synapse<A>>
+where Self: Clone + Send + Sync + 'static + Activation<String>, 
+<Self as Activation<String>>::Acivator: Default{
+    type InnerReceptor = Synapse<A>;
+}
+fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: impl NodeReceptor)
+where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized, 
+T: NodeReceptor, T::InnerReceptor: Send + Clone,
+<N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{}
