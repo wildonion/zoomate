@@ -370,7 +370,7 @@ impl Node{
     pub async fn hash_node(&mut self){
 
         let stringified_obj = serde_json::to_string_pretty(&self).unwrap();
-        let hash = Wallet::generate_sha256_from(&stringified_obj);
+        let hash = Wallet::generate_keccak256_hash_from(&stringified_obj);
         self.hash = hex::encode(&hash);
     }
 
@@ -444,7 +444,7 @@ impl Node{
         // signature
         // pubkey
 
-        let data_hash = Wallet::generate_sha256_from(data);
+        let data_hash = Wallet::generate_keccak256_hash_from(data);
 
     }
 
@@ -454,7 +454,7 @@ impl Node{
         // signature
         // pubkey
 
-        let data_hash = Wallet::generate_sha256_from(data);
+        let data_hash = Wallet::generate_keccak256_hash_from(data);
 
         let is_verified = true;
         if is_verified{
@@ -509,7 +509,7 @@ impl Node{
             stringify_data.clone().as_str(), 
             contract.wallet.ed25519_secret_key.as_ref().unwrap().as_str());
         
-        let hash_of_data = Wallet::generate_sha256_from(&stringify_data);
+        let hash_of_data = Wallet::generate_keccak256_hash_from(&stringify_data);
         let verify_res = Wallet::verify_ed25519_signature(
             signature_hex.clone().unwrap().as_str(), hash_of_data.as_slice(),
             contract.wallet.ed25519_public_key.as_ref().unwrap().as_str());

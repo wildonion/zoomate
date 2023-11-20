@@ -257,21 +257,88 @@ impl TypeTrait for RuntimeCode{
     }
 }
 
-trait NodeReceptor{
+pub trait NodeReceptor{
     type InnerReceptor;
+    fn get_inner_receptor(&self) -> Self::InnerReceptor;
 }
-trait Activation<C>{
+
+pub trait Activation<C>{
     type Acivator;
 }
-struct Synapse<A>{id: A}
-struct Neuron<A=u8>{data: Synapse<A>}
 
-impl<A> NodeReceptor for Neuron<Synapse<A>>
+#[derive(Default)]
+pub struct Synapse<A>{id: A}
+
+#[derive(Default)]
+pub struct Neuron<A=u8>{
+    pub data: Option<Synapse<A>>,
+    pub multipart: Option<actix_multipart::Multipart>,
+    pub payload: Option<actix_web::web::Payload>,
+}
+
+/* 
+    this must be implemented for Neuron<Synapse<A>>
+    to be able to call get_inner_receptor() method
+*/
+impl<A: Default> NodeReceptor for Neuron<Synapse<A>>
 where Self: Clone + Send + Sync + 'static + Activation<String>, 
 <Self as Activation<String>>::Acivator: Default{
+
     type InnerReceptor = Synapse<A>;
+    fn get_inner_receptor(&self) -> Self::InnerReceptor {
+        let id: A = Default::default();
+        Synapse{
+            id,
+        }
+    }
 }
-fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: impl NodeReceptor)
+
+/* 
+    this must be implemented for Neuron<String>
+    to be able to call get_inner_receptor() method
+*/
+impl NodeReceptor for Neuron<String>{
+
+    type InnerReceptor = Synapse<String>;
+    fn get_inner_receptor(&self) -> Self::InnerReceptor {
+        Synapse{
+            id: String::from(""),
+        }
+    }
+}
+
+/* 
+    this must be implemented for Neuron<A>
+    to be able to call get_inner_receptor() method
+*/
+impl NodeReceptor for Neuron<u8>{
+
+    type InnerReceptor = Synapse<u8>;
+    fn get_inner_receptor(&self) -> Self::InnerReceptor {
+        Synapse{
+            id: 0,
+        }
+    }
+}
+
+pub fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: N) -> <N as NodeReceptor>::InnerReceptor // or T::InnerReceptor
 where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized, 
 T: NodeReceptor, T::InnerReceptor: Send + Clone,
-<N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{}
+<N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
+
+    /* 
+        note that if we want to call get_inner_receptor() method
+        on an instance of Neuron, the NodeReceptor trait must be
+        implemented for every generic type in Neuron struct separately
+        like:
+            impl NodeReceptor for Neuron<String>{}
+            impl NodeReceptor for Neuron<u8>{}
+            impl NodeReceptor for Neuron<Synapse<A>>{}
+    */
+    let neuron = cmd;
+    let neuron_ = Neuron::<String>::default();
+    
+    neuron.get_inner_receptor()
+    // neuron_.get_inner_receptor()
+    
+}
