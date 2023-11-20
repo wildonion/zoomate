@@ -262,7 +262,7 @@ pub trait NodeReceptor{
     fn get_inner_receptor(&self) -> Self::InnerReceptor;
 }
 
-pub trait Activation<C>{
+pub trait Activation<C>: Send + Sync + 'static + Clone + Default{
     type Acivator;
 }
 
