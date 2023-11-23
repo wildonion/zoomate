@@ -418,7 +418,7 @@ impl Node{
 
     pub async fn proof_of_chain(chain_addresses: Vec<String>, chain_addresses_from_other_servers: Vec<String>){
 
-        /*  
+        /*      ------ good for whilelist ------
             having two different mutable pointer to instances are not allowed in a single scope
             based on this we're ok to call calculate_root_hash() method which takes a mutable pointer 
             of the struct instance method two times on the same instance 
