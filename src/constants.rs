@@ -426,7 +426,12 @@ where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized,
 T: NodeReceptor, T::InnerReceptor: Send + Clone,
 <N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
 
-    /* 
+    let pinned_boxed_future: std::pin::Pin<Box<dyn std::future::Future<Output=String>>> = 
+        Box::pin(async move{
+            String::from("")
+        });
+
+    /*  
         note that if we want to call get_inner_receptor() method
         on an instance of Neuron, the NodeReceptor trait must be
         implemented for every generic type in Neuron struct separately

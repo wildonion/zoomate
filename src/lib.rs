@@ -804,12 +804,73 @@ pub async fn start_tcp_listener(){
         let (job_sender, mut job_receiver) = tokio::sync::mpsc::channel::<String>(1024);
 
         let api_listener = api_listener.unwrap();
-        println!("➔ 🚀 tcp listener is started at [{}]", bind_address);
+        println!("➔ 🚀 tcp listener is started at [{}] to accept streaming of utf8 bytes", bind_address);
 
         tokio::spawn(async move{
 
             println!("➔ start receiving asyncly and concurrently in tokio green threadpool");
 
+            /*  -------------------------- STREAMING NOTES --------------------------
+            | streaming can be done using actix|tokio|tonic with tlps like wsactor|http|tcp|grpc in a separate 
+            | threadpool like in tokio::spawn(), actors in a same server can use actix and tokio stuffs to send/recv 
+            | responses actors in two different mses can use tcp, (g)capnprpc or redis to send/recv responses also 
+            | there must be a message and stream handlers implemented for actors so they can communicate with each 
+            | other and different parts of the app to send/receive static lazy mutex streams of utf8 bytes data based 
+            | on serde_json, web::Payload, Multipart and capnp+protobuf codecs throught rpc or mpsc channel based on 
+            | tokio::spawn,mpsc,mailbox,mutex,select,time, we can also have a pubsub pattern for them using 
+            | libp2pgossipsub,rpc,redisstreamqueue,actixbroker pubsub
+
+                also see multireq crate in gem which handles incoming multipart form data asyncly 
+                by streaming over each field to gather the field's bytes then map it into a 
+                data type or serde json value
+                
+                streaming over a realtiming source like a socket to fill the buffer with incoming u8 
+                future byte objs chunks and then map into a struct can be done with tokio(mpsc,select,spawn,
+                mutex,rwlock,tcp) actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event 
+                handler which accepts streaming of events' data utf8 bytes can be like: 
+
+                let (data_sender, mut data_receiver) 
+                    = tokio::sync::mpsc::channel::<std::sync::Arc<tokio::sync::Mutex<Data>>>(1024);
+                let buffer = vec![];
+                let mut bytes = web::BytesMut::new();
+                let streamer_body: web::Payload;
+                tokio::task::spawn(async move{ 
+                    while let Some(chunk) = streamer_body.next().await{
+                        let byte = chunk.as_slice();
+                        buffer.extend_from_slice(byte);
+                        bytes.extend_from_slice(byte);
+                        let decoded_data = serde_json::from_slice::<Data>(&buffer).unwrap();
+                        data_sender.clone().send(
+                            std::sync::Arc::new(
+                                tokio::sync::Mutex::new(
+                                    Some(decoded_data)
+                                )
+                            )
+                        ).await;
+                    }
+                });
+                while let Some(received_data) = data_receiver.recv().await{
+                    let mut data = received_data.lock().await;
+                    *data = Default::default();
+                }
+
+                the nature of rust codes are not asynced and multithreaded by default we must use
+                a runtime for that like tokio and run async tasks inside tokio::spawn() threadpool
+                which takes care of running an async context in a free thread behind the scene and 
+                won't let other codes in other scopes get halted and waited for this job to be
+                finished and, they get exectued on their own without blocking the scopes  
+                thus if we have a condition like
+                if condition {
+                    return something to the caller;
+                }
+
+                the rest of the code after if won't get executed with this nature we can 
+                only have one if, provided that it terminate the method body with an statement,
+                and respond the caller with a value; once the body get terminated the rest of
+                the code won't be executed cause we don't have async context by default, 
+                other than that we have to provide the else part since rust needs to know 
+                that if not this type then what type?!
+            */
             // streaming over incoming bytes to fill the buffer and then map the buffer to structure 
             while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
                 println!("🍐 new peer connection: [{}]", addr);
@@ -824,60 +885,6 @@ pub async fn start_tcp_listener(){
                     /* this buffer will be filled up with incoming bytes from the socket */
                     let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
 
-                    /*     
-                        -----------------------------------------------------------------------------
-                        see misc::store_file() and misc::convert_multipart_to_json functions which handle 
-                        incoming multipart form data asyncly by streaming over each field to gather the 
-                        field's bytes then map it into a data type.
-                        -----------------------------------------------------------------------------
-                        
-                        streaming over a realtiming source like a socket to fill the buffer with incoming u8 
-                        future byte objs chunks and then map into a struct can be done with tokio(mpsc,select,spawn,
-                        mutex,rwlock,tcp) actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event 
-                        handler which accepts streaming of events' data utf8 bytes can be like: 
-
-                        let (data_sender, mut data_receiver) 
-                            = tokio::sync::mpsc::channel::<std::sync::Arc<tokio::sync::Mutex<Data>>>(1024);
-                        let buffer = vec![];
-                        let mut bytes = web::BytesMut::new();
-                        let streamer_body: web::Payload;
-                        tokio::task::spawn(async move{ 
-                            while let Some(chunk) = streamer_body.next().await{
-                                let byte = chunk.as_slice();
-                                buffer.extend_from_slice(byte);
-                                bytes.extend_from_slice(byte);
-                                let decoded_data = serde_json::from_slice::<Data>(&buffer).unwrap();
-                                data_sender.clone().send(
-                                    std::sync::Arc::new(
-                                        tokio::sync::Mutex::new(
-                                            Some(decoded_data)
-                                        )
-                                    )
-                                ).await;
-                            }
-                        });
-                        while let Some(received_data) = data_receiver.recv().await{
-                            let mut data = received_data.lock().await;
-                            *data = Default::default();
-                        }
-
-                        the nature of rust codes are not asynced and multithreaded by default we must use
-                        a runtime for that like tokio and run async tasks inside tokio::spawn() threadpool
-                        which takes care of running an async context in a free thread behind the scene and 
-                        won't let other codes in other scopes get halted and waited for this job to be
-                        finished and, they get exectued on their own without blocking the scopes  
-                        thus if we have a condition like
-                        if condition {
-                            return something to the caller;
-                        }
-
-                        the rest of the code after if won't get executed with this nature we can 
-                        only have one if, provided that it terminate the method body with an statement,
-                        and respond the caller with a value; once the body get terminated the rest of
-                        the code won't be executed cause we don't have async context by default, 
-                        other than that we have to provide the else part since rust needs to know 
-                        that if not this type then what type?!
-                    */
                     while match api_streamer.read(&mut buffer).await { /* streaming over socket to fill the buffer */
                         Ok(rcvd_bytes) if rcvd_bytes == 0 => return,
                         Ok(rcvd_bytes) => {
@@ -914,7 +921,6 @@ pub async fn start_tcp_listener(){
             }{}
         
         });
-
 
         tokio::spawn(async move{
 
