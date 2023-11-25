@@ -820,14 +820,14 @@ pub async fn start_tcp_listener(){
             | tokio::spawn,mpsc,mailbox,mutex,select,time, we can also have a pubsub pattern for them using 
             | libp2pgossipsub,rpc,redisstreamqueue,actixbroker pubsub
 
-                also see multireq crate in gem which handles incoming multipart form data asyncly 
+                also see multipartreq crate in gem which handles incoming multipart form data asyncly 
                 by streaming over each field to gather the field's bytes then map it into a 
                 data type or serde json value
                 
                 streaming over a realtiming source like a socket to fill the buffer with incoming u8 
                 future byte objs chunks and then map into a struct can be done with tokio(mpsc,select,spawn,
-                mutex,rwlock,tcp) actix-ws-http|redis&libp2ppubsub and can be a webhook/stream/event 
-                handler which accepts streaming of events' data utf8 bytes can be like: 
+                mutex,rwlock,tcp) actix-ws-http,redis&libp2ppubsub and can be a webhook/stream/event 
+                handler which will accept streaming of events' data utf8 bytes can be like:  
 
                 let (data_sender, mut data_receiver) 
                     = tokio::sync::mpsc::channel::<std::sync::Arc<tokio::sync::Mutex<Data>>>(1024);
