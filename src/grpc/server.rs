@@ -30,6 +30,9 @@ impl NodeService for NodeServer{
     */
     async fn echo(&self, request: TonicRequest<NodeRequest>) -> Result<TonicResponse<NodeResponse>, Status> {
 
+        // see gem grpc server for more info
+        // ...
+        
         info!("Got a request {:?}", request);
 
         let resp = NodeResponse{

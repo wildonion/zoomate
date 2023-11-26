@@ -36,12 +36,24 @@ rust cli zoomate features and ownership, borrowing rules:
             | actor object which allows services to call each structure's method directly through the rpc 
             | protocol without having any extra api and packet handlers , they can be used to handle 
             | message streaming in realtime and bi directional manner
+            > ------------------------------------------------------------------
+            | -> each rpc ds is like an actix actor which contains:
+            |    * inner message handlers to communicate with different parts of the app's actors
+            |    * tcp based stream handlers and listeners to stream over incoming connections 
+            |      to map packet bytes like Capnp, Protobuf, serde_json, Multipart, BSON and 
+            |      Payload into desired data struct
+            |    * inner concurrent task handlers for sending/receiving message, handling
+            |      async tasks from outside of the app using tokio::spawn,mpsc,mailbox,mutex,
+            |      rwlock,select,time 
+            | -> two actors in two apps communicate through streaming and pubsub channels using rcp http2 and redis
+            | -> two actors in an app communicate through streaming and pubsub channels using mpsc and redis 
              --------------------------------------------------------------------------------------------
-            > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits
-            > actix::brokerpubsub,http,actor,ws,multipart,payload,Protobuf extractor
+            > pubsub and streaming be like:
+            > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits,mailbox using while let Ok((stream, addr)) = listener.accept().await{}
+            > actix::brokerpubsub,http,actor,ws,Multipart,Payload,Protobuf extractor
             > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
             > redis::pubsub,streams,queue
-            > rpc::protobuf,capnp
+            > tonio::grpc::protobuf,capnp
             > then:
                 1 - static lazy mutexed, rusty ltg pointers, box pin trait and stackless, ret ref and slice from method, &mut type, codec, async io traits then coerce heap data to slice form, pass slice form in method param
                 2 - gathering incoming bytes to fill the buffer by streaming over the source asyncly in a threadpool
@@ -811,14 +823,14 @@ pub async fn start_tcp_listener(){
             println!("➔ start receiving asyncly and concurrently in tokio green threadpool");
 
             /*  -------------------------- STREAMING NOTES --------------------------
-            | streaming can be done using actix|tokio|tonic with tlps like wsactor|http|tcp|grpc in a separate 
-            | threadpool like in tokio::spawn(), actors in a same server can use actix and tokio stuffs to send/recv 
-            | responses actors in two different mses can use tcp, (g)capnprpc or redis to send/recv responses also 
-            | there must be a message and stream handlers implemented for actors so they can communicate with each 
-            | other and different parts of the app to send/receive static lazy mutex streams of utf8 bytes data based 
-            | on serde_json, web::Payload, Multipart and capnp+protobuf codecs throught rpc or mpsc channel based on 
-            | tokio::spawn,mpsc,mailbox,mutex,select,time, we can also have a pubsub pattern for them using 
-            | libp2pgossipsub,rpc,redisstreamqueue,actixbroker pubsub
+            |   streaming can be done using actix|tokio|tonic with tlps like wsactor|http|tcp|grpc in a separate 
+            |   threadpool like in tokio::spawn(), actors in a same server can use actix and tokio stuffs to send/recv 
+            |   responses actors in two different mses can use tcp, (g)capnprpc or redis to send/recv responses also 
+            |   there must be a message and stream handlers implemented for actors so they can communicate with each 
+            |   other and different parts of the app to send/receive static lazy mutex streams of utf8 bytes data based 
+            |   on serde_json, web::Payload, Multipart and capnp+protobuf codecs throught rpc or mpsc channel based on 
+            |   tokio::spawn,mpsc,mailbox,mutex,select,time, we can also have a pubsub pattern for them using 
+            |   libp2pgossipsub,rpc,redisstreamqueue,actixbroker pubsub
 
                 also see multipartreq crate in gem which handles incoming multipart form data asyncly 
                 by streaming over each field to gather the field's bytes then map it into a 
