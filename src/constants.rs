@@ -365,6 +365,10 @@ pub trait Activation<C>: Send + Sync + 'static + Clone + Default{
     type Acivator;
 }
 
+impl<C> Activation<C> for &'static [u8]{
+    type Acivator = &'static [u8];
+}
+
 #[derive(Default)]
 pub struct Synapse<A>{id: A}
 

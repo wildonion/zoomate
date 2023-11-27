@@ -189,6 +189,7 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
+   • ssl certs using ring rsa and wallexerr ed22519 for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix
    • (g)rpccapnp to communicate between each balancer
    • decompress encoded packet using borsh and serde 
@@ -197,6 +198,7 @@ using following flow:
    • weighted round robin dns, 
    • vector clock, 
    • event loop
+   • A* to find a path to a node in the whole network
    • iptables and ssh tunneling
    • zmq pub/sub with borsh serialization 
    • simd divide and conquer based vectorization using rayon multithreading (each vector can be analyzed in a separate thread)
@@ -515,6 +517,12 @@ impl Node{
         /* wallet operations */
 
         let contract = Contract::new_with_ed25519("0xDE6D7045Df57346Ec6A70DfE1518Ae7Fe61113f4");
+        
+        /* 
+            will be saved in a folder called wallexerr-keys inside the root of this project 
+            since the wallexerr lib.rs is loaded in this project thus the root of wallexerr
+            is the root of this project
+        */
         Wallet::save_to_json(&contract.wallet, "ed25519").unwrap();
         
         let signature_hex = Wallet::ed25519_sign(

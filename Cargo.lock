@@ -5071,6 +5071,7 @@ dependencies = [
  "actix-redis",
  "actix-web",
  "actix-web-actors",
+ "base58",
  "base64 0.21.4",
  "borsh",
  "bytes",
