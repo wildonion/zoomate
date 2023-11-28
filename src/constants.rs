@@ -428,6 +428,7 @@ pub fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: N, cmd_receptor: impl Node
 -> <N as NodeReceptor>::InnerReceptor // or T::InnerReceptor
 where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized, 
 T: NodeReceptor, T::InnerReceptor: Send + Clone,
+/* casting generic N to NodeReceptor trait to access the InnerReceptor gat */
 <N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
 
     let pinned_boxed_future: std::pin::Pin<Box<dyn std::future::Future<Output=String>>> = 
