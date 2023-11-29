@@ -23,7 +23,7 @@ compile `build.rs` codes which contains the `.proto` files in `proto` folder usi
 ## 🥙 Usage
 
 ```bash
-# run gRPC server
+# run node + gRPC server
 cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
 ```
 
@@ -34,5 +34,6 @@ cargo install cargo-generate
 cargo generate --git https://github.com/yewstack/yew-trunk-minimal-template ###### build a new yew app
 rustup target add wasm32-unknown-unknown
 cargo install trunk wasm-bindgen-cli
-trunk serve
+trunk serve --port 9837
 ```
+

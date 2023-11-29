@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use grpc::server;
 use once_cell::sync::Lazy;
 use rand::{Rng, SeedableRng, RngCore};
 use rand_chacha::{rand_core, ChaCha12Rng};
@@ -142,25 +143,6 @@ async fn main()
     /* ------------------------------ */
     let cli = ServerCli::parse();
     let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
-    let node = NodeServer::default();
-    info!("gRPC Server listening on {}", addr);
-
-    // node webhook signature
-    let node_instance = Node::default();
-    let (pubkey, prvkey) = node_instance.generate_ed25519_webhook_keypair();
-    println!("ed25519 pubkey: {}", pubkey);
-    println!("ed25519 prvkey: {}", prvkey);
-    
-    Server::builder()
-        /* creating a new server service actor from the EchoServer structure which is our rpc server */
-        .add_service(NodeServiceServer::new(node))
-        .serve(addr)
-        .await
-        .unwrap();
-
-    
-
-    Ok(())
-
+    server::NodeServer::start(addr).await
 
 }

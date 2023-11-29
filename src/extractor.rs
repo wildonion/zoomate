@@ -23,6 +23,7 @@ pub struct Response<'m, T>{
     pub is_error: bool
 }
 
+// we can represent any type of data as a serde json value
 pub async fn multipart(
     payload: std::sync::Arc<tokio::sync::Mutex<Multipart>>
 ) -> Result<(serde_json::Value, HashMap<String, Vec<u8>>), PanelHttpResponse>{
