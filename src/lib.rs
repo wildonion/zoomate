@@ -6,6 +6,11 @@
 JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
 ---------------------------------------------------------------------
 
+ 
+WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressing
+setup oauth2 with yew ssr feature for manit dashboard
+compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
+
 https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
 https://crates.io/crates/capnp-rpc
 https://github.com/actix/examples/tree/master
@@ -17,9 +22,26 @@ https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
 https://github.com/libp2p/rust-libp2p/tree/master/examples
-https://github.com/foniod/build-images
-https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
-
+https://github.com/foniod/build-imageshttps://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
+https://docs.peer5.com/guides/production-ready-hls-vod/
+https://blog.tempus-ex.com/hello-video-codec/
+https://stackoverflow.com/a/56475851
+https://github.com/wildonion/cs-concepts
+https://www.quora.com/How-do-you-write-a-video-codec
+https://coaxion.net/blog/2017/07/writing-gstreamer-applications-in-rust/
+https://github.com/security-union/rust-zoom
+https://999eagle.moe/posts/rust-video-player-part-1/
+https://ffplayout.github.io/
+https://bparli.medium.com/adventures-in-rust-and-load-balancers-73a0bc61a192
+https://github.com/jsdw/weave
+https://github.com/hyperium/hyper/blob/master/examples/http_proxy.rs
+https://github.com/hyperium/hyper/blob/master/examples/gateway.rs
+https://dzone.com/articles/rust-based-load-balancing-proxy-server-with-async
+https://truelayer.com/blog/grpc-load-balancing-in-rust
+https://medium.com/load-balancer-series/writing-a-http-load-balancer-in-python-using-tdd-theoretical-concepts-fb6dab3e879b
+https://kemptechnologies.com/load-balancer/load-balancing-algorithms-techniques
+https://github.com/bparli/convey
+https://github.com/NicolasLM/nucleon
 
 
 rust cli zoomate features and ownership, borrowing rules:
@@ -840,7 +862,7 @@ pub async fn start_tcp_listener(){
             |   tokio::spawn,mpsc,mailbox,mutex,select,time, we can also have a pubsub pattern for them using 
             |   libp2pgossipsub,rpc,redisstreamqueue,actixbroker pubsub
 
-                also see multipartreq crate in gem which handles incoming multipart form data asyncly 
+                also see extractor::multipart() which handles incoming multipart form data asyncly 
                 by streaming over each field to gather the field's bytes then map it into a 
                 data type or serde json value
                 
