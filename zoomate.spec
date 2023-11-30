@@ -204,6 +204,8 @@ using following flow:
 	to_string vs from utf8
 
 4)‌ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
+   • ssl certs using ring rsa and wallexerr ed25519 ecc curve with aes256 for ssh, tcp, rpc with tokio-rustls to sign the packets with pubkey
+   • (DQL (ql, mdp) for data decryption like rsa, aes256, wallexerr ecc curves)
    • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, (g)rpccapnp, zmq, libp2p stacks, ws, tcp and udp
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
