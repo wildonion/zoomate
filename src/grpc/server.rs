@@ -32,9 +32,6 @@ impl NodeServer{
     
         // node webhook signature
         let node_instance = Node::default();
-        let (pubkey, prvkey) = node_instance.generate_ed25519_webhook_keypair();
-        println!("ed25519 pubkey: {}", pubkey);
-        println!("ed25519 prvkey: {}", prvkey);
         
         TonicServer::builder()
             /* creating a new server service actor from the EchoServer structure which is our rpc server */
@@ -96,6 +93,12 @@ impl NodeService for NodeServer{
 
                 let jwt = format!("Bearer {}", metadata_value.to_str().unwrap());
                 let node_resp = NodeResponse::default();
+
+                let data = serde_json::to_string_pretty(&node_rpc_request_body.clone()).unwrap();
+                let mut wallet = Wallet::new_ed25519();
+                let signature = misc::sign_with_ed25519(&data, wallet);
+                println!("base58 ed25519 signature >> {:?}", signature);
+
                 Ok(TonicResponse::new(node_resp))
 
 

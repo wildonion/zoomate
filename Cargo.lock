@@ -1739,7 +1739,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
- "wallexerr",
+ "wallexerr 0.2.8",
 ]
 
 [[package]]
@@ -4319,6 +4319,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "wallexerr"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8f0569a60a9a0ffeb1d46130d64b84166d19f09d2c1daa3682545e6ce26978a"
+dependencies = [
+ "aes256ctr_poly1305aes",
+ "base58",
+ "base64 0.21.4",
+ "chrono",
+ "hex",
+ "once_cell",
+ "ring 0.17.4",
+ "secp256k1 0.28.0",
+ "serde",
+ "serde_json",
+ "sha2",
+ "themis",
+ "tiny-bip39",
+ "tiny-keccak",
+ "tokio",
+ "web3",
+]
+
+[[package]]
 name = "want"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5178,7 +5202,7 @@ dependencies = [
  "tonic",
  "tonic-build",
  "uuid",
- "wallexerr",
+ "wallexerr 0.3.0",
  "wasmer 4.2.2",
  "wasmer-wasi",
  "web3",

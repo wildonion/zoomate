@@ -36,6 +36,8 @@ use crate::bpf::*;
 
 mod extractor;
 
+mod cry;
+use crate::cry::*;
 
 
 /* ---------------------------------------------------------

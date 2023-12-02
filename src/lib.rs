@@ -24,6 +24,7 @@ mod constants;
 use constants::*;
 
 
+
 // global rate limiter
 pub static HADEAD: Lazy<Config> = Lazy::new(||{
 
@@ -329,51 +330,15 @@ impl Node{
     
     }
 
-    pub fn ed25519_aes256_signing(data: &str, mut wallet: Wallet) -> String{
 
-        // ed25519_aes256_test() will sign and hash data using aes256 instead of keccak256 bits
-        // ed25519_test() will sign and hash data using keccak256
-        // note that nonce must be unique per each user or a unique identity
-        
-        let mut default_aes256_config = wallexerr::Aes256Config::default();
-        default_aes256_config.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
-        default_aes256_config.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
-        default_aes256_config.data = data.as_bytes().to_vec();
+}
 
-        let encrypted_data = wallet.self_generate_aes256_from(default_aes256_config.clone());        
-        default_aes256_config.data = encrypted_data.clone(); /* update data field with encrypted form of raw data */
-        let decrypted_data = wallet.self_generate_data_from_aes256(default_aes256_config.clone());
-        
-        let raw_data = std::str::from_utf8(&decrypted_data).unwrap();
-        println!("aes256 decrypted data :::: {:?}", raw_data);
-        println!("default_aes256_config.secret_key :::: {:?}", default_aes256_config.secret_key);
-        println!("default_aes256_config.nonce :::: {:?}", default_aes256_config.nonce);
+pub fn sign_with_ed25519(data: &str, mut wallet: Wallet) -> String{
+    let aes256_signature = cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
+    let secure_cell_signature = cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
+    let keccak256_signature = cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
 
-        let edprvkey = wallet.ed25519_secret_key.clone().unwrap();
-        let base58_sig = wallet.self_ed25519_aes256_sign(
-            &edprvkey, 
-            default_aes256_config
-        );
-
-        base58_sig.unwrap()
-
-    }
-
-    pub fn secure_cell_signing(data: &str, mut wallet: Wallet){
-
-        let mut default_secure_cell_config = wallexerr::SecureCellConfig::default();
-        default_aes256_config.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
-        default_aes256_config.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
-        default_aes256_config.data = data.as_bytes().to_vec();
-
-        let encrypted_data = wallet.self_secure_cell_encrypt(default_secure_cell_config).unwrap();
-        
-        default_secure_cell_config.data = encrypted_data;
-
-        let decrypted_data = wallet.self_secure_cell_decrypt(themis_secure_cell_config).unwrap();
-
-    }
-
+    secure_cell_signature
 }
 
 /* ----------------------------------------------------------------------- */
