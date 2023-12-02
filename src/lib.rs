@@ -331,6 +331,10 @@ impl Node{
 
     pub fn sign_with_ed25519_aes256(data: &str, mut wallet: Wallet) -> String{
 
+        // ed25519_aes256_test() will sign and hash data using aes256 instead of keccak256 bits
+        // ed25519_test() will sign and hash data using keccak256
+        // note that nonce must be unique per each user or a unique identity
+        
         let mut default_aes256_condif = wallexerr::Aes256Config::default();
         default_aes256_condif.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
         default_aes256_condif.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
