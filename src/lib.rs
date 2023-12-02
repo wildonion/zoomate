@@ -17,7 +17,7 @@ use uuid::Uuid;
 use hadead::*;
 use once_cell::sync::Lazy;
 use base64::{engine::general_purpose, Engine as _};
-use wallexerr::{DataBucket, Contract, Wallet};
+use wallexerr::misc::*;
 use sha3::{Digest, Keccak256, Keccak256Core};
 use ring::rand as ring_rand;
 mod constants;
@@ -329,33 +329,48 @@ impl Node{
     
     }
 
-    pub fn sign_with_ed25519_aes256(data: &str, mut wallet: Wallet) -> String{
+    pub fn ed25519_aes256_signing(data: &str, mut wallet: Wallet) -> String{
 
         // ed25519_aes256_test() will sign and hash data using aes256 instead of keccak256 bits
         // ed25519_test() will sign and hash data using keccak256
         // note that nonce must be unique per each user or a unique identity
         
-        let mut default_aes256_condif = wallexerr::Aes256Config::default();
-        default_aes256_condif.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
-        default_aes256_condif.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
-        default_aes256_condif.data = data.as_bytes().to_vec();
+        let mut default_aes256_config = wallexerr::Aes256Config::default();
+        default_aes256_config.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
+        default_aes256_config.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
+        default_aes256_config.data = data.as_bytes().to_vec();
 
-        let encrypted_data = wallet.self_generate_aes256_from(default_aes256_condif.clone());        
-        default_aes256_condif.data = encrypted_data.clone(); /* update data field with encrypted form of raw data */
-        let decrypted_data = wallet.self_generate_data_from_aes256(default_aes256_condif.clone());
+        let encrypted_data = wallet.self_generate_aes256_from(default_aes256_config.clone());        
+        default_aes256_config.data = encrypted_data.clone(); /* update data field with encrypted form of raw data */
+        let decrypted_data = wallet.self_generate_data_from_aes256(default_aes256_config.clone());
         
         let raw_data = std::str::from_utf8(&decrypted_data).unwrap();
         println!("aes256 decrypted data :::: {:?}", raw_data);
-        println!("default_aes256_condif.secret_key :::: {:?}", default_aes256_condif.secret_key);
-        println!("default_aes256_condif.nonce :::: {:?}", default_aes256_condif.nonce);
+        println!("default_aes256_config.secret_key :::: {:?}", default_aes256_config.secret_key);
+        println!("default_aes256_config.nonce :::: {:?}", default_aes256_config.nonce);
 
         let edprvkey = wallet.ed25519_secret_key.clone().unwrap();
         let base58_sig = wallet.self_ed25519_aes256_sign(
             &edprvkey, 
-            default_aes256_condif
+            default_aes256_config
         );
 
         base58_sig.unwrap()
+
+    }
+
+    pub fn secure_cell_signing(data: &str, mut wallet: Wallet){
+
+        let mut default_secure_cell_config = wallexerr::SecureCellConfig::default();
+        default_aes256_config.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
+        default_aes256_config.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
+        default_aes256_config.data = data.as_bytes().to_vec();
+
+        let encrypted_data = wallet.self_secure_cell_encrypt(default_secure_cell_config).unwrap();
+        
+        default_secure_cell_config.data = encrypted_data;
+
+        let decrypted_data = wallet.self_secure_cell_decrypt(themis_secure_cell_config).unwrap();
 
     }
 
