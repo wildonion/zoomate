@@ -222,7 +222,8 @@ using following flow:
    • A* to find a path to a node in the whole network
    • iptables and ssh tunneling
    • zmq pub/sub with borsh serialization 
-   • simd divide and conquer based vectorization using rayon multithreading (each vector can be analyzed in a separate thread)
+   • simd divide and conquer based vectorization using rayon multithreading
+   • with rayon each vector can be analyzed in a separate thread then with mpsc channels we can gather them all together in a single vector
    • language binding
    • reverse proxy for NAT traversal implemented in Rust based macros
    • implement DNS Server in Rust (DNS hijacking and spoofing using mitm tools)
