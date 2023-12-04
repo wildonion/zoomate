@@ -40,6 +40,12 @@ tonic = "0.10.2"
 clap = { version = "4.4.8", features = ["derive"] }
 prost = "0.12"
 prost-types = "0.12"
+# -------------------------------------
+# ---- proc macro butter and bread ----
+syn = { version = "*", features = ["full"] }
+quote = "*"
+proc-macro2 = "*"
+# -------------------------------------
 
 # ------------------
 #    crypto libs
