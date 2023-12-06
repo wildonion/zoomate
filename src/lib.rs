@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
 use actix_web::HttpResponse;
+use actix_web::web::Payload;
+use aes256ctr_poly1305aes::aead::Buffer;
 use chacha20::cipher::typenum::Len;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -60,7 +62,14 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
     parsed in any server or client application and can be sent through
     the tcp socket to either ckient or seerver
 */
-pub async fn api() -> Result<actix_web::HttpResponse, actix_web::Error>{
+#[post("/api")]
+pub async fn api(req: HttpRequest, stream: Payload) -> Result<actix_web::HttpResponse, actix_web::Error>{
+
+    /* we have to fill a buffer on server with incoming bytes by streaming over `stream` object */
+    let mut bytes = vec![];
+    while let Some(item) = stream.next().await {
+        bytes.extend_from_slice(&item?);
+    }
 
     let hadead = HADEAD.clone();
     println!("hadead contract info: {:?}", hadead.contract.as_ref().unwrap());
