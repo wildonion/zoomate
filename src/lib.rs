@@ -1037,7 +1037,7 @@ pub fn passport(args: TokenStream, input: TokenStream) -> TokenStream {
     ).unwrap();
 
     /* inject the granted_roles into the api body at compile time */
-    api_ast.block.stmts.insert(0, new_stmt);
+    api_ast.block.stmts.insert(0, new_stmt); // extending the AST of the api method at compile time
     
     /* 
         return the newly generated AST by the quote of the input api Rust code  
