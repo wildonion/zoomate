@@ -16,13 +16,14 @@ https://cetra3.github.io/blog/implementing-a-jobq-with-tokio/
 https://tokio.rs/tokio/tutorial/channels
 https://rust-lang.github.io/async-book/01_getting_started/01_chapter.html
 https://www.fpcomplete.com/blog/http-status-codes-async-rust/
+https://github.com/mahdi-shojaee/loole => create something like mpsc
 
 
 actors have:
     - task scheduling algos
     - worker threadpool like tokio::spawn()
     - pub sub channels for broadcasting messages and tasks scheduling
-    - jobq like celery and the one inside the rabbitmq and zmq or tokio jobq algos
+    - jobq like celery and the one inside the rabbitmq and zmq or tokio jobq algos like mpsc
 and actix actors be like:
 actors are smart data structures and a combination of async and multithreaded io to build smart 
 objects that have the ability to execute tasks in their threadpool which is a method like: 
