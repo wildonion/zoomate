@@ -7,6 +7,8 @@ WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressin
 setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 
+https://drive.google.com/file/d/1-8M8BNMabNPzPZM43ekWqX_D456KaUvT/view => the programmer guides to theory
+https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed patterns in backend
 https://github.com/MoonKraken/youtube/tree/main/KonaaAuth
 https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
 https://crates.io/crates/capnp-rpc
@@ -42,7 +44,7 @@ https://github.com/NicolasLM/nucleon
 
 
 rust cli zoomate features and ownership, borrowing rules:
-    - multithreaded and async node, agent and balancer engines with blockchain distributed algorithms and scheduling tlps using:
+    - multithreaded and async node, agent and balancer engines with blockchain graph based distributed algorithms and scheduling tlps using:
         > actor based coding for async message sending and realtime stream message handlers and listeners using
             > --------------------------------------------------------------------------------------------
             | with actors we can communicate between different parts of the app by sending async 
@@ -204,13 +206,13 @@ using following flow:
 	to_string vs from utf8
 
 4)‌ bpf based proxy, firewall, vpns, packet sniffer and load balancer like pingora, docker networking, nginx, ngrok, HAproxy, v2ray and wireshark for all layers
-   • ssl certs using ring rsa and wallexerr ed25519 ecc curve with aes256 for ssh, tcp, rpc with tokio-rustls to sign the packets with pubkey
+   • zoomate protocol must be started with zoomate:// 
    • (DQL (ql, mdp) for data decryption like rsa, aes256, wallexerr ecc curves)
    • tokio channels + worker green threadpool + event loopg, hyper, actix actor concepts, (g)rpccapnp, zmq, libp2p stacks, ws, tcp and udp
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
-   • ssl certs using ring rsa and wallexerr ed22519 for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
+   • ssl certs using ring rsa and wallexerr ed22519 ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix
    • (g)rpccapnp to communicate between each balancer
    • decompress encoded packet using borsh and serde 

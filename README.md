@@ -1,6 +1,6 @@
 
 
-☢️ actor based proxy and balancer for audio and video realtiming process which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has a Oauth2 based dashboard for monitoring nodes and balancers written in Yew.
+☢️ actor and distributed based proxy and balancer for audio and video realtiming process which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has a Oauth2 based dashboard for monitoring nodes and balancers written in Yew.
 
 > refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 

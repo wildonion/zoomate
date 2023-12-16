@@ -216,7 +216,7 @@ impl Node{
 
     }
 
-    pub async fn proof_of_chain(chain_addresses: Vec<String>, chain_addresses_from_other_servers: Vec<String>){
+    pub async fn proof_of_chain(chain_addresses: Vec<String>, chain_addresses_from_other_nodes: Vec<String>){
 
         /*      ------ good for whilelist ------
             having two different mutable pointer to instances are not allowed in a single scope
@@ -224,7 +224,7 @@ impl Node{
             of the struct instance method two times on the same instance 
         */
         let mut merkle_tree_wl = constants::MerkleNode::new();
-        let old_merkle_hash = merkle_tree_wl.calculate_root_hash(chain_addresses_from_other_servers);  
+        let old_merkle_hash = merkle_tree_wl.calculate_root_hash(chain_addresses_from_other_nodes);  
         let merkle_hash = merkle_tree_wl.calculate_root_hash(chain_addresses);
         if old_merkle_hash == merkle_hash{
             
@@ -694,7 +694,7 @@ pub async fn start_tcp_listener(){
                 // of tokio::spawn cause tokio::spawn will capture these into its closure scope
                 let tcp_server_data = tcp_server_data.clone();
                 let job_sender = job_sender.clone();
-                
+
                 tokio::spawn(async move {
 
                     /* this buffer will be filled up with incoming bytes from the socket */
