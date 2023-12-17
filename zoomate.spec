@@ -212,7 +212,7 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
-   • ssl certs using ring rsa and wallexerr ed22519 ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
+   • ssl and ssh certs using ring rsa and wallexerr ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix
    • (g)rpccapnp to communicate between each balancer
    • decompress encoded packet using borsh and serde 

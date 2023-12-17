@@ -877,6 +877,7 @@ pub mod network{
 
 
 
+
 /*  > -------------------------------------------
     |           proc macro functions 
     | ------------------------------------------
@@ -917,7 +918,7 @@ pub mod network{
     tell the compiler that extend the old AST with this new one
 
     kinds: 
-        decl_macro (inside misc.rs)
+        decl_macro
         proc_macro
         proc_macro_derive
         proc_macro_attribute
@@ -936,6 +937,13 @@ pub mod network{
 */
 
 
+
+use proc_macro::TokenStream;
+use quote::{quote, ToTokens};
+use std::collections::HashSet as Set;
+use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
+use syn::{parse_macro_input, parse_quote, Expr, Ident, Local, Pat, Stmt, Token, FnArg};
 
 
 
@@ -1031,13 +1039,13 @@ pub fn passport(args: TokenStream, input: TokenStream) -> TokenStream {
                 inside a vec![] and since there are multiple roles we used * to 
                 push them all into the vec![] which means repetition pattern
             */
-            let granted_roles = vec![#(#granted_roles),*];
+            let granted_roles = vec![#(#granted_roles),*]; // extending the AST of the api method at compile time
 
         }
     ).unwrap();
 
     /* inject the granted_roles into the api body at compile time */
-    api_ast.block.stmts.insert(0, new_stmt); // extending the AST of the api method at compile time
+    api_ast.block.stmts.insert(0, new_stmt);
     
     /* 
         return the newly generated AST by the quote of the input api Rust code  
@@ -1050,10 +1058,14 @@ pub fn passport(args: TokenStream, input: TokenStream) -> TokenStream {
 
 
 #[proc_macro]
-pub fn fn_like_proc_macro(input: TokenStream) -> TokenStream {
+pub fn passport_proc(input: TokenStream) -> TokenStream {
 
     // ex:
-    // #[macro_name]
+    // #[passport_proc]
+    // #[passport_proc(access=all)]
+    // #[passport_proc(access=user)]
+    // #[passport_proc(access=admin)]
+    // #[passport_proc(access=dev)]
     // fn im_a_method(){}
     
     input
@@ -1068,9 +1080,9 @@ pub fn derive_proc_macro(input: TokenStream) -> TokenStream {
     // struct SexyStruct{}
     
     // this will be implemented in here for the struct inside input token stream
-    // so later on we can call the method on the struct once we've implemented the
+    // so later on we can call the method on the struct once we implement the
     // method for the struct in here.
-    // SexyStruct::passport() 
+    // SexyStruct::passport() // like checking jwt in request object
 
     input
 
