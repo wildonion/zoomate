@@ -83,6 +83,16 @@ impl<'g, G: Clone + Default + Send + Sync + 'static> Event for Struct<'g, G>{
             func();
         };
         callback(get_name);
+
+        type Closure = Box<dyn FnOnce() -> ()>;
+        fn get_cls(cls: Closure) -> (){ () }
+        fn get_cls1(cls: impl FnOnce() -> ()) -> (){ () }
+        // or
+        (
+            |param: impl FnOnce() -> ()|{
+                ()
+            }
+        )(||{});
         
         let d = self.data.clone();
         std::sync::Arc::new(

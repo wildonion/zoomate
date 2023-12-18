@@ -17,6 +17,7 @@ https://github.com/actix/examples/tree/master/protobuf
 https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs => run session actor in a separate tokio::spawn thread using tcp server and custom codec
 https://github.com/wildonion/cs-concepts
 https://github.com/wildonion/cs-concepts#-blogs-and-books
+https://github.com/wildonion/cs-concepts/blob/main/backend-roadmap.pdf
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
@@ -25,7 +26,6 @@ https://github.com/foniod/build-imageshttps://www.qualcomm.com/content/dam/qcomm
 https://docs.peer5.com/guides/production-ready-hls-vod/
 https://blog.tempus-ex.com/hello-video-codec/
 https://stackoverflow.com/a/56475851
-https://github.com/wildonion/cs-concepts
 https://www.quora.com/How-do-you-write-a-video-codec
 https://coaxion.net/blog/2017/07/writing-gstreamer-applications-in-rust/
 https://github.com/security-union/rust-zoom
@@ -44,6 +44,7 @@ https://github.com/NicolasLM/nucleon
 
 
 rust cli zoomate features and ownership, borrowing rules:
+    - .wasm, .so, libp2p, redis, tokio and actix tools for event driven, graph and distributed based streaming nodes using wallexerr and hadead
     - multithreaded and async node, agent and balancer engines with blockchain graph based distributed algorithms and scheduling tlps using:
         > actor based coding for async message sending and realtime stream message handlers and listeners using
             > --------------------------------------------------------------------------------------------
@@ -69,9 +70,9 @@ rust cli zoomate features and ownership, borrowing rules:
             | -> two actors in two apps communicate through streaming and pubsub channels using rcp http2 and redis
             | -> two actors in an app communicate through streaming and pubsub channels using mpsc and redis 
              --------------------------------------------------------------------------------------------
-            > pubsub and streaming be like:
-            > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits,mailbox using while let Ok((stream, addr)) = listener.accept().await{}
-            > actix::brokerpubsub,http,actor,ws,Multipart,Payload,Protobuf extractor
+            > pubsub streaming inside actor done with:
+            > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits
+            > actix::brokerpubsub,http,actor,ws,Multipart,Payload,Protobuf extractor,mailbox using while let Ok((stream, addr)) = listener.accept().await{}
             > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
             > redis::pubsub,streams,queue
             > tonio::grpc::protobuf,capnp
