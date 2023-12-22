@@ -47,6 +47,24 @@ rust cli zoomate features and ownership, borrowing rules:
     - .wasm, .so, libp2p, redis, tokio and actix tools for event driven, graph and distributed based streaming nodes using wallexerr and hadead
     - multithreaded and async node, agent and balancer engines with blockchain graph based distributed algorithms and scheduling tlps using:
         > actor based coding for async message sending and realtime stream message handlers and listeners using
+            ----------------------------------------------------------------------------------
+            --------------- actor based pubsub macro for streaming over topics ---------------
+            ----------------------------------------------------------------------------------
+            actors and dsl based local and tcp based pubsub macroes for realtime streaming 
+            and monitoring like grafana with distributed algos with:
+            tokio tcp listener, mpsc, select, spawn, time
+            actix web apis, shared state data between routers threads using app data
+            actix web stream: Payload, payload: Multipart, data: web::Josn<Data>
+            actix ws actor, broker 
+            tonic grpc protobuf
+            Lazy<Arc<Mutex<MapDbOrConfiFile>>> + Send + Sync + 'static
+            extract multipart into map then convert it into serde json then map json value into structure 
+            or just serde json value if we don't know the incoming type of data from any server 
+            local and tcp based pubsub actor streaming using mpsc and redis, libp2p and sqlx:
+            1 - start both redis and subscriber actor globally 
+            2 - PUBLISHER MACRO === publish/fire/emit topic using redis actor where an event must be triggered 
+            3 - SUBSCIBER MACRO === in subscriber actor interval in tokio::spawn start subscribing using while let some syntax
+            4 - client/server can be an actor and can stream over incoming packets and topics from server response/client response
             > --------------------------------------------------------------------------------------------
             | with actors we can communicate between different parts of the app by sending async 
             | messages to each other through jobq channels, they also must have a handler for each 
@@ -213,6 +231,8 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
+   • graph algos in ai and distributed models like libp2p
+   • sign hash of aes256 bits of data using ed25519 private key then verify ed25519 sig using data hash, pubkey and sig 
    • ssl and ssh certs using ring rsa and wallexerr ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix
    • (g)rpccapnp to communicate between each balancer

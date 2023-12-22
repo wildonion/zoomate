@@ -78,6 +78,18 @@ impl<'g, G: Clone + Default + Send + Sync + 'static> Event for Struct<'g, G>{
 
     fn get_room<'valid>(&mut self) -> Self::Room<'valid> {
 
+        // no two closures, even if identical, have the same type since 
+        // they're traits and traits are not sized
+        // consider boxing your closure and/or using it as a trait object
+        // trait object is an struct instance that implements the trait 
+        // and we canll trait method on it, also boxing makes the type
+        // sizable cause box stores on the heap, in our case they must be
+        // as trait object cause they can be sized since we're calling them
+        // on an struct instance
+        // let c1 = Box::new(||{});
+        // let mut closure = &mut c1;
+        // closure = &mut Box::new(||{}); // it can't be mutated cause
+
         fn get_name() -> String{ String::from("") }
         let callback = |func: fn() -> String|{
             func();
@@ -88,7 +100,8 @@ impl<'g, G: Clone + Default + Send + Sync + 'static> Event for Struct<'g, G>{
         fn get_cls(cls: Closure) -> (){ () }
         fn get_cls1(cls: impl FnOnce() -> ()) -> (){ () }
         // or
-        (
+        (   
+            // a closure that takes a closure
             |param: impl FnOnce() -> ()|{
                 ()
             }
