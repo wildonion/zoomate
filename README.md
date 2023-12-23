@@ -18,6 +18,13 @@ sudo make install
 brew install libthemis
 ```
 
+### protobuf setup
+
+```bash
+brew install protobuf # on MacOS
+sudo apt install protobuf-compiler libssl-dev zlib1g-dev
+```
+
 compile `build.rs` codes which contains the `.proto` files in `proto` folder using ```cargo build``` command to generate the rust codes.
 
 ## 🥙 Usage

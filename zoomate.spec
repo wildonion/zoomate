@@ -47,11 +47,11 @@ rust cli zoomate features and ownership, borrowing rules:
     - .wasm, .so, libp2p, redis, tokio and actix tools for event driven, graph and distributed based streaming nodes using wallexerr and hadead
     - multithreaded and async node, agent and balancer engines with blockchain graph based distributed algorithms and scheduling tlps using:
         > actor based coding for async message sending and realtime stream message handlers and listeners using
-            ----------------------------------------------------------------------------------
-            --------------- actor based pubsub macro for streaming over topics ---------------
-            ----------------------------------------------------------------------------------
-            actors and dsl based local and tcp based pubsub macroes for realtime streaming 
-            and monitoring like grafana with distributed algos with:
+            ------------------------------------------------------------------------------------------------------------
+            --------------- actor based push notif pubsub macros for streaming over topics in a same app ---------------
+            ------------------------------------------------------------------------------------------------------------
+            actors and dsl based local and tcp based pubsub macroes for realtime streaming,
+            push notifs and monitoring like grafana with distributed algos with:
             tokio tcp listener, mpsc, select, spawn, time
             actix web apis, shared state data between routers threads using app data
             actix web stream: Payload, payload: Multipart, data: web::Josn<Data>
@@ -65,7 +65,19 @@ rust cli zoomate features and ownership, borrowing rules:
             2 - PUBLISHER MACRO === publish/fire/emit topic using redis actor where an event must be triggered 
             3 - SUBSCIBER MACRO === in subscriber actor interval in tokio::spawn start subscribing using while let some syntax
             4 - client/server can be an actor and can stream over incoming packets and topics from server response/client response
-            > --------------------------------------------------------------------------------------------
+            actor based pubsub workers in server/client (like tcp,tonic,http) for realtime streaming and monitoring like grafana
+            - start actors globally in a place when the server gets built (static Lazy<Arc<Mutex<Actor>>> send sync 'static)
+            - local pubsub pattern (using actix actor worker and the broker crate)
+                publisher actor  -> publish/fire/emit/trigger event data using actix broker 
+                subscriber actor -> subscribe to incoming data from publisher in the interval in tokio::spawn while let some and mpsc
+            - redis pubsub pattern
+                publisher actor  -> publish/fire/emit/trigger event data using redis actor in the interval then break once a subscriber receives it
+                subscriber actor -> subscribe to incoming data from redis in the interval in tokio::spawn while let some and mpsc
+            - http api must be triggered by frontend every 5 seconds in which we send message to subscriber actor worker to 
+              get the notifications from redis and send it as the json response back to the caller
+            -----------------------------------------------------------------------------------------------------------
+            --------------- actor based push notif pubsub macro for streaming over topics in a two apps ---------------
+            -----------------------------------------------------------------------------------------------------------
             | with actors we can communicate between different parts of the app by sending async 
             | messages to each other through jobq channels, they also must have a handler for each 
             | type of incoming messages like redis streams and pubsub patterns with ws actors and 
@@ -231,7 +243,7 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
-   • graph algos in ai and distributed models like libp2p
+   • graph algos in ai and distributed models like libp2p and ipfs
    • sign hash of aes256 bits of data using ed25519 private key then verify ed25519 sig using data hash, pubkey and sig 
    • ssl and ssh certs using ring rsa and wallexerr ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix
