@@ -65,16 +65,19 @@ rust cli zoomate features and ownership, borrowing rules:
             2 - PUBLISHER MACRO === publish/fire/emit topic using redis actor where an event must be triggered 
             3 - SUBSCIBER MACRO === in subscriber actor interval in tokio::spawn start subscribing using while let some syntax
             4 - client/server can be an actor and can stream over incoming packets and topics from server response/client response
-            actor based pubsub workers in server/client (like tcp,tonic,http) for realtime streaming and monitoring like grafana
-            - start actors globally in a place when the server gets built (static Lazy<Arc<Mutex<Actor>>> send sync 'static)
-            - local pubsub pattern (using actix actor worker and the broker crate)
-                publisher actor  -> publish/fire/emit/trigger event data using actix broker 
-                subscriber actor -> subscribe to incoming data from publisher in the interval in tokio::spawn while let some and mpsc
-            - redis pubsub pattern
-                publisher actor  -> publish/fire/emit/trigger event data using redis actor in the interval then break once a subscriber receives it
-                subscriber actor -> subscribe to incoming data from redis in the interval in tokio::spawn while let some and mpsc
-            - http api must be triggered by frontend every 5 seconds in which we send message to subscriber actor worker to 
-              get the notifications from redis and send it as the json response back to the caller
+            pubsub realtime monitoring, streaming and push notification with:
+            • actor based pubsub workers in server/client (like tcp,tonic,http) for realtime streaming over receiver/subscriber and monitoring like grafana
+            • start actors globally in a place when the server is being built
+            • shared the started actor between threads as an app data state in this case the data must be Arc<Mutex<Actor>>
+            • initialize a global in memory map based db using static Lazy<Arc<Mutex<Actor>>> send sync 'static
+            • local pubsub pattern (using actix actor worker and the broker crate with mpsc channel)
+                publisher actor  ➙ publish/fire/emit/trigger event data using actix broker 
+                subscriber actor ➙ subscribe to incoming data from publisher in the interval in tokio::spawn while let some and mpsc
+            • redis pubsub pattern
+                publisher actor  ➙ publish/fire/emit/trigger event data using redis actor in the interval then break once a subscriber receives it
+                subscriber actor ➙ subscribe to incoming data from redis in the interval in tokio::spawn while let some and mpsc
+            • http api must be triggered by frontend every 5 seconds in which we send message to subscriber actor worker to 
+              get all user notifications from redis and send it as the json response back to the caller
             -----------------------------------------------------------------------------------------------------------
             --------------- actor based push notif pubsub macro for streaming over topics in a two apps ---------------
             -----------------------------------------------------------------------------------------------------------
