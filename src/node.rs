@@ -39,6 +39,9 @@ mod extractor;
 mod cry;
 use crate::cry::*;
 
+mod tcpactor;
+use crate::tcpactor::*;
+
 
 /* ---------------------------------------------------------
     loading the compiled proto file into rust code in here 
