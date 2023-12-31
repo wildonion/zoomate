@@ -65,7 +65,8 @@ rust cli zoomate features and ownership, borrowing rules:
             2 - PUBLISHER MACRO === publish/fire/emit topic using redis actor where an event must be triggered 
             3 - SUBSCIBER MACRO === in subscriber actor interval in tokio::spawn start subscribing using while let some syntax
             4 - client/server can be an actor and can stream over incoming packets and topics from server response/client response
-            pubsub realtime monitoring, streaming and push notification over a receiver/subscriber/listener with:
+            • generally pubsub realtime monitoring, streaming and push notification over an mpsc receiver/redis subscriber/tcp listener 
+              can be done inside actor worker interval inside tokio::spawn() using while let some syntax
             • actor based pubsub workers in server/client (like tcp,tonic,http) for realtime streaming over receiver/subscriber and monitoring like grafana
             • start actors globally in a place when the server is being built
             • share the started actor between threads as an app data state in this case the data must be Arc<Mutex<Actor>> + Send + Sync + 'static

@@ -144,7 +144,13 @@ async fn main()
 
 
     /* ------------------------------ */
-    /*      start grpc server         */
+    /*    start tcp listener actor    */
+    /* ------------------------------ */
+    tcpactor::TcpServer::new(&format("0.0.0.0:2247")).start();
+
+
+    /* ------------------------------ */
+    /*     start grpc server actor    */
     /* ------------------------------ */
     let cli = ServerCli::parse();
     let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();

@@ -1,19 +1,24 @@
 
 
-
 use actix::prelude::*;
 use actix::Actor;
+use tokio::io::AsyncReadExt; // for reading from socket asyncly allows us to call .read() method
 use tokio::net::TcpListener;
+use tokio::io::AsyncWriteExt; // for writing to socket asyncly allows us to call .write_all() method
+use log::{info, error};
 
-pub struct TcpServer{
-    pub listener: TcpListener,
+
+pub struct TcpListenerActor{
     pub addr: String,
 }
 
-impl Actor for TcpServer{
+impl Actor for TcpListenerActor{
     type Context = Context<Self>;
     
     fn started(&mut self, ctx: &mut Self::Context){
+
+        info!("TcpListenerActor -> started listening");
+
         let (listener_sender, listener_reciever) = 
             std::sync::mpsc::channel::<TcpListener>();
 
@@ -25,15 +30,19 @@ impl Actor for TcpServer{
         });
 
         let received_listener = listener_reciever.recv().unwrap();
-        self.listener(received_listener);
+        self.listen(received_listener);
         
     }
     
 }
 
-impl TcpServer{
+impl TcpListenerActor{
 
-    pub fn listener(&mut self, api_listener: TcpListener){
+    pub fn new(addr: &str) -> Self{
+        TcpListenerActor{addr: addr.to_string()}
+    }
+
+    pub fn listen(&mut self, api_listener: TcpListener){
 
         tokio::spawn(async move{
 
@@ -49,20 +58,20 @@ impl TcpServer{
                         Ok(rcvd_bytes) => {
                 
                             let string_event_data = std::str::from_utf8(&buffer[..rcvd_bytes]).unwrap();
-                            println!("📺 received event data from peer: {}", string_event_data);
+                            info!("📺 received event data from peer: {}", string_event_data);
 
                             let send_tcp_server_data = String::from("write me into the socket");
                             if let Err(why) = api_streamer.write_all(&send_tcp_server_data.as_bytes()).await{
-                                eprintln!("❌ failed to write to api_streamer; {}", why);
+                                error!("❌ failed to write to api_streamer; {}", why);
                                 return;
                             } else{
-                                println!("🗃️ sent {}, wrote {} bytes to api_streamer", send_tcp_server_data.clone(), send_tcp_server_data.len());
+                                info!("🗃️ sent {}, wrote {} bytes to api_streamer", send_tcp_server_data.clone(), send_tcp_server_data.len());
                                 return;
                             }
                         
                         },
                         Err(e) => {
-                            eprintln!("❌ failed to read from api_streamer; {:?}", e);
+                            error!("❌ failed to read from api_streamer; {:?}", e);
                             return;
                         }
                         
@@ -73,5 +82,5 @@ impl TcpServer{
         });
 
     }
-    
+
 }
