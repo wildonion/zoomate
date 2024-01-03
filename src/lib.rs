@@ -455,7 +455,7 @@ pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     (mut cls: T){
 
     {
-        let data = constants::GLOBAL_MUTEXED.clone();
+        let data = constants::IN_MEMORY_DB.clone();
         let mut map = data.lock().await;
         (*map).insert(100, "key".to_string());
     }
@@ -501,7 +501,7 @@ pub async fn agent_simulation<N>() where N: Send + Sync + 'static + Clone{
 	}
 	#[derive(Clone)]
 	struct Pipeline{
-		pub pid: String, // keccak256 bits hash of the whole data
+		pub pid: String, // keccak256 bits hash of the whole data and system usage
 	}
     #[derive(Clone)]
     /* trait objects are heap data and must be beind pointer, eiter Box<dyn or &dyn */
@@ -932,6 +932,7 @@ pub mod network{
         write parser using decl_macro
         changing and analysing the AST logics of methods at compile time before getting into their body
         bind rust code to other langs and extending code in rust using macros
+        extend the user code by adding some code into his already coded logic at compile time
     
 
 */

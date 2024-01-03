@@ -56,6 +56,12 @@ pub const CHARSET: &[u8] = b"0123456789";
                  a thread safe global response objects
            --------------------------------------------------
 
+    
+    code order execution and synchronization in multithreaded based envs
+    like having static lazy arced mutex data without having deadlocks and 
+    race conditions using std::sync tokio::sync objects like 
+    semaphore,arc,mutex,rwlock,mpsc
+
     reasons rust don't have static global types:
         
         Memory Safety: One of Rust's main goals is to ensure memory safety without the need 
@@ -128,7 +134,7 @@ Lazy::new(||{
     )
 });
 
-pub static GLOBAL_MUTEXED: Lazy<std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>> = 
+pub static IN_MEMORY_DB: Lazy<std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>> = 
 Lazy::new(||{ 
     std::sync::Arc::new(
         tokio::sync::Mutex::new(
@@ -453,3 +459,30 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
     // neuron_.get_inner_receptor()
     
 }
+
+#[derive(Serialize, Deserialize, Clone, Default)]
+pub enum ActionType{
+    A1
+} 
+type Method = fn() -> i32;
+fn run<'lifetime>(param: impl Fn() -> ActionType, method: &'lifetime Method)
+// bounding generic Method to traits and lifetimes
+where Method: Send + Sync + 'static{}
+fn execute<'f, F>(param: &'f mut F) -> () 
+// bounding generic F to closure, lifetimes and other traits
+where F: Fn() -> ActionType + Send + Sync + 'static{}
+
+trait Interface: Send + Sync + 'static{}
+struct Instance{}
+impl Interface for Instance{}
+impl Interface for (){}
+type BoxedTrait = Box<dyn FnOnce() -> ()>;
+struct Test<F: Send + Sync + 'static + Clone + Default> where F: FnOnce() -> (){
+    pub data: F,
+    pub another_data: BoxedTrait
+}
+fn trait_as_ret_and_param_type(param: &mut impl FnOnce() -> ()) -> impl FnOnce() -> (){ ||{} }
+fn trait_as_ret_and_param_type1(param_instance: &mut impl Interface) -> impl FnOnce() -> (){ ||{} }
+fn trait_as_ret_type(instance_type: Instance) -> impl Interface{ instance_type }
+fn trait_as_ret_type_1(instance_type: Instance) -> impl Interface{ () }
+fn trait_as_param_type(param: impl FnOnce() -> ()){}
