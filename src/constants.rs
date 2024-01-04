@@ -57,10 +57,12 @@ pub const CHARSET: &[u8] = b"0123456789";
            --------------------------------------------------
 
     
-    code order execution and synchronization in multithreaded based envs
-    like having static lazy arced mutex data without having deadlocks and 
-    race conditions using std::sync tokio::sync objects like 
-    semaphore,arc,mutex,rwlock,mpsc
+
+        code order execution and synchronization in multithreaded based envs like
+        actor worker like having static lazy arced mutex data without having deadlocks 
+        and race conditions using std::sync tokio::sync objects like 
+        semaphore,arc,mutex,rwlock,mpsc
+
 
     reasons rust don't have static global types:
         
@@ -141,6 +143,24 @@ Lazy::new(||{
             HashMap::new()
         )
     ) 
+});
+
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// static lazy arced mutexed and pinned box type
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+pub static Db: Lazy<std::sync::Arc<tokio::sync::Mutex<
+    std::pin::Pin<Box<dyn futures::Future<Output = HashMap<u32, String>> + Send + Sync + 'static>>
+    >>> = 
+Lazy::new(||{
+
+    std::sync::Arc::new(
+        tokio::sync::Mutex::new(
+            Box::pin(async move{
+                HashMap::new()
+            })
+        )
+    )
+
 });
 
 /* 

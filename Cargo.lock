@@ -161,9 +161,9 @@ dependencies = [
 
 [[package]]
 name = "actix-redis"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38446dc11c743f4f0023b1067c7cfb8f2548f24418e31a193b324e35fa059279"
+checksum = "3bd38b548549dae348a2a9f6c3f8f5cbc6705c4ed0f3ae464e91941a7bc47c36"
 dependencies = [
  "actix",
  "actix-rt",
@@ -174,7 +174,7 @@ dependencies = [
  "derive_more",
  "futures-core",
  "log",
- "redis-async 0.13.0",
+ "redis-async",
  "time 0.3.30",
  "tokio",
  "tokio-util",
@@ -1705,7 +1705,7 @@ dependencies = [
  "futures",
  "futures-util",
  "log",
- "redis",
+ "redis 0.23.3",
  "serde",
  "serde_json",
  "tokio",
@@ -2880,18 +2880,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "redis-async"
-version = "0.13.0"
+name = "redis"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2777130e406c74c28b6cddc0194fcdc2553b5a8795eef9f6384bd3b70a07ba3f"
+checksum = "c580d9cbbe1d1b479e8d67cf9daf6a62c957e6846048408b80b43ac3f6af84cd"
 dependencies = [
+ "async-trait",
  "bytes",
- "futures-channel",
- "futures-sink",
+ "combine",
+ "crc16",
+ "futures",
  "futures-util",
+ "itoa",
  "log",
+ "percent-encoding",
+ "pin-project-lite",
+ "rand",
+ "ryu",
+ "serde",
+ "serde_json",
+ "sha1_smol",
+ "socket2 0.4.9",
  "tokio",
  "tokio-util",
+ "url",
 ]
 
 [[package]]
@@ -5132,8 +5144,8 @@ dependencies = [
  "rand",
  "rand_chacha",
  "rayon",
- "redis",
- "redis-async 0.16.1",
+ "redis 0.24.0",
+ "redis-async",
  "ring 0.17.4",
  "rust-argon2",
  "secp256k1 0.28.0",
