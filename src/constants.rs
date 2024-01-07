@@ -492,12 +492,22 @@ fn execute<'f, F>(param: &'f mut F) -> ()
 // bounding generic F to closure, lifetimes and other traits
 where F: Fn() -> ActionType + Send + Sync + 'static{}
 
+// bounding generic to traits and lifetiems
+// async trait fn run in multithread env using #[trait_variant::make(TraitNameSend: Send)]
+// bounding trait method only to traits like TraitName::foo(): Send + Sync
+// return trait from method using -> impl TraitName
+// trait as method param like param: impl TraitName
+// trait as struct field like pub data: F (where F: TraitName) or pub data: Box<dyn TraitName> 
+// casting generic to trait like N as TraitName
+// bounding trait gat to traits like <N as TraitName>::AssetInfo: Send + Sync
 trait Interface: Send + Sync + 'static{}
 struct Instance{}
 impl Interface for Instance{}
 impl Interface for (){}
 type BoxedTrait = Box<dyn FnOnce() -> ()>;
-struct Test<F: Send + Sync + 'static + Clone + Default> where F: FnOnce() -> (){
+struct Test<R, F: Send + Sync + 'static + Clone + Default> 
+    where F: FnOnce() -> R + Send + Sync + 'static, 
+        R: Send + Sync + 'static{
     pub data: F,
     pub another_data: BoxedTrait
 }
