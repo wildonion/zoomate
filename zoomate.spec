@@ -8,7 +8,7 @@ setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 
 https://drive.google.com/file/d/1-8M8BNMabNPzPZM43ekWqX_D456KaUvT/view => the programmer guides to theory
-https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed patterns in backend
+https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed (clustering/sharding) patterns in backend like ipfs + data compression in pubsub pattern based tlps
 https://github.com/MoonKraken/youtube/tree/main/KonaaAuth
 https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
 https://crates.io/crates/capnp-rpc

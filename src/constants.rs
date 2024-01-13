@@ -500,6 +500,7 @@ where F: Fn() -> ActionType + Send + Sync + 'static{}
 // trait as struct field like pub data: F (where F: TraitName) or pub data: Box<dyn TraitName> 
 // casting generic to trait like N as TraitName
 // bounding trait gat to traits like <N as TraitName>::AssetInfo: Send + Sync
+// bounding the return type of closure trait to traits like where F: FnOnce() -> R + Send + Sync + 'static
 trait Interface: Send + Sync + 'static{}
 struct Instance{}
 impl Interface for Instance{}
