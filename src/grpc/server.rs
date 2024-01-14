@@ -96,7 +96,7 @@ impl NodeService for NodeServer{
 
                 let data = serde_json::to_string_pretty(&node_rpc_request_body.clone()).unwrap();
                 let mut wallet = Wallet::new_ed25519();
-                let signature = misc::sign_with_ed25519(&data, wallet);
+                let signature = misc::ed25519_with_aes_signing(&data, wallet);
                 println!("base58 ed25519 signature >> {:?}", signature);
 
                 Ok(TonicResponse::new(node_resp))

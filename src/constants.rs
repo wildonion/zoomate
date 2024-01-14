@@ -146,7 +146,8 @@ Lazy::new(||{
 });
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// static lazy arced mutexed and pinned box type
+// s3 code order execution using sync objects: 
+// static lazy arced mutexed and pinned box future db type, send sync static
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 pub static Db: Lazy<std::sync::Arc<tokio::sync::Mutex<
     std::pin::Pin<Box<dyn futures::Future<Output = HashMap<u32, String>> + Send + Sync + 'static>>

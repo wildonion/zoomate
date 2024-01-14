@@ -350,7 +350,9 @@ impl Node{
 
 }
 
-pub fn sign_with_ed25519(data: &str, mut wallet: Wallet) -> String{
+
+// vpn streamer actor uses this signing method to ecnrypt data
+pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
     let aes256_signature = cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
     let secure_cell_signature = cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
     let keccak256_signature = cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
