@@ -14,7 +14,7 @@ https://github.com/wildonion/gem/tree/master/core/panel/events => websocket impl
 https://crates.io/crates/capnp-rpc
 https://github.com/actix/examples/tree/master
 https://github.com/actix/examples/tree/master/protobuf
-https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs => run session actor in a separate tokio::spawn thread using tcp server and custom codec
+https://github.com/actix/examples/blob/master/websockets/chat-tcp/src/codec.rs => start a tcp server in a separate tokio::spawn thread which runs the session actor with a custom codec instead of using the websocket codec
 https://github.com/wildonion/cs-concepts
 https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://github.com/wildonion/cs-concepts/blob/main/backend-roadmap.pdf
