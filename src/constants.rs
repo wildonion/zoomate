@@ -458,6 +458,37 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
 /* casting generic N to NodeReceptor trait to access the InnerReceptor gat */
 <N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
 
+    // with pointer we can borrow the type to prevent from moving and 
+    // makes the type sizable at compile time by storing the address of 
+    // none determined size of it inside the stack like str and []
+    // box is sized with the size of its content allocated on the heap
+    trait Test{}
+    struct Neuronam{}
+    let name = Neuronam{};
+    impl Test for Neuronam{}
+    let trait_name = &name as &dyn Test;
+    struct AnotherNeuronam<T: Test, F> where F: FnOnce() -> (){
+        pub data: T,
+        pub new_data: F
+    }
+    impl<V: Test, T> AnotherNeuronam<V, T> where T: FnOnce() -> (){
+        fn get_data(param: impl FnMut() -> ()) -> impl FnMut() 
+            -> std::pin::Pin<Box<dyn futures::Future<Output=String> + Send + Sync + 'static>>{
+            ||{
+                Box::pin(async move{
+                    String::from("")
+                })
+            }
+        }
+        fn get_func() -> fn() -> String{
+            fn get_name() -> String{
+                String::from("")
+            }
+            get_name
+        }
+        }
+    let another_name = AnotherNeuronam{data: name, new_data: ||{}};
+
     let pinned_boxed_future: std::pin::Pin<Box<dyn std::future::Future<Output=String>>> = 
         Box::pin(async move{
             String::from("")
