@@ -8,7 +8,7 @@ setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 
 https://drive.google.com/file/d/1-8M8BNMabNPzPZM43ekWqX_D456KaUvT/view => the programmer guides to theory
-https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed (clustering/sharding) patterns in backend like ipfs + data compression in pubsub pattern based tlps
+https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed (clustering/sharding) patterns in backend like ipfs with libp2p + data compression in pubsub pattern based tlps
 https://github.com/MoonKraken/youtube/tree/main/KonaaAuth
 https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
 https://crates.io/crates/capnp-rpc
@@ -20,7 +20,7 @@ https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://github.com/wildonion/cs-concepts/blob/main/backend-roadmap.pdf
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
-https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs
+https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs => graph and math algos with libp2p::kademliadht,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
 https://github.com/libp2p/rust-libp2p/tree/master/examples
 https://github.com/foniod/build-imageshttps://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 https://docs.peer5.com/guides/production-ready-hls-vod/
@@ -113,7 +113,7 @@ rust cli zoomate features and ownership, borrowing rules:
             > pubsub streaming inside actor done with:
             > tokio::tcp,udp,mpsc,select,spawn,time,mutex,rwlock,asynciotraits
             > actix::brokerpubsub,http,actor,ws,Multipart,Payload,Protobuf extractor,mailbox using while let Ok((stream, addr)) = listener.accept().await{}
-            > libp2p::dht,kademlia,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
+            > libp2p::kademliadht,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
             > redis::pubsub,streams,queue
             > tonio::grpc::protobuf,capnp
             > then:
