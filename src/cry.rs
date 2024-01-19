@@ -1,5 +1,6 @@
 
 
+
 use wallexerr::misc::*;
 use crate::constants;
 
@@ -56,6 +57,7 @@ pub mod eddsa_with_symmetric_signing{
                 let deserialized_data = std::str::from_utf8(&dec).unwrap();
                 if deserialized_data == data{
 
+                    wallet.self_save_to_json("ed25519-aes256");
                     println!("✅ got same data");
                     return base58_sig.unwrap();
 
@@ -71,7 +73,9 @@ pub mod eddsa_with_symmetric_signing{
 
     }
 
-
+    //------------------------------
+    //----------- themis -----------
+    //------------------------------
     pub fn ed25519_secure_cell_signing(data: &str, mut wallet: Wallet) -> String{
 
         let mut default_secure_cell_config = &mut SecureCellConfig::default();
@@ -112,6 +116,7 @@ pub mod eddsa_with_symmetric_signing{
                 let deserialized_data = std::str::from_utf8(&dec).unwrap();
                 if deserialized_data == data{
 
+                    wallet.self_save_to_json("ed25519-secure_cell");
                     println!("✅ got same data");
                     return base58_sig.unwrap();
 
@@ -162,7 +167,8 @@ pub mod eddsa_with_keccak256_signing{
         
         match is_verified{
             Ok(is_verified) => {
-                
+
+                wallet.self_save_to_json("ed25519-keccak256");
                 return base58_sig.unwrap();
 
             },
