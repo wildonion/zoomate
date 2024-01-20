@@ -1,6 +1,6 @@
 
 
-☢️ actor and distributed based proxy and balancer for audio and video realtiming process using ICP blockchain which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has a Oauth2 based dashboard for monitoring nodes and balancers written in Yew.
+actor and distributed based proxy and balancer for audio and video realtiming process using ICP blockchain which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has a Oauth2 based dashboard for monitoring nodes and balancers written in Yew.
 
 > refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 
@@ -23,6 +23,13 @@ brew install libthemis
 ```bash
 brew install protobuf # on MacOS
 sudo apt install protobuf-compiler libssl-dev zlib1g-dev
+```
+
+### ICP canisters setup 
+
+```bash
+sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+cd canisters && dfx new --type=rust wepn
 ```
 
 compile `build.rs` codes which contains the `.proto` files in `proto` folder using ```cargo build``` command to generate the rust codes.

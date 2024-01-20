@@ -42,9 +42,6 @@ use crate::cry::*;
 mod tcpactor;
 use crate::tcpactor::*;
 
-mod canisters;
-use crate::canisters::*;
-
 
 /* ---------------------------------------------------------
     loading the compiled proto file into rust code in here 

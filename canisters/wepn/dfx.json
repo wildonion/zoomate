@@ -1,0 +1,30 @@
+{
+  "canisters": {
+    "wepn_backend": {
+      "candid": "src/wepn_backend/wepn_backend.did",
+      "package": "wepn_backend",
+      "type": "rust"
+    },
+    "wepn_frontend": {
+      "dependencies": [
+        "wepn_backend"
+      ],
+      "frontend": {
+        "entrypoint": "src/wepn_frontend/src/index.html"
+      },
+      "source": [
+        "src/wepn_frontend/assets",
+        "dist/wepn_frontend/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
