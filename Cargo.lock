@@ -1695,24 +1695,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hadead"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6f52f1b9113c4b27b5811bf4d46bdec24a65ce99f8af687925b557ba04ef378"
-dependencies = [
- "chrono",
- "env_logger 0.10.0",
- "futures",
- "futures-util",
- "log",
- "redis 0.23.3",
- "serde",
- "serde_json",
- "tokio",
- "wallexerr 0.2.8",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2850,33 +2832,6 @@ checksum = "5ce3fb6ad83f861aac485e76e1985cd109d9a3713802152be56c3b1f0e0658ed"
 dependencies = [
  "crossbeam-deque",
  "crossbeam-utils",
-]
-
-[[package]]
-name = "redis"
-version = "0.23.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f49cdc0bb3f412bf8e7d1bd90fe1d9eb10bc5c399ba90973c14662a27b3f8ba"
-dependencies = [
- "async-trait",
- "bytes",
- "combine",
- "crc16",
- "futures",
- "futures-util",
- "itoa",
- "log",
- "percent-encoding",
- "pin-project-lite",
- "rand",
- "ryu",
- "serde",
- "serde_json",
- "sha1_smol",
- "socket2 0.4.9",
- "tokio",
- "tokio-util",
- "url",
 ]
 
 [[package]]
@@ -4251,30 +4206,6 @@ checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "wallexerr"
-version = "0.2.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5585aed1f80de31d142197dbe3fa6bc6dcfbd68725819763223754b4cdb611f5"
-dependencies = [
- "aes256ctr_poly1305aes",
- "base58",
- "base64 0.21.4",
- "chrono",
- "hex",
- "once_cell",
- "ring 0.17.4",
- "secp256k1 0.28.0",
- "serde",
- "serde_json",
- "sha2",
- "themis",
- "tiny-bip39",
- "tiny-keccak",
- "tokio",
- "web3",
-]
-
-[[package]]
-name = "wallexerr"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bdde3d18edb35070c470e7d563a084ccec084305faf6ddd865a77a5082578d3"
@@ -5130,7 +5061,6 @@ dependencies = [
  "env_logger 0.10.0",
  "futures",
  "futures-util",
- "hadead",
  "hex",
  "is_type",
  "log",
@@ -5144,7 +5074,7 @@ dependencies = [
  "rand",
  "rand_chacha",
  "rayon",
- "redis 0.24.0",
+ "redis",
  "redis-async",
  "ring 0.17.4",
  "rust-argon2",
@@ -5161,7 +5091,7 @@ dependencies = [
  "tonic",
  "tonic-build",
  "uuid",
- "wallexerr 0.3.1",
+ "wallexerr",
  "wasmer 4.2.2",
  "wasmer-wasi",
  "web3",

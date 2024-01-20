@@ -76,7 +76,7 @@ impl<'g, G: Clone + Default + Send + Sync + 'static> Event for Struct<'g, G>{
     
     type Room<'valid> = std::sync::Arc<tokio::sync::Mutex<G>>;
 
-    fn get_room<'valid>(&mut self) -> Self::Room<'valid> {
+    fn get_room<'valid>(&mut self, cls: impl FnOnce(String) -> String) -> Self::Room<'valid> {
 
         // no two closures, even if identical, have the same type since 
         // they're traits and traits are not sized
@@ -102,10 +102,10 @@ impl<'g, G: Clone + Default + Send + Sync + 'static> Event for Struct<'g, G>{
         // or
         (   
             // a closure that takes a closure
-            |param: impl FnOnce() -> ()|{
+            |param: Box<dyn FnOnce() -> ()>|{
                 ()
             }
-        )(||{});
+        )(Box::new(||{}));
         
         let d = self.data.clone();
         std::sync::Arc::new(

@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
+use actix::Actor;
 use grpc::server;
 use once_cell::sync::Lazy;
 use rand::{Rng, SeedableRng, RngCore};
@@ -9,7 +10,6 @@ use tokio::sync::broadcast;
 use tokio::sync::futures;
 use tokio::sync::mpsc;
 use serde::{Serialize, Deserialize};
-use zoomate::Node;
 use std::collections::HashMap;
 use log::{error, info};
 use dotenv::dotenv;
@@ -20,10 +20,14 @@ use crate::grpc::server::NodeServer;
 use crate::redis4::*;
 use node::{NodeRequest, NodeResponse, node_service_client::NodeServiceClient, node_service_server::NodeServiceServer};
 use ::clap::{Parser};
-use zoomate::api;
+use utils::{api, ZoomateRequest, ZoomateResponse};
 
 
 mod redis4;
+
+mod tcpactor;
+
+mod constants;
 
 mod grpc;
 mod capnp;
@@ -39,8 +43,6 @@ mod extractor;
 mod cry;
 use crate::cry::*;
 
-mod tcpactor;
-use crate::tcpactor::*;
 
 
 /* ---------------------------------------------------------
@@ -125,28 +127,18 @@ async fn main()
     });
 
 
-    /* 
-        if we need a data to be shared with other scopes which is inside of
-        spawned task we have to use mpsc like channel to move it between other 
-        scopes, with tokio::spawn() we can run async tasks in another threadpool
-        using green threads other than main threads which prevent other codes 
-        from being halted in their execution while we're running the async task 
-        also std::thread by default handles the multi-processing manner when the
-        task is heavy enough so it can switch to another navtive core.
-    */
-    tokio::spawn(async move{
-        
-        // hadead rate limiter 
-        let res = api().await;
-        println!("hadead res {:?}", res);
 
-    });
+    //----------------------------------------------------------------------------------
+    //---- file encryption using ed25519 wallet with aes256 themis secure cell signing
+    //----------------------------------------------------------------------------------
+    let mut encrypted = utils::encrypt_file("secret.txt").await;
+    let decrypted = utils::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
 
 
     /* ------------------------------ */
     /*    start tcp listener actor    */
     /* ------------------------------ */
-    tcpactor::TcpServer::new(&format("0.0.0.0:2247")).start();
+    tcpactor::TcpListenerActor::new(&format!("0.0.0.0:2247")).start();
 
 
     /* ------------------------------ */

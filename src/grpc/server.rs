@@ -3,6 +3,8 @@
 
 use crate::{*, node::node_service_server::NodeService};
 use tonic::transport::Server as TonicServer;
+use utils::Node;
+use wallexerr::misc::Wallet;
 
 /* > ------------------------------------------------------------------
    | -> each rpc ds is like an actix actor which contains:
@@ -94,9 +96,9 @@ impl NodeService for NodeServer{
                 let jwt = format!("Bearer {}", metadata_value.to_str().unwrap());
                 let node_resp = NodeResponse::default();
 
-                let data = serde_json::to_string_pretty(&node_rpc_request_body.clone()).unwrap();
+                let data = node_rpc_request_body.message.clone();
                 let mut wallet = Wallet::new_ed25519();
-                let signature = misc::ed25519_with_aes_signing(&data, wallet);
+                let signature = utils::ed25519_with_aes_signing(&data, wallet);
                 println!("base58 ed25519 signature >> {:?}", signature);
 
                 Ok(TonicResponse::new(node_resp))

@@ -2,7 +2,7 @@
 
 
 use wallexerr::misc::*;
-use crate::constants;
+use crate::constants::{gen_random_chars};
 
 
 /** 
@@ -26,8 +26,8 @@ pub mod eddsa_with_symmetric_signing{
 
         // note that nonce must be unique per each user or a unique identity
         let mut default_aes256_config = &mut Aes256Config::default();
-        default_aes256_config.secret_key = constants::gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
-        default_aes256_config.nonce = constants::gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
+        default_aes256_config.secret_key = gen_random_chars(64); /*** ---- secret key must be 64 bytes or 512 bits */
+        default_aes256_config.nonce = gen_random_chars(16); /*** ---- secret key must be 16 bytes or 128 bits */
         default_aes256_config.data = data.as_bytes().to_vec();
 
         let edprvkey = wallet.ed25519_secret_key.clone().unwrap();
@@ -83,7 +83,7 @@ pub mod eddsa_with_symmetric_signing{
         default_secure_cell_config.secret_key = {
             hex::encode(
                 wallet.self_generate_keccak256_hash_from(
-                    &constants::gen_random_chars(64)
+                    &gen_random_chars(64)
                 )
             )
         };

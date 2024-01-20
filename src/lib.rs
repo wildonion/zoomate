@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 use actix::{Actor, Handler, Message, StreamHandler};
-use actix_web::HttpResponse;
+use actix_web::{post, HttpRequest, HttpResponse};
 use actix_web::web::Payload;
 use aes256ctr_poly1305aes::aead::Buffer;
 use chacha20::cipher::typenum::Len;
@@ -16,7 +16,6 @@ mod acter;
 use acter::*;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use uuid::Uuid;
-use hadead::*;
 use once_cell::sync::Lazy;
 use base64::{engine::general_purpose, Engine as _};
 use wallexerr::misc::*;
@@ -24,37 +23,10 @@ use sha3::{Digest, Keccak256, Keccak256Core};
 use ring::rand as ring_rand;
 mod constants;
 use constants::*;
-use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
-use std::collections::HashSet as Set;
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, parse_quote, Expr, Ident, Local, Pat, Stmt, Token, FnArg};
 mod misc;
 use misc::*; // load all macros
+mod cry;
 
-
-
-// global rate limiter
-pub static HADEAD: Lazy<Config> = Lazy::new(||{
-
-    let redis_password = "geDteDd0Ltg2135FJYQ6rjNYHYkGQa70".to_string();
-    let redis_username = "".to_string();
-    let redis_host = "localhost".to_string();
-    let redis_port = "6379".to_string();
-    let chill_zone_duration_in_seconds = 5;
-
-    let hadead_instance = hadead::Config::new(
-        &redis_password,
-        &redis_username,
-        &redis_host,
-        &redis_port,
-        chill_zone_duration_in_seconds, /* default is 5 miliseconds */
-    );
-
-    hadead_instance
-
-});
 
 
 /* 
@@ -63,7 +35,7 @@ pub static HADEAD: Lazy<Config> = Lazy::new(||{
     the tcp socket to either ckient or seerver
 */
 #[post("/api")]
-pub async fn api(req: HttpRequest, stream: Payload) -> Result<actix_web::HttpResponse, actix_web::Error>{
+pub async fn api(req: HttpRequest, mut stream: Payload) -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     /* we have to fill a buffer on server with incoming bytes by streaming over `stream` object */
     let mut bytes = vec![];
@@ -71,41 +43,18 @@ pub async fn api(req: HttpRequest, stream: Payload) -> Result<actix_web::HttpRes
         bytes.extend_from_slice(&item?);
     }
 
-    let hadead = HADEAD.clone();
-    println!("hadead contract info: {:?}", hadead.contract.as_ref().unwrap());
+    tokio::spawn(async move{
 
-    let check_rate_limited = hadead.check(hadead.id.as_ref().unwrap()).await;
+        // other api logics
+        // ...
     
-    let Ok(flag) = check_rate_limited else{
-        
-        let why = check_rate_limited.unwrap_err();
-        return Ok(
-            HttpResponse::NotAcceptable().json(why.to_string())
-        );
-    };
+    });
+   
 
-    if flag{
+    return Ok(
+        HttpResponse::NotAcceptable().json("rate limited")
+    );
 
-        // rate limited
-
-        return Ok(
-            HttpResponse::NotAcceptable().json("rate limited")
-        );
-
-    } else{
-
-        tokio::spawn(async move{
-
-            // other api logics
-            // ...
-        
-        });
-
-        return Ok(
-            HttpResponse::Ok().json("some json data")
-        );
-
-    }
 
 }
 
@@ -358,6 +307,48 @@ pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
     let keccak256_signature = cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
 
     secure_cell_signature
+}
+
+pub async fn encrypt_file(fpath: &str) -> (Vec<u8>, SecureCellConfig){
+
+    let file = tokio::fs::File::open(fpath).await;
+
+    let mut buffer = vec![];
+    file.unwrap().read_to_end(&mut buffer).await; // await on it to fill the buffer
+
+    let mut wallet = wallexerr::misc::Wallet::new_ed25519();
+    let mut default_secure_cell_config = &mut SecureCellConfig::default();
+    default_secure_cell_config.secret_key = {
+        hex::encode(
+            wallet.self_generate_keccak256_hash_from(
+                &constants::gen_random_chars(64)
+            )
+        )
+    };
+    default_secure_cell_config.data = buffer;
+
+    let encrypted_data = wallet.self_secure_cell_encrypt(default_secure_cell_config).unwrap();
+    default_secure_cell_config.data = encrypted_data.clone(); //*** important part */
+
+    let enc_file_path = format!("{}.enc", fpath);
+    let file = tokio::fs::File::create(&enc_file_path).await;
+    file.unwrap().write_all(&encrypted_data).await;
+
+    (encrypted_data, default_secure_cell_config.to_owned())
+
+}
+
+pub async fn decrypt_file(decpath: &str, default_secure_cell_config: &mut SecureCellConfig) -> Vec<u8>{
+
+    let file = tokio::fs::File::create(decpath).await;
+
+    let mut wallet = wallexerr::misc::Wallet::new_ed25519();
+    let decrypted_data = wallet.self_secure_cell_decrypt(default_secure_cell_config).unwrap();
+
+    file.unwrap().write_all(&decrypted_data).await;
+
+    decrypted_data
+
 }
 
 /* ----------------------------------------------------------------------- */
@@ -937,156 +928,159 @@ pub mod network{
         extend the user code by adding some code into his already coded logic at compile time
     
 
+
+    [lib]
+    proc-macro = true
+    path = "core/panel/lib.rs"
+    name = "panel_macros"
+
 */
 
+// use proc_macro::TokenStream;
+// use quote::{quote, ToTokens};
+// use std::collections::HashSet as Set;
+// use syn::parse::{Parse, ParseStream};
+// use syn::punctuated::Punctuated;
+// use syn::{parse_macro_input, parse_quote, Expr, Ident, Local, Pat, Stmt, Token, FnArg};
 
 
-use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
-use std::collections::HashSet as Set;
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, parse_quote, Expr, Ident, Local, Pat, Stmt, Token, FnArg};
+// struct Args{
+//     vars: Set<Ident>
+// }
 
+// /*
+//     we need to create our own parser to parse the 
+//     args token stream into a new AST
+// */
+// impl Parse for Args {
+//     fn parse(input: ParseStream) -> syn::parse::Result<Self> {
+//         let vars = Punctuated::<Ident, Token![,]>::parse_terminated(input)?;
+//         Ok(Args {
+//             vars: vars.into_iter().collect(),
+//         })
+//     }
+// }
 
+// /*
+//     with the following proc macro we can do inspect and operate on the 
+//     api methods before generating the output or executing any extra
+//     logics before getting into the api body like actix #[get()] which
+//     checks the request path in the first place before sliding into 
+//     the request body, also to get the Rust token codes from TokenStream 
+//     we must use syn::parse and to get the TokenStream from Rust codes 
+//     we msut use quote
+// */
+// #[proc_macro_attribute]
+// pub fn passport(args: TokenStream, input: TokenStream) -> TokenStream {
 
-struct Args{
-    vars: Set<Ident>
-}
+//     /*  
+//         build the new AST from the `input` TokenStream to extend the one that we 
+//         already have by using syn to parse the args & input tokens into a syntax 
+//         tree, note that the type of TokenStream that we want to parse it with syn 
+//         to generate AST, must be specified, like parsing a function TokenStream 
+//         into ItemFn AST, then we need to generate a new TokenStream from generated 
+//         Rust types parsed from the input TokenStream, using quote to do so, generate 
+//         a new TokenStream from the passed in Rust codes (either pure or using #variable) 
+//         to it that can be used to build a new AST, this will replace whatever `input` 
+//         is annotated with this attribute proc macro, finally we'll return the token 
+//         stream either generated by the quote or the passed in input.
 
-/*
-    we need to create our own parser to parse the 
-    args token stream into a new AST
-*/
-impl Parse for Args {
-    fn parse(input: ParseStream) -> syn::parse::Result<Self> {
-        let vars = Punctuated::<Ident, Token![,]>::parse_terminated(input)?;
-        Ok(Args {
-            vars: vars.into_iter().collect(),
-        })
-    }
-}
+//         when we are defining a procedural macro, we're not actually interacting with 
+//         the runtime data, instead, we're generating code that will be inserted into 
+//         the function thus we can't access the token inside the request object in this 
+//         proc macro since procedural macros work at compile time, they don't have access 
+//         to runtime data, in our case, the token in the HTTP request header is available 
+//         at runtime, so it's impossible to directly inspect the header's content inside
+//         a procedural macro.
+//     */
+//     let mut api_ast = syn::parse::<syn::ItemFn>(input.clone()).unwrap(); /* parsing the input token stream or the method into the ItemFn AST */
+//     let roles_set = parse_macro_input!(args as Args).vars; /* casting the args TokenStream into the Args parser */
+//     let mut granted_roles = vec![];
+//     for role in roles_set{
+//         granted_roles.push(role.to_string()); /* converting the Ident into String */
+//     }
 
-/*
-    with the following proc macro we can do inspect and operate on the 
-    api methods before generating the output or executing any extra
-    logics before getting into the api body like actix #[get()] which
-    checks the request path in the first place before sliding into 
-    the request body, also to get the Rust token codes from TokenStream 
-    we must use syn::parse and to get the TokenStream from Rust codes 
-    we msut use quote
-*/
-#[proc_macro_attribute]
-pub fn passport(args: TokenStream, input: TokenStream) -> TokenStream {
+//     /*  
+//         every variable can be shown as ident in Rust thus if we wanna have a new variable we must 
+//         create new ident instance, like the following for the request object, also every token 
+//         in a TokenStream has an associated Span holding some additional info, a span, is a region 
+//         of source code, along with macro expansion information, it points into a region of the 
+//         original source code(important for displaying diagnostics at the correct places) as well 
+//         as holding the kind of hygiene for this location. The hygiene is relevant mainly for 
+//         identifiers, as it allows or forbids the identifier from referencing things or being 
+//         referenced by things defined outside of the invocation.
+//     */
+//     let mut req_ident = syn::Ident::new("req", proc_macro2::Span::call_site());
+//     for input in api_ast.clone().sig.inputs{
+//         if let FnArg::Typed(pat_type) = input{
+//             if let Pat::Ident(pat_ident) = *pat_type.pat{
+//                 if pat_ident.ident.to_string() == "req".to_string(){
+//                     req_ident = pat_ident.ident;
+//                     break;
+//                 }
+//             }
+//         }
+//     }
 
-    /*  
-        build the new AST from the `input` TokenStream to extend the one that we 
-        already have by using syn to parse the args & input tokens into a syntax 
-        tree, note that the type of TokenStream that we want to parse it with syn 
-        to generate AST, must be specified, like parsing a function TokenStream 
-        into ItemFn AST, then we need to generate a new TokenStream from generated 
-        Rust types parsed from the input TokenStream, using quote to do so, generate 
-        a new TokenStream from the passed in Rust codes (either pure or using #variable) 
-        to it that can be used to build a new AST, this will replace whatever `input` 
-        is annotated with this attribute proc macro, finally we'll return the token 
-        stream either generated by the quote or the passed in input.
-
-        when we are defining a procedural macro, we're not actually interacting with 
-        the runtime data, instead, we're generating code that will be inserted into 
-        the function thus we can't access the token inside the request object in this 
-        proc macro since procedural macros work at compile time, they don't have access 
-        to runtime data, in our case, the token in the HTTP request header is available 
-        at runtime, so it's impossible to directly inspect the header's content inside
-        a procedural macro.
-    */
-    let mut api_ast = syn::parse::<syn::ItemFn>(input.clone()).unwrap(); /* parsing the input token stream or the method into the ItemFn AST */
-    let roles_set = parse_macro_input!(args as Args).vars; /* casting the args TokenStream into the Args parser */
-    let mut granted_roles = vec![];
-    for role in roles_set{
-        granted_roles.push(role.to_string()); /* converting the Ident into String */
-    }
-
-    /*  
-        every variable can be shown as ident in Rust thus if we wanna have a new variable we must 
-        create new ident instance, like the following for the request object, also every token 
-        in a TokenStream has an associated Span holding some additional info, a span, is a region 
-        of source code, along with macro expansion information, it points into a region of the 
-        original source code(important for displaying diagnostics at the correct places) as well 
-        as holding the kind of hygiene for this location. The hygiene is relevant mainly for 
-        identifiers, as it allows or forbids the identifier from referencing things or being 
-        referenced by things defined outside of the invocation.
-    */
-    let mut req_ident = syn::Ident::new("req", proc_macro2::Span::call_site());
-    for input in api_ast.clone().sig.inputs{
-        if let FnArg::Typed(pat_type) = input{
-            if let Pat::Ident(pat_ident) = *pat_type.pat{
-                if pat_ident.ident.to_string() == "req".to_string(){
-                    req_ident = pat_ident.ident;
-                    break;
-                }
-            }
-        }
-    }
-
-    /* 
-        generating a token stream from granted_roles variable, 
-        quote generates new AST or token stream from Rust codes
-        that can be returned to the proc macro caller.
-    */
-    let new_stmt = syn::parse2(
-        quote!{ /* building new token stream from the Rust token codes */
+//     /* 
+//         generating a token stream from granted_roles variable, 
+//         quote generates new AST or token stream from Rust codes
+//         that can be returned to the proc macro caller.
+//     */
+//     let new_stmt = syn::parse2(
+//         quote!{ /* building new token stream from the Rust token codes */
             
-            /* 
-                granted_roles can be accessible inside the api body at runtime, 
-                vec![#(#granted_roles),*] means that we're pushing all the roles
-                inside a vec![] and since there are multiple roles we used * to 
-                push them all into the vec![] which means repetition pattern
-            */
-            let granted_roles = vec![#(#granted_roles),*]; // extending the AST of the api method at compile time
+//             /* 
+//                 granted_roles can be accessible inside the api body at runtime, 
+//                 vec![#(#granted_roles),*] means that we're pushing all the roles
+//                 inside a vec![] and since there are multiple roles we used * to 
+//                 push them all into the vec![] which means repetition pattern
+//             */
+//             let granted_roles = vec![#(#granted_roles),*]; // extending the AST of the api method at compile time
 
-        }
-    ).unwrap();
+//         }
+//     ).unwrap();
 
-    /* inject the granted_roles into the api body at compile time */
-    api_ast.block.stmts.insert(0, new_stmt);
+//     /* inject the granted_roles into the api body at compile time */
+//     api_ast.block.stmts.insert(0, new_stmt);
     
-    /* 
-        return the newly generated AST by the quote of the input api Rust code  
-        which contains the updated and compiled codes of the function body
-    */
-    TokenStream::from(quote!(#api_ast)) /* building new token stream from the updated api_ast Rust token codes */
+//     /* 
+//         return the newly generated AST by the quote of the input api Rust code  
+//         which contains the updated and compiled codes of the function body
+//     */
+//     TokenStream::from(quote!(#api_ast)) /* building new token stream from the updated api_ast Rust token codes */
 
 
-}
+// }
 
 
-#[proc_macro]
-pub fn passport_proc(input: TokenStream) -> TokenStream {
+// #[proc_macro]
+// pub fn passport_proc(input: TokenStream) -> TokenStream {
 
-    // ex:
-    // #[passport_proc]
-    // #[passport_proc(access=all)]
-    // #[passport_proc(access=user)]
-    // #[passport_proc(access=admin)]
-    // #[passport_proc(access=dev)]
-    // fn im_a_method(){}
+//     // ex:
+//     // #[passport_proc]
+//     // #[passport_proc(access=all)]
+//     // #[passport_proc(access=user)]
+//     // #[passport_proc(access=admin)]
+//     // #[passport_proc(access=dev)]
+//     // fn im_a_method(){}
     
-    input
+//     input
 
-}
+// }
 
-#[proc_macro_derive(Passport)]
-pub fn derive_proc_macro(input: TokenStream) -> TokenStream {
+// #[proc_macro_derive(Passport)]
+// pub fn derive_proc_macro(input: TokenStream) -> TokenStream {
 
-    // ex:
-    // #[derive(Passport)]
-    // struct SexyStruct{}
+//     // ex:
+//     // #[derive(Passport)]
+//     // struct SexyStruct{}
     
-    // this will be implemented in here for the struct inside input token stream
-    // so later on we can call the method on the struct once we implement the
-    // method for the struct in here.
-    // SexyStruct::passport() // like checking jwt in request object
+//     // this will be implemented in here for the struct inside input token stream
+//     // so later on we can call the method on the struct once we implement the
+//     // method for the struct in here.
+//     // SexyStruct::passport() // like checking jwt in request object
 
-    input
+//     input
 
-}
+// }

@@ -71,7 +71,7 @@ pub struct Data{id: String}
 
 
 
-pub async fn start_server<F, A>(mut api: F, redis_pubsub_msg_sender: tokio::sync::mpsc::Sender<String>, redis_client: redis::Client) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
+pub async fn start_server<F, A>(mut apifunc: F, redis_pubsub_msg_sender: tokio::sync::mpsc::Sender<String>, redis_client: redis::Client) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
     where F: FnMut(Request, Response) -> A + Send + Sync + 'static + Clone,
     A: futures_util::future::Future<Output=Result<Response, ()>> + Send + Sync + 'static
     {
@@ -128,7 +128,7 @@ pub async fn start_server<F, A>(mut api: F, redis_pubsub_msg_sender: tokio::sync
             // ...
 
             /* cloning senable and syncable data here to not to lose their ownership in each iteration */
-            let mut api = api.clone();
+            let mut apifunc = apifunc.clone();
             let sender = sender.clone();
             let redis_pubsub_msg_sender = redis_pubsub_msg_sender.clone();
             let redis_client = redis_client.clone();
@@ -176,7 +176,7 @@ pub async fn start_server<F, A>(mut api: F, redis_pubsub_msg_sender: tokio::sync
                         // stream.shutdown().await;
 
                         /* calling the api of this connection */
-                        api(Request{}, Response{}).await.unwrap();
+                        apifunc(Request{}, Response{}).await.unwrap();
                         
                         /* sending data_ to the down side of the channel */
                         sender.send(data_.clone()).await.unwrap();

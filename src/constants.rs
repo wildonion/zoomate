@@ -152,7 +152,7 @@ Lazy::new(||{
 // static lazy arced mutexed and pinned box future db type, send sync static
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 pub static Db: Lazy<std::sync::Arc<tokio::sync::Mutex<
-    std::pin::Pin<Box<dyn futures::Future<Output = HashMap<u32, String>> + Send + Sync + 'static>>
+    std::pin::Pin<Box<dyn std::future::Future<Output = HashMap<u32, String>> + Send + Sync + 'static>>
     >>> = 
 Lazy::new(||{
 
@@ -486,7 +486,7 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
     }
     impl<V: Test, T> AnotherNeuronam<V, T> where T: FnOnce() -> (){
         fn get_data(param: impl FnMut() -> ()) -> impl FnMut() 
-            -> std::pin::Pin<Box<dyn futures::Future<Output=String> + Send + Sync + 'static>>{
+            -> std::pin::Pin<Box<dyn std::future::Future<Output=String> + Send + Sync + 'static>>{
             ||{
                 Box::pin(async move{
                     String::from("")
@@ -527,6 +527,7 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub enum ActionType{
+    #[default]
     A1
 } 
 type Method = fn() -> i32;
