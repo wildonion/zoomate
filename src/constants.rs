@@ -48,10 +48,7 @@ pub const CHARSET: &[u8] = b"0123456789";
     However, if your specific case involves a lot of concurrent reads with infrequent writes and the read operations 
     are substantial enough to create a bottleneck, a RWLock might be a better choice.
 
-
-*/
-
-/*      
+    
            --------------------------------------------------
                  a thread safe global response objects
            --------------------------------------------------
@@ -61,13 +58,12 @@ pub const CHARSET: &[u8] = b"0123456789";
         code order execution and synchronization in multithreaded based envs like
         actor worker like having static lazy arced mutex data without having deadlocks 
         and race conditions using std::sync tokio::sync objects like 
-        semaphore,arc,mutex,rwlock,mpsc
-
-        data collision, memory corruption, deadlocks, race conditions 
-        avoidance in async and multithreaded contexts: 
+        semaphore,arc,mutex,rwlock,mpsc also data collision, memory corruption, deadlocks 
+        and race conditions avoidance in async and multithreaded contexts are: 
             - share app state data between tokio::spawn() threads using mpsc 
-            - enum as unique storage key
-            - global storage using thread local, actor id and lazy arc mutexed
+            - enum as unique storage key, actor id
+            - mutate a global storage using thread local in single-threaded contexts
+            - mutate a gloabl storage using lazy arc mutexed in multi-threaded contexts
 
 
     reasons rust don't have static global types:
@@ -189,6 +185,17 @@ pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
         );
     HashMap::new()
 });
+
+thread_local!{
+    pub static DB: std::cell::RefCell<std::collections::HashMap<String, String>> = 
+        std::cell::RefCell::new(HashMap::new());
+}
+
+// DB.with_borrow_mut(|db| {
+//     db.insert("key".to_string(), "value".to_string())
+// });
+
+
 
 // following is incorrect since std::sync::Arc<tokio::sync::RwLock<Lazy<String>>>
 // is not constant and the whole type must be wrapped into the Lazy<>
