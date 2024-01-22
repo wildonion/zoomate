@@ -507,6 +507,9 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
             String::from("")
         });
 
+    let cls = ||{};
+    let casted = &cls as &dyn Fn() -> ();
+    
     /*  
         note that if we want to call get_inner_receptor() method
         on an instance of Neuron, the NodeReceptor trait must be
@@ -544,7 +547,7 @@ where F: Fn() -> ActionType + Send + Sync + 'static{}
 // return trait from method using -> impl TraitName
 // trait as method param like param: impl TraitName
 // trait as struct field like pub data: F (where F: TraitName) or pub data: Box<dyn TraitName> 
-// casting generic to trait like N as TraitName
+// casting generic to trait like &N as &dyn TraitName or N as TraitName
 // bounding trait gat to traits like <N as TraitName>::AssetInfo: Send + Sync
 // bounding the return type of closure trait to traits like where F: FnOnce() -> R + Send + Sync + 'static
 trait Interface: Send + Sync + 'static{}
