@@ -131,6 +131,22 @@ macro_rules! query { // NOTE - this is a macro with multiple syntax support and 
 
 }
 
+#[macro_export]
+macro_rules! dynamic_methods {
+    ($builder:ident, $($field:ident: $field_type:ty),*) => {
+        impl $builder {
+            $(
+                pub fn $field(mut self, $field: $field_type) -> Self {
+                    self.$field = Some($field);
+                    self
+                }
+            )*
+        }
+    };
+}
+//////
+/// dynamic_methods!{StructName, id: None, name: None, age: i32}
+//////
 
 #[macro_export]
 macro_rules! log {
@@ -157,6 +173,30 @@ macro_rules! impl_ecq_engine_constructor {
     };
 }
 
+// #[derive(Debug, Clone)]
+// pub struct Shape{
+//     typ: &'static str,
+//     positions: HashSet<Pos>,
+//     anchor: Pos,
+// }
+
+
+// #[derive(Debug, Clone, Copy)]
+// pub struct Pos(pub i32, pub i32);
+
+
+
+// impl Shape {
+//     impl_ecq_engine_constructor! {
+//       new_i "🟦": [Pos(0, 0), Pos(1, 0), Pos(2, 0), Pos(3, 0)] @ Pos(1, 0);
+//       new_o "🟨": [Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(1, 1)] @ Pos(0, 0);
+//       new_t "🟫": [Pos(0, 0), Pos(1, 0), Pos(2, 0), Pos(1, 1)] @ Pos(1, 0);
+//       new_j "🟪": [Pos(0, 0), Pos(0, 1), Pos(0, 2), Pos(-1, 2)] @ Pos(0, 1);
+//       new_l "🟧": [Pos(0, 0), Pos(0, 1), Pos(0, 2), Pos(1, 2)] @ Pos(0, 1);
+//       new_s "🟩": [Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(-1, 1)] @ Pos(0, 0);
+//       new_z "🟥": [Pos(0, 0), Pos(-1, 0), Pos(0, 1), Pos(1, 1)] @ Pos(0, 0);
+//     }
+// }
 
 #[macro_export]
 macro_rules! iterator{
@@ -207,32 +247,6 @@ trait T {
 macro_rules! example {
     () => { println!("Macro call in a macro!"); };
 }
-
-
-// #[derive(Debug, Clone)]
-// pub struct Shape{
-//     typ: &'static str,
-//     positions: HashSet<Pos>,
-//     anchor: Pos,
-// }
-
-
-// #[derive(Debug, Clone, Copy)]
-// pub struct Pos(pub i32, pub i32);
-
-
-
-// impl Shape {
-//     impl_ecq_engine_constructor! {
-//       new_i "🟦": [Pos(0, 0), Pos(1, 0), Pos(2, 0), Pos(3, 0)] @ Pos(1, 0);
-//       new_o "🟨": [Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(1, 1)] @ Pos(0, 0);
-//       new_t "🟫": [Pos(0, 0), Pos(1, 0), Pos(2, 0), Pos(1, 1)] @ Pos(1, 0);
-//       new_j "🟪": [Pos(0, 0), Pos(0, 1), Pos(0, 2), Pos(-1, 2)] @ Pos(0, 1);
-//       new_l "🟧": [Pos(0, 0), Pos(0, 1), Pos(0, 2), Pos(1, 2)] @ Pos(0, 1);
-//       new_s "🟩": [Pos(0, 0), Pos(1, 0), Pos(0, 1), Pos(-1, 1)] @ Pos(0, 0);
-//       new_z "🟥": [Pos(0, 0), Pos(-1, 0), Pos(0, 1), Pos(1, 1)] @ Pos(0, 0);
-//     }
-// }
 
 #[macro_export]
 macro_rules! contract {
