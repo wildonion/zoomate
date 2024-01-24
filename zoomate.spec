@@ -6,7 +6,7 @@ JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
 WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressing
 setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
-actor based pubsub and contracts using redis,rpc,tcp,mpsc,libp2p on ICP
+actor and onchain based pubsub realtime streaming contract to build wepn using redis,rpc,tcp,mpsc,libp2p,ipfs,tor on ICP
 
 
 https://internetcomputer.org/docs/current/developer-docs/backend/rust/
