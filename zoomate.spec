@@ -6,15 +6,13 @@ JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
 WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressing
 setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
-actor and onchain based pubsub realtime streaming contract to build wepn using redis,rpc,tcp,mpsc,libp2p,ipfs,tor on ICP
-
 
 https://internetcomputer.org/docs/current/developer-docs/backend/rust/
 https://github.com/wildonion/gem/wiki/Realtime-Push-Notification-Strategy
 https://drive.google.com/file/d/1-8M8BNMabNPzPZM43ekWqX_D456KaUvT/view => the programmer guides to theory
 https://drive.google.com/file/d/14l2B6cdAECz_tIRtQtkf2iYxnc5pDv9S/view?usp=drive_link => distributed (clustering/sharding) patterns in backend like ipfs with libp2p + data compression in pubsub pattern based tlps
 https://github.com/MoonKraken/youtube/tree/main/KonaaAuth
-https://github.com/wildonion/gem/tree/master/core/panel/events => websocket implementations
+https://github.com/wildonion/gem/tree/master/core/panel/events => actix pubsub actor workers and websocket implementations
 https://crates.io/crates/capnp-rpc
 https://github.com/actix/examples/tree/master
 https://github.com/actix/examples/tree/master/protobuf

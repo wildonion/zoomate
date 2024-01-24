@@ -53,7 +53,7 @@ pub const CHARSET: &[u8] = b"0123456789";
                  a thread safe global response objects
            --------------------------------------------------
 
-    
+        none gc concepts: ltg &mut pointer (rc,refcell,arc,mutex,lazy,threadlocal),box,pin,impl Trait,
 
         code order execution and synchronization in multithreaded based envs like
         actor worker like having static lazy arced mutex data without having deadlocks 
@@ -64,6 +64,9 @@ pub const CHARSET: &[u8] = b"0123456789";
             - enum as unique storage key, actor id
             - mutate a global storage using thread local in single-threaded contexts
             - mutate a gloabl storage using lazy arc mutexed in multi-threaded contexts
+            - can't move out of a reference or deref a type if its pointer is being used by and shared with other scopes
+            - can't mutate data without acquiring the lock of the mutex in other threads
+            - can't have both mutable and immutable pointers at the same time 
 
 
     reasons rust don't have static global types:
@@ -508,7 +511,12 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
         });
 
     let cls = ||{};
-    let casted = &cls as &dyn Fn() -> ();
+    let casted = &cls as &dyn Fn() -> (); // casting the closure to an Fn trait
+    let name = (
+        |name: String| -> String{
+            name
+        }
+    )(String::from(""));
     
     /*  
         note that if we want to call get_inner_receptor() method

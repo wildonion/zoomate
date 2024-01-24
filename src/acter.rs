@@ -17,6 +17,7 @@ https://tokio.rs/tokio/tutorial/channels
 https://rust-lang.github.io/async-book/01_getting_started/01_chapter.html
 https://www.fpcomplete.com/blog/http-status-codes-async-rust/
 https://github.com/mahdi-shojaee/loole => create something like mpsc
+https://github.com/wildonion/gem/tree/master/core/panel/events => actix pubsub actor workers
 
 
 actors have:

@@ -2,6 +2,7 @@
   |    DSL MACROS
   |------------------
   |
+  | dsl macros traits as plugin
 
 
 
