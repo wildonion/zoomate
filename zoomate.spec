@@ -22,6 +22,7 @@ https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://github.com/wildonion/cs-concepts/blob/main/backend-roadmap.pdf
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
+https://github.com/wildonion/cs-concepts?tab=readme-ov-file#-concepts => graph alsog
 https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs => graph and math algos with libp2p::kademliadht,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
 https://github.com/libp2p/rust-libp2p/tree/master/examples
 https://github.com/foniod/build-imageshttps://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
@@ -255,7 +256,7 @@ using following flow:
    • distribute data by finding other nodes using kademlia algo 
    • a p2p based vpn like v2ray and tor using noise protocol, gossipsub, kademlia quic and p2p websocket 
    • simple-hyper-server-tls, noise-protocol and tokio-rustls to implement ssl protocols and make a secure channel for the underlying raw socket streams
-   • graph algos in ai and distributed models like libp2p and ipfs
+   • graph algos in ai like mdp env and distributed models like libp2p and ipfs
    • sign hash of aes256 bits of data using ed25519 private key then verify ed25519 sig using data hash, pubkey and sig 
    • ssl and ssh certs using ring rsa and wallexerr ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
    • gateway and proxy using actix

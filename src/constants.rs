@@ -53,17 +53,17 @@ pub const CHARSET: &[u8] = b"0123456789";
                  a thread safe global response objects
            --------------------------------------------------
 
-        none gc concepts: ltg &mut pointer (rc,refcell,arc,mutex,lazy,threadlocal),box,pin,impl Trait,
+        single thread and none gc concepts: ltg &mut pointer (rc,refcell,arc,mutex,lazy,threadlocal),box,pin,impl Trait,
 
         code order execution and synchronization in multithreaded based envs like
         actor worker like having static lazy arced mutex data without having deadlocks 
         and race conditions using std::sync tokio::sync objects like 
         semaphore,arc,mutex,rwlock,mpsc also data collision, memory corruption, deadlocks 
         and race conditions avoidance in async and multithreaded contexts are: 
-            - share app state data between tokio::spawn() threads using mpsc 
-            - enum as unique storage key, actor id
+            - share none global app state data between tokio::spawn() threads using mpsc 
+            - enum and actor id as unique storage key
             - mutate a global storage using thread local in single-threaded contexts
-            - mutate a gloabl storage using lazy arc mutexed in multi-threaded contexts
+            - mutate a gloabl storage using static lazy arc mutexed in multi-threaded contexts
             - can't move out of a reference or deref a type if its pointer is being used by and shared with other scopes
             - can't mutate data without acquiring the lock of the mutex in other threads
             - can't have both mutable and immutable pointers at the same time 
@@ -518,6 +518,15 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
         }
     )(String::from(""));
     
+    enum Packet{
+        Http{header: String},
+        Tcp{size: usize},
+    }
+    let packet = Packet::Http { header: String::from("") };
+    if let Packet::Http { header } = packet{
+        println!("packet header bytes => {header:}");
+    }
+
     /*  
         note that if we want to call get_inner_receptor() method
         on an instance of Neuron, the NodeReceptor trait must be
