@@ -318,6 +318,7 @@ pub async fn encrypt_file(fpath: &str) -> (Vec<u8>, SecureCellConfig){
 
     let mut wallet = wallexerr::misc::Wallet::new_ed25519();
     let mut default_secure_cell_config = &mut SecureCellConfig::default();
+    // secret key is the keccak256 hash of a random 64 bytes chars or 4096 hex chars
     default_secure_cell_config.secret_key = {
         hex::encode(
             wallet.self_generate_keccak256_hash_from(
@@ -325,6 +326,13 @@ pub async fn encrypt_file(fpath: &str) -> (Vec<u8>, SecureCellConfig){
             )
         )
     };
+
+    // store the config into a json file so we can use later to decrypt the file
+    let config_path = format!("{}.config.json", fpath);
+    let config_file = tokio::fs::File::create(config_path).await;
+    config_file.unwrap().write_all(
+        &serde_json::to_string_pretty(&default_secure_cell_config).unwrap().as_bytes()
+    ).await;
     default_secure_cell_config.data = buffer;
 
     let encrypted_data = wallet.self_secure_cell_encrypt(default_secure_cell_config).unwrap();

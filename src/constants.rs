@@ -189,6 +189,7 @@ pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
     HashMap::new()
 });
 
+// a single thread arena allocator
 thread_local!{
     pub static DB: std::cell::RefCell<std::collections::HashMap<String, String>> = 
         std::cell::RefCell::new(HashMap::new());

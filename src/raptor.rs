@@ -2,24 +2,7 @@
 
 
 /* 
-
-    - help from https://github.com/wildonion/gvm/
-    - pointers (&mut, shared ref, rc, arc, mutex, refcell, rwolock, as ref, can't move type, can't ret pointer, can't have more than one mutable pointers)
-    - traits (box &dyn, closures, impl Trait, extend the behavior of types)
-    - generics (bounding to traits and lifetimes)
-    - enum, ram concepts, stack, heap, cap, length, pointer 
-    - global static lazy arced mutexed/rwlocked map as a thread safe and an in memory database using multithreading and actor streaming (both in client and server) concepts with tcp based tlps:
-        sqlx and tokio rustls wallexerr, redis hadead, tonic grpc, Payload, Multiaprt, Protobuf
-        tokio::spawn,mutex,rwlock,mpsc,select,tcp
-        actix::http,web,broker,actor
-    - rusty ltg(&mut,box,pin,trait,macro,generic) and shared state data to make them shareable between routes and threads using Arc<Mutex<Db>> + Send + Sync + 'static with mpsc
-    - arc will be used to share the pointer of the type between threads safely cause it's a atomically-reference-counted shared pointer
-    - trigger, publish, fire, emit event means that we'll send a packet on an specific condition to a channel
-        so subscribers can subscribe to and stream over that packet (mpsc receiver, file, mulipart, payload, tcp based packets) 
-        using actor, tokio::spawn, while let some to fill the buffer then decode and map to struct or serde json 
-        value and from other parts send message to the actor to get the decoded data
-    
-    
+    https://github.com/wildonion/gvm/
 */
 
 use actix::prelude::*;
