@@ -30,7 +30,6 @@ mod tcpactor;
 mod constants;
 
 mod grpc;
-mod capnp;
 
 mod raptor;
 use crate::raptor::*;
