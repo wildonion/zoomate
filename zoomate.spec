@@ -7,6 +7,7 @@ WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressin
 setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 
+https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/
 https://internetcomputer.org/docs/current/developer-docs/backend/rust/
 https://github.com/wildonion/gem/wiki/Realtime-Push-Notification-Strategy
 https://drive.google.com/file/d/1-8M8BNMabNPzPZM43ekWqX_D456KaUvT/view => the programmer guides to theory
@@ -44,6 +45,8 @@ https://medium.com/load-balancer-series/writing-a-http-load-balancer-in-python-u
 https://kemptechnologies.com/load-balancer/load-balancing-algorithms-techniques
 https://github.com/bparli/convey
 https://github.com/NicolasLM/nucleon
+https://github.com/wildonion/smarties/blob/main/contracts/near/NEAR.rules
+https://github.com/wildonion/solmarties/blob/main/SOLANA.rules
 
 
 rust cli zoomate features and ownership, borrowing rules:
@@ -280,21 +283,22 @@ using following flow:
    • caching server implemented in Rust like redis
    • scalable and Secure Firewall implemented in Rust
    • ngrok process: [https://docs.rs/ngrok/latest/ngrok/] || [https://ngrok.com/docs/using-ngrok-with/rust/]
- 	➙ first it'll open a port on local machine 
- 	➙ then it will create a session on that port with a random dns on its servers 
- 	➙ finally it forwards all the traffic to that session to the local port it created
-	➙ ngrok and ssh vps will starts a server on a random part then forward all the packets 
- 	  coming from outside to the localhost it's like: 
-	  outside <---packet---> ngrok or ssh vps server act like proxy <---packet---> localhost
+        • first it'll open a port on local machine 
+        • then it will create a session on that port with a random dns on its servers 
+        • finally it forwards all the traffic to that session to the local port it created
+        • ngrok and ssh vps will starts a server on a random part then forward all the packets 
+        • coming from outside to the localhost it's like: 
+            outside <---packet---> ngrok or ssh vps server act like proxy <---packet---> localhost
    • cloudflare warp vpn
 	    • boringtun protocol which is based on wireguard protocol
 	    • uses noise protocol with ed25519 encryption
 	    • 1111 dns based protocol 
 	    • udp and quic for packet sending   
 	    • argo routing to send packets to cloudflare gateways
-	    • ed25519 digital signature pubkey with chacha20 in noise protocol for making vpn
+	    • ed25519 digital signature pubkey with chacha20 and aes256 in noise protocol for making vpn
+   • use warp to build a dns over https/tls vpn: hid dns queries inside the https traffic
    • VPS configuration according to the source usage of each node 
-    ➙ like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
-    ➙ OS and a security management app(malware detection) using RL
-    ➙ our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
-    ➙ our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm
+        • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
+        • OS and a security management app(malware detection) using RL
+        • our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
+        • our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm

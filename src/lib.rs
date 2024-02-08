@@ -451,6 +451,16 @@ pub struct ResponseObject{
     data: String,
 }
 
+// a dns over httsp structures
+pub struct Dns{
+    pub queries: Vec<DnsRequest>,
+    pub id: String
+}
+
+pub struct DnsRequest{
+    pub http_req: HttpRequest 
+}
+
 pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
     /* since T is a FnMut closure, the cls param must be defined mutablly */
     (mut cls: T){

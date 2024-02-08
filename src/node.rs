@@ -56,7 +56,7 @@ pub mod node{
 
 #[derive(Parser)]
 #[command(author, version)]
-#[command(about = "zoomate grpc server", long_about = None)]
+#[command(about = "zoomate grpc server config", long_about = None)]
 struct ServerCli {
     #[arg(short = 's', long = "server", default_value = "127.0.0.1")]
     server: String,
@@ -95,22 +95,6 @@ async fn main()
     let redis_client = redis::Client::open(redis_conn_url.as_str()).unwrap();
     let (redis_pubsub_msg_sender, mut redis_pubsubs_msg_receiver) = tokio::sync::mpsc::channel::<String>(io_buffer_size);
     let mut redis_conn = redis_client.get_connection().unwrap();
-
-
-    /* 
-        for handling and streaming over each coming async and heavy tasks we must use 
-        tokio::spawn(async move{}) to avoid blocking issues, stuck and halting situations 
-    */
-    tokio::spawn(async move{
-
-        while let Some(data) = redis_pubsubs_msg_receiver.recv().await{
-
-            // receiving data from the redis pubsub mpsc sender
-            // ...
-
-        }
-
-    });
 
 
     /* start redis4 server in tokio::spawn() threads */

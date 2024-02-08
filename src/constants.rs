@@ -358,7 +358,7 @@ impl TypeTrait for MerkleNode{
 
 struct Streamer;
 struct Context<T>{data: T}
-impl TypeTrait for Streamer{
+impl TypeTrait for Streamer{ // polymorphism
     
     type Value = Context<Self>; /* Context data is of type Streamer */
 
@@ -584,3 +584,25 @@ fn trait_as_ret_and_param_type1(param_instance: &mut impl Interface) -> impl FnO
 fn trait_as_ret_type(instance_type: Instance) -> impl Interface{ instance_type }
 fn trait_as_ret_type_1(instance_type: Instance) -> impl Interface{ () }
 fn trait_as_param_type(param: impl FnOnce() -> ()){}
+
+
+// C must be send sync to be share between threads safely
+impl<F: Interface + Clone, C: Send + Sync + 'static + FnOnce() -> String> Interface for UserInfo<C, F>{}
+struct UserInfo<C: Send + Sync + 'static, F: Clone> where 
+    F: Interface, 
+    C: FnOnce() -> String{
+    data: F,
+    __data: C,
+    _data: Box<dyn Interface>,
+}
+impl<F: Interface + Clone, C: Send + Sync + 'static + FnOnce() -> String> UserInfo<C, F>{
+    fn set_data(cls: impl FnOnce() -> String, clstopass: C, f: F) -> impl Interface{
+        Self{
+            data: f,
+            __data: clstopass,
+            _data: Box::new(
+                ()
+            ),
+        }
+    }
+} 
