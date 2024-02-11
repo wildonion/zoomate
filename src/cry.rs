@@ -3,6 +3,66 @@
 
 use wallexerr::misc::*;
 use crate::constants::{gen_random_chars};
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncWriteExt;
+
+
+
+pub mod wannacry{
+
+    pub use super::*;
+
+    pub async fn encrypt_file(fpath: &str) -> (Vec<u8>, SecureCellConfig){
+
+        let file = tokio::fs::File::open(fpath).await;
+    
+        let mut buffer = vec![];
+        file.unwrap().read_to_end(&mut buffer).await; // await on it to fill the buffer
+    
+        let mut wallet = wallexerr::misc::Wallet::new_ed25519();
+        let mut default_secure_cell_config = &mut SecureCellConfig::default();
+        // secret key is the keccak256 hash of a random 64 bytes chars or 4096 hex chars
+        default_secure_cell_config.secret_key = {
+            hex::encode(
+                wallet.self_generate_keccak256_hash_from(
+                    &gen_random_chars(64)
+                )
+            )
+        };
+    
+        // store the config into a json file so we can use later to decrypt the file
+        let config_path = format!("{}.config.json", fpath);
+        let config_file = tokio::fs::File::create(config_path).await;
+        config_file.unwrap().write_all(
+            &serde_json::to_string_pretty(&default_secure_cell_config).unwrap().as_bytes()
+        ).await;
+        default_secure_cell_config.data = buffer;
+    
+        let encrypted_data = wallet.self_secure_cell_encrypt(default_secure_cell_config).unwrap();
+        default_secure_cell_config.data = encrypted_data.clone(); //*** important part */
+    
+        let enc_file_path = format!("{}.enc", fpath);
+        let file = tokio::fs::File::create(&enc_file_path).await;
+        file.unwrap().write_all(&encrypted_data).await;
+    
+        (encrypted_data, default_secure_cell_config.to_owned())
+    
+    }
+    
+    pub async fn decrypt_file(decpath: &str, default_secure_cell_config: &mut SecureCellConfig) -> Vec<u8>{
+    
+        let file = tokio::fs::File::create(decpath).await;
+    
+        let mut wallet = wallexerr::misc::Wallet::new_ed25519();
+        let decrypted_data = wallet.self_secure_cell_decrypt(default_secure_cell_config).unwrap();
+    
+        file.unwrap().write_all(&decrypted_data).await;
+    
+        decrypted_data
+    
+    }
+    
+}
 
 
 /** 
@@ -11,17 +71,97 @@ use crate::constants::{gen_random_chars};
     |---------------------------------------------------------------------
     |
     | CURVE           -> ed25519
-    | DATA ENCRYPTION -> SYMMETRIC WIGH AES256 ALGORITHM
+    | DATA ENCRYPTION -> SYMMETRIC WITH AES256 ALGORITHM
     | RETURN DATA     -> base58 Signature
     |
 
 **/
 pub mod eddsa_with_symmetric_signing{
 
-    
-
     pub use super::*;
-    
+
+    pub fn ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(mut wallet: Wallet, aes256_config: &mut SecureCellConfig) -> String{
+
+        let raw_data_vec = aes256_config.clone().data;
+        let raw_data_str = std::str::from_utf8(&raw_data_vec).unwrap();
+
+        let edprvkey = wallet.ed25519_secret_key.clone().unwrap();
+        let base58_sig = wallet.self_ed25519_secure_cell_sign(
+            &edprvkey, 
+            aes256_config
+        );
+
+        /* aes256_config.data now contains the aes256 hash of the raw data */
+        let hash_of_data = aes256_config.clone().data;
+        println!("secure cell aes256 encrypted data :::: {:?}", hex::encode(&hash_of_data));
+        println!("signature :::: {:?}", base58_sig.clone());
+        
+        let is_verified = wallet.self_verify_ed25519_signature(
+            &base58_sig.clone().unwrap(), 
+            &hash_of_data, 
+            &wallet.clone().ed25519_public_key.unwrap()
+        );
+        
+        match is_verified{
+            Ok(is_verified) => {
+
+                aes256_config.data = hash_of_data.clone(); /* update data field with encrypted form of raw data */
+                let dec = wallet.self_secure_cell_decrypt(aes256_config).unwrap();
+                println!("aes256 decrypted data :::: {:?}", std::str::from_utf8(&dec));
+
+                let deserialized_data = std::str::from_utf8(&dec).unwrap();
+                if deserialized_data == raw_data_str{
+
+                    wallet.self_save_to_json("ed25519-secure_cell");
+                    println!("✅ got same data");
+                    return base58_sig.unwrap();
+
+                } else{
+
+                    eprintln!("🔴 invalid data");
+                    return String::from("");
+                }
+
+            },
+            Err(e) => return String::from("")
+        }
+
+    }
+
+    pub fn ed25519_decrypt_and_verify_tcp_packet_with_aes256_secure_cell(mut wallet: Wallet, base58_sig: &str, aes256_config: &mut SecureCellConfig) -> (bool, String){
+
+        /* aes256_config.data now contains the aes256 hash of the raw data */
+        let hash_of_data = aes256_config.clone().data;
+        println!("secure cell aes256 encrypted data :::: {:?}", hex::encode(&hash_of_data));
+        println!("signature :::: {:?}", base58_sig);
+        
+        let is_verified = wallet.self_verify_ed25519_signature(
+            &base58_sig, 
+            &hash_of_data, 
+            &wallet.clone().ed25519_public_key.unwrap()
+        );
+        
+        match is_verified{
+            Ok(is_verified) => {
+
+                aes256_config.data = hash_of_data.clone(); /* update data field with encrypted form of raw data */
+                let dec = wallet.self_secure_cell_decrypt(aes256_config).unwrap();
+                println!("aes256 decrypted data :::: {:?}", std::str::from_utf8(&dec)); // dec is not the vector of hex it's the raw vector of data so we can map it to str like this
+
+                let deserialized_data = std::str::from_utf8(&dec).unwrap();
+                wallet.self_save_to_json("ed25519-secure_cell");
+                println!("✅ aes256 hash is valid");
+                return (true, deserialized_data.to_string());
+
+            },
+            Err(e) => (false, String::from(""))
+        }
+
+    }
+
+    //---------------------------------------------
+    //----------- aes256ctr_poly1305aes -----------
+    //---------------------------------------------
     pub fn ed25519_aes256_signing(data: &str, mut wallet: Wallet) -> String{
 
         // note that nonce must be unique per each user or a unique identity
@@ -137,7 +277,7 @@ pub mod eddsa_with_symmetric_signing{
 
 /** 
      ---------------------------------------------------------------------
-    |          EdDSA Ed25519 USING KECCAK256
+    |          EdDSA Ed25519 USING KECCAK256 SIGNING
     |---------------------------------------------------------------------
     |
     | CURVE           -> ed25519

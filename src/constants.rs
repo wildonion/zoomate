@@ -1,10 +1,73 @@
 
 
 
+use std::io::Write;
 use rand::{Rng, random};
 use crate::*;
 
 pub const CHARSET: &[u8] = b"0123456789";
+
+
+#[derive(Serialize, Deserialize)]
+struct TcpSharedSetup{
+    pub wallet: wallexerr::misc::Wallet,
+    pub secure_cell_config: wallexerr::misc::SecureCellConfig
+}
+pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, wallexerr::misc::Wallet)> = Lazy::new(||{
+    
+    let mut wallet = wallexerr::misc::Wallet::new_ed25519();
+    // creating the secure cell config structure
+    let mut aes256_config = &mut wallexerr::misc::SecureCellConfig::default();
+    // following secret key is the sha3 keccak256 hash of random chars
+    aes256_config.secret_key = {
+        hex::encode(
+            wallet.self_generate_keccak256_hash_from(
+                &gen_random_chars(64)
+            )
+        )
+    };
+    // save the config so we can share it between clients
+    let mut file = std::fs::File::create("tcp_wallet_secure_cell_config.json").unwrap();
+    file.write_all(&serde_json::to_string_pretty(&TcpSharedSetup{
+        wallet: wallet.clone(), 
+        secure_cell_config: aes256_config.clone()
+    }).unwrap().as_bytes()).unwrap();
+
+    (aes256_config.to_owned(), wallet)
+});
+
+pub fn serding(){
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct DataBucket{data: String, age: i32}
+    let instance = DataBucket{data: String::from("wildonion"), age: 27};
+    ///// encoding
+    let instance_bytes = serde_json::to_vec(&instance);
+    let instance_json_string = serde_json::to_string_pretty(&instance);
+    let instance_str = serde_json::to_string(&instance);
+    let isntance_json_value = serde_json::to_value(&instance);
+    let instance_json_bytes = serde_json::to_vec_pretty(&instance);
+    let instance_hex = hex::encode(&instance_bytes.as_ref().unwrap());
+    ///// decoding
+    let instance_from_bytes = serde_json::from_slice::<DataBucket>(&instance_bytes.as_ref().unwrap());
+    let instance_from_json_string = serde_json::from_str::<DataBucket>(&instance_json_string.unwrap());
+    let instance_from_str = serde_json::from_str::<DataBucket>(&instance_str.unwrap());
+    let isntance_from_json_value = serde_json::from_value::<DataBucket>(isntance_json_value.unwrap());
+    let instance_from_hex = hex::decode(instance_hex.clone()).unwrap();
+    let instance_from_hex_vector_using_serde = serde_json::from_slice::<DataBucket>(&instance_from_hex);
+    let instance_from_hex_vector_using_stdstr = std::str::from_utf8(&instance_from_hex);
+    let instance_from_vector_using_stdstr = std::str::from_utf8(&instance_bytes.as_ref().unwrap());
+    
+    println!(">>>>>>> instance_hex {:?}", instance_hex);
+    println!(">>>>>>> instance_from_bytes {:?}", instance_from_bytes.as_ref().unwrap());
+    println!(">>>>>>> instance_from_json_string {:?}", instance_from_json_string.unwrap());
+    println!(">>>>>>> instance_from_str {:?}", instance_from_str.unwrap());
+    println!(">>>>>>> isntance_from_json_value {:?}", isntance_from_json_value.unwrap());
+    println!(">>>>>>> instance_from_hex_vector_using_serde {:?}", instance_from_hex_vector_using_serde.unwrap());
+    println!(">>>>>>> instance_from_vector_using_stdstr {:?}", instance_from_vector_using_stdstr.unwrap());
+    println!(">>>>>>> instance_from_hex_vector_using_stdstr {:?}", instance_from_hex_vector_using_stdstr.unwrap());
+
+} 
 
 /*      
            --------------------------------------------------

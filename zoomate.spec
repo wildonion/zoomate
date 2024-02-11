@@ -262,6 +262,9 @@ using following flow:
    • graph algos in ai like mdp env and distributed models like libp2p and ipfs
    • sign hash of aes256 bits of data using ed25519 private key then verify ed25519 sig using data hash, pubkey and sig 
    • ssl and ssh certs using ring rsa and wallexerr ed25519 ecc curve with aes256 hash of data for ssh, tcp, rpc with tokio-rustls to sign and encrypt the packets with pubkey to pass them through socket
+        • generate an ed25519 wallet and a secure cell config and share them between server and clients for making a secure connection
+        • from that moment on server and clients communicate with each other by sending encrypted and signed packet through the socket 
+        • only the signature and hash data will be sent through the socket so we can verify the signature and decrypt the data
    • gateway and proxy using actix
    • (g)rpccapnp to communicate between each balancer
    • decompress encoded packet using borsh and serde 
@@ -301,4 +304,4 @@ using following flow:
         • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
         • OS and a security management app(malware detection) using RL
         • our VPS must detect the amount of CPU and RAM that every servers needs to get, without running the app
-        • our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm
+        • our VPS must detect the number of instances of every servers needs to be run and the load balancing algorithm 

@@ -1,6 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 use actix::Actor;
+use constants::SECURECELLCONFIG_TCPWALLET;
 use grpc::server;
 use once_cell::sync::Lazy;
 use rand::{Rng, SeedableRng, RngCore};
@@ -110,25 +111,31 @@ async fn main()
     });
 
 
+    constants::serding();
+
 
     //----------------------------------------------------------------------------------
     //---- file encryption using ed25519 wallet with aes256 themis secure cell signing
     //----------------------------------------------------------------------------------
-    let mut encrypted = utils::encrypt_file("secret.txt").await;
-    let decrypted = utils::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
+    let mut encrypted = cry::wannacry::encrypt_file("secret.txt").await;
+    let decrypted = cry::wannacry::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
 
 
     /* ------------------------------ */
     /*    start tcp listener actor    */
     /* ------------------------------ */
-    tcpactor::TcpListenerActor::new(&format!("0.0.0.0:2247")).start();
+    // getting the shared tcp ed25519 secure cell config and wallet
+    let (mut secure_cell, wallet) = SECURECELLCONFIG_TCPWALLET.to_owned(); //---- this must be shared between clients and server
+    tcpactor::TcpListenerActor::new(&format!("0.0.0.0:2247"), wallet, secure_cell).start();
+
+    Ok(())
 
 
     /* ------------------------------ */
     /*     start grpc server actor    */
     /* ------------------------------ */
-    let cli = ServerCli::parse();
-    let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
-    server::NodeServer::start(addr).await
+    // let cli = ServerCli::parse();
+    // let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
+    // server::NodeServer::start(addr).await
 
 }
