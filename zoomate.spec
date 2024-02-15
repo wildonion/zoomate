@@ -6,6 +6,7 @@ JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
 WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressing
 setup oauth2 with yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
+contract based backend using the compiled wasm file to call its methods inside other rust crates
 
 https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/
 https://internetcomputer.org/docs/current/developer-docs/backend/rust/
@@ -299,7 +300,7 @@ using following flow:
 	    • udp and quic for packet sending   
 	    • argo routing to send packets to cloudflare gateways
 	    • ed25519 digital signature pubkey with chacha20 and aes256 in noise protocol for making vpn
-   • use warp to build a dns over https/tls vpn: hid dns queries inside the https traffic
+   • use warp to build a dns over https/tls vpn: hide dns queries inside the https traffic like client request the dns and the server respond him within the encrypted https packets
    • VPS configuration according to the source usage of each node 
         • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
         • OS and a security management app(malware detection) using RL

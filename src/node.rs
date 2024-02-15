@@ -2,6 +2,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use actix::Actor;
 use constants::SECURECELLCONFIG_TCPWALLET;
+use env_logger::Env;
 use grpc::server;
 use once_cell::sync::Lazy;
 use rand::{Rng, SeedableRng, RngCore};
@@ -67,6 +68,7 @@ struct ServerCli {
 
 
 /*  
+    https://github.com/actix/actix-web/blob/master/actix-web/MIGRATION-4.0.md#actix_webmain-and-tokiomain
     instead of addin' #[tokio::main] macro on top of the main method which will execute
     the whole main method and all of its functions inside of it in a threadpool context 
     we can remove the macro to have a none async main method but still in order to run 
@@ -86,9 +88,11 @@ async fn main()
         must be implemented for the error type (impl Error for ErrorType{}) since 
         we're implementing the Error trait for the error type in return type   
     */
-    -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
+    -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
+    {
 
     dotenv().expect("⚠️ .env file not found");
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
     let io_buffer_size = env::var("IO_BUFFER_SIZE").expect("⚠️ no io buffer size variable set").parse::<u32>().unwrap() as usize; //// usize is the minimum size in os which is 32 bits
     let redis_password = env::var("REDIS_PASSWORD").expect("⚠️ no redis password variable set");
     let redis_host = std::env::var("REDIS_HOST").expect("⚠️ no redis host variable set");
@@ -98,7 +102,9 @@ async fn main()
     let mut redis_conn = redis_client.get_connection().unwrap();
 
 
-    /* start redis4 server in tokio::spawn() threads */
+    //---------------------------------------------------------------
+    //---- start redis4 server with tokio::spawn() in the background
+    //---------------------------------------------------------------
     tokio::spawn(async move{
 
         /* start an async and concurrent server to handle socket packets from clients concurrently */ 
@@ -111,9 +117,6 @@ async fn main()
     });
 
 
-    constants::serding();
-
-
     //----------------------------------------------------------------------------------
     //---- file encryption using ed25519 wallet with aes256 themis secure cell signing
     //----------------------------------------------------------------------------------
@@ -124,18 +127,33 @@ async fn main()
     /* ------------------------------ */
     /*    start tcp listener actor    */
     /* ------------------------------ */
-    // getting the shared tcp ed25519 secure cell config and wallet
+    /* 
+        first we must get the shared tcp ed25519 secure cell config 
+        and wallet to stablish secured communication
+        
+        can't start streaming over a tokio tcp listener using actix actor
+        because of different version of multiple tokio runtimes
+    */
     let (mut secure_cell, wallet) = SECURECELLCONFIG_TCPWALLET.to_owned(); //---- this must be shared between clients and server
-    tcpactor::TcpListenerActor::new(&format!("0.0.0.0:2247"), wallet, secure_cell).start();
-
-    Ok(())
-
-
+    let listener_actor = tcpactor::TcpListenerActor::new(wallet, secure_cell, "0.0.0.0:2458");
+    listener_actor.start_streaming().await;
+    
+    
     /* ------------------------------ */
     /*     start grpc server actor    */
     /* ------------------------------ */
-    // let cli = ServerCli::parse();
-    // let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
-    // server::NodeServer::start(addr).await
+    let cli = ServerCli::parse();
+    let addr = format!("{}:{}", cli.server, cli.port).parse::<SocketAddr>().unwrap();
+    server::NodeServer::start(addr).await;
+    
+    
+    /* 
+        we should make the app to be ran constantly like a real server, so we can monitor the
+        logics inside any tokio::spawn() or other threads which have been executed concurrently
+        and asyncly in the background, otherwise we would use some mpsc channel to send any 
+        computational result inside of those threads into the channel so we can receive it 
+        outside of their scopes while the app is running
+    */
+    loop{} //--- make the app to be ran constantly
 
 }

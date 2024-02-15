@@ -26,11 +26,10 @@ impl NodeServer{
 
     pub async fn start(addr: SocketAddr) -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>{
 
-        info!("➔ 🚀 gRPC server has launched from [{}] at {}", 
+        info!("🚀 gRPC server is started launched at [{}] at {}", 
             addr, chrono::Local::now().naive_local());
 
         let node = NodeServer::default();
-        info!("gRPC Server listening on {}", addr);
     
         // node webhook signature
         let node_instance = Node::default();

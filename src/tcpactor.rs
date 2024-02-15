@@ -92,20 +92,8 @@ impl Actor for TcpListenerActor{
     fn started(&mut self, ctx: &mut Self::Context){
 
         info!("TcpListenerActor -> started listening");
-
-        let (listener_sender, listener_reciever) = 
-            std::sync::mpsc::channel::<TcpListener>();
-
-        let address = self.addr.clone();
-        tokio::spawn(async move{
-
-            let api_listener = tokio::net::TcpListener::bind(address.clone()).await;
-            info!("➔ 🚀 tcp listener is started at [{}] to accept streaming of utf8 bytes", address);
-            listener_sender.send(api_listener.unwrap());
-        });
-
-        let received_listener = listener_reciever.recv().unwrap();
-        self.listen(received_listener);
+        
+        // ...
         
     }
     
@@ -113,16 +101,25 @@ impl Actor for TcpListenerActor{
 
 impl TcpListenerActor{
 
-    pub fn new(addr: &str, wallet: wallexerr::misc::Wallet, secure_cell: wallexerr::misc::SecureCellConfig) -> Self{
+    pub fn new(
+        wallet: wallexerr::misc::Wallet, 
+        secure_cell: wallexerr::misc::SecureCellConfig,
+        address: &str,
+    ) -> Self{
         TcpListenerActor{
-            addr: addr.to_string(),
             wallet,
-            secure_cell
+            secure_cell,
+            addr: address.to_string()
         }
     }
 
-    pub fn listen(&mut self, api_listener: TcpListener){
+    pub async fn start_streaming(&self){
 
+        // extracting self, since self is behind a mutable pointer 
+        // thus all the fields will be extract in form of mutable pointer
+
+        let addr = self.addr.clone();
+        let api_listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
         let (job_sender, mut job_receiver) = 
             tokio::sync::mpsc::channel::<String>(1024);
 
@@ -130,12 +127,24 @@ impl TcpListenerActor{
         // getting the shared tcp ed25519 secure cell config and wallet
         let mut secure_cell = self.secure_cell.clone();
         let wallet = self.wallet.clone();
-
+        let cloned_job_sender = job_sender.clone();
+        
+        /* 
+            once we run this method and get to here, this tokio::spawn contains 
+            the whole streaming logic which will be executed in the background 
+            hence allows the code to be finished executing and have no constant 
+            listening in the terminal, the solution to this is to make the app 
+            alive and don't let it to be finished so we can monitor the process
+            inside this tokio::spawn while the app is running, this can be done
+            by adding a loop{} after calling the start_streaming() method which
+            allows the app to be ran constantly and prevent finishing execution
+        */
         tokio::spawn(async move{
 
             ////// cloning before going into while loop scope
             let cloned_aes256_config = secure_cell.clone();
-            let cloned_wallet = wallet.clone();
+
+            info!("🚀 tcp listener is started at [{}] to accept streaming of utf8 bytes", "0.0.0.0:2247");
 
             // streaming over incoming bytes to fill the buffer and then map the buffer to structure
             while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
@@ -145,9 +154,9 @@ impl TcpListenerActor{
                 ////// cloning before going into second tokio::spawn scope
                 let mut cloned_aes256_config = cloned_aes256_config.clone();
                 let cloned_wallet = wallet.clone();
-                let job_sender = job_sender.clone();
+                let cloned_job_sender = cloned_job_sender.clone();
 
-                tokio::spawn(async move {
+                tokio::spawn(async move { // process each api_streamer concurrently and asyncly
 
                     /* this buffer will be filled up with incoming bytes from the socket */
                     let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
@@ -175,7 +184,7 @@ impl TcpListenerActor{
                                 /* ----------------------------------------------------------------------------- */
                                 /* -------- encrypting the tcp packet using ed25519 with aes256 signing -------- */
                                 /* ----------------------------------------------------------------------------- */
-                                aes256_config.data = string_event_data.as_bytes().to_vec(); // filling it with the raw data for signing and encrypting
+                                aes256_config.data = String::from("****a very important event data****").as_bytes().to_vec(); // filling it with the raw data for signing and encrypting
                                 // client must verify the signature using the hash of data and public key
                                 let sig = crate::cry::eddsa_with_symmetric_signing::ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), aes256_config);
                                 let hash_of_data = aes256_config.clone().data; // data field now contains the hash of data
@@ -188,14 +197,14 @@ impl TcpListenerActor{
                                 // client can send encrypted packet through the secure connection
                                 sig_and_hash_data
                             } else{
-                                String::from("❌ invalid hash data or signature")
+                                String::from("❌ invalid hash data or signature, connection is not secured")
                             };
                             
                             /*  
                                 sending the decoded bytes into the mpsc channel so we could receive it  
                                 in other scopes or threads
                             */
-                            if let Err(why) = job_sender.send(must_be_written_to_socket.clone()).await{
+                            if let Err(why) = cloned_job_sender.send(must_be_written_to_socket.clone()).await{
                                 eprintln!("❌ failed to send to the mpsc channel; {}", why);
                             }
 
@@ -220,29 +229,34 @@ impl TcpListenerActor{
             }{}
         });
 
-        // receiving event data from the mpsc channel inside another 
-        // threadpool in the background asyncly and concurrently
+
+        // receiving the data from the channel using while let some 
+        // and tokio select event loop in the background
         tokio::spawn(async move{
 
-            /* 
-                write the incoming data from channel to file constanly 
-                as they're coming from the mpsc channel 
-            */
-            let f = tokio::fs::File::open("readmeasync.txt").await;
-            if let Err(why) = f.as_ref(){
-                println!("can't create file cause: {}", why.to_string());
-            }
-            let mut funwrapped = f.unwrap();
+            // the receiver of the tokio event loop will be executed 
+            // first to receive the data from the sender, cause we've
+            // sent some data right after this tokio::spawn 
 
-            while let Some(job) = job_receiver.recv().await{
-
-                if let Err(why) = funwrapped.write(job.as_bytes()).await{
-                    println!("can't write to file cause: {}", why.to_string());
+            // ----------- tokio event loop
+            // ---------------------------------------------------------------
+            tokio::select!{
+                received_job = job_receiver.recv() => {
+                    if let Some(job) = received_job{
+                        info!("tokio::select > got the job: {:?}", job);
+                    }
                 }
+            }
             
+            // ----------- while let some 
+            // ---------------------------------------------------------------
+            while let Some(job) = job_receiver.recv().await{
+                info!("while let some > got the job: {:?}", job);
             }
             
         });
+    
+        job_sender.clone().send(String::from("this data has sent from the bottom of start_streaming method")).await.unwrap();
 
     }
 

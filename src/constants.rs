@@ -391,9 +391,14 @@ pub fn vector_to_static_slice(s: Vec<u32>) -> &'static [u32] {
 trait TypeTrait{
     type Value;
 
+    /* 
+        we can use the lifetime of self in struct and trait methods 
+        to return pointer since the self is valid as long as the object 
+        itself is valid during the execution of the app
+    */
     fn get_data(&self) -> Self::Value;
     fn get_ctx_data(&self, ctx: Self::Value) -> Self;
-    fn fill_buffer(&mut self) -> Vec<u8>;
+    fn fill_buffer(&mut self) -> &[u8];
 }
 
 impl TypeTrait for MerkleNode{
@@ -414,7 +419,7 @@ impl TypeTrait for MerkleNode{
         todo!()
     }
 
-    fn fill_buffer(&mut self) -> Vec<u8> {
+    fn fill_buffer(&mut self) -> &[u8] {
         todo!()
     }
 }
@@ -433,7 +438,7 @@ impl TypeTrait for Streamer{ // polymorphism
         todo!()
     }
 
-    fn fill_buffer(&mut self) -> Vec<u8> {
+    fn fill_buffer(&mut self) -> &[u8] {
         todo!()
     }
 
@@ -458,7 +463,7 @@ impl TypeTrait for RuntimeCode{
         todo!()
     }
 
-    fn fill_buffer(&mut self) -> Vec<u8> {
+    fn fill_buffer(&mut self) -> &[u8] {
         todo!()
     }
 }
@@ -532,11 +537,11 @@ impl NodeReceptor for Neuron<u8>{
 }
 
 pub fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: N, cmd_receptor: impl NodeReceptor) 
--> <N as NodeReceptor>::InnerReceptor // or T::InnerReceptor
-where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized, 
-T: NodeReceptor, T::InnerReceptor: Send + Clone,
-/* casting generic N to NodeReceptor trait to access the InnerReceptor gat */
-<N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
+    -> <N as NodeReceptor>::InnerReceptor // or T::InnerReceptor
+    where N: Send + Sync + 'static + Clone + NodeReceptor + ?Sized, 
+    T: NodeReceptor, T::InnerReceptor: Send + Clone,
+    /* casting generic N to NodeReceptor trait to access the InnerReceptor gat */
+    <N as NodeReceptor>::InnerReceptor: Send + Sync + 'static{
 
     // with pointer we can borrow the type to prevent from moving and 
     // makes the type sizable at compile time by storing the address of 
@@ -574,6 +579,14 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
             String::from("")
         });
 
+    let cls = |func: fn() -> String|{
+        func()
+    };
+    fn execute() -> String{
+        String::from("wildonion")
+    }
+    cls(execute);
+
     let cls = ||{};
     let casted = &cls as &dyn Fn() -> (); // casting the closure to an Fn trait
     let name = (
@@ -584,12 +597,26 @@ T: NodeReceptor, T::InnerReceptor: Send + Clone,
     
     enum Packet{
         Http{header: String},
-        Tcp{size: usize},
+        Tcp{size: usize}, // the size of the incoming buffer
+        Snowflake{id: String}
     }
     let packet = Packet::Http { header: String::from("") };
     if let Packet::Http { header } = packet{
         println!("packet header bytes => {header:}");
     }
+
+    enum UserName{
+        Age,
+        Id,
+        Snowflake{id: String}
+    }
+    let enuminstance = (Packet::Tcp{size: 0 as usize}, Packet::Http { header: String::from("http header") });
+    let res = match enuminstance{
+        (Packet::Tcp { size: tcpsize }, Packet::Http{ header: httpheader }) | 
+        (Packet::Http{ header: httpheader }, Packet::Tcp { size: tcpsize }) => {},
+        (_, Packet::Snowflake{id: sid}) => if !sid.is_empty(){},
+        _ => {}
+    };
 
     /*  
         note that if we want to call get_inner_receptor() method

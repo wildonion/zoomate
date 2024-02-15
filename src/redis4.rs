@@ -103,8 +103,18 @@ pub async fn start_server<F, A>(mut apifunc: F, redis_pubsub_msg_sender: tokio::
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<Arc<tokio::sync::Mutex<Data>>>(1024);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:2001").await.unwrap();
     
-    info!("➔ server started at 0.0.0.0:2001");
+    info!("🚀 redis4 server is started at at 0.0.0.0:2001");
     
+    /* 
+        once we run this method and get to here, this tokio::spawn contains 
+        the whole streaming logic which will be executed in the background 
+        hence allows the code to be finished executing and have no constant 
+        listening in the terminal, the solution to this is to make the app 
+        alive and don't let it to be finished so we can monitor the process
+        inside this tokio::spawn while the app is running, this can be done
+        by adding a loop{} after calling the start_streaming() method which
+        allows the app to be ran constantly and prevent finishing execution
+    */
     tokio::spawn(async move{
             
         // handle streaming async tasks like accepting packets from a socket connections in a none blocking
