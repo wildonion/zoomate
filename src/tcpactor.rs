@@ -73,13 +73,6 @@ use crate::constants::gen_random_chars;
         other than that we have to provide the else part since rust needs to know 
         that if not this type then what type?!
 */
-
-/* >___________________________________________________________________________________
-    pubsub streaming over raw tcp based source like grpc,tcp,http,ws,redis and mpsc 
-    receiver to decode data like stream: Payload, payload: Multipart, utf8 bytes with 
-    actor worker inside tokio::spawn() using while let some syntax to map and store the 
-    multipart and payload bytes into structure (serde json value) and file in server
-*/
 pub struct TcpListenerActor{
     pub addr: String,
     pub wallet: wallexerr::misc::Wallet,
@@ -231,24 +224,30 @@ impl TcpListenerActor{
 
 
         // receiving the data from the channel using while let some 
-        // and tokio select event loop in the background
+        // and tokio select event loop in the background also 
+        // the receiver of the tokio event loop will be executed 
+        // first to receive the data from the sender, cause we've
+        // sent some data right after this tokio::spawn 
         tokio::spawn(async move{
 
-            // the receiver of the tokio event loop will be executed 
-            // first to receive the data from the sender, cause we've
-            // sent some data right after this tokio::spawn 
+            // running a loop inside tokio::spawn() to receive constantly
+            // from the mpsc channel it's like having while let Some
+            loop{
 
-            // ----------- tokio event loop
-            // ---------------------------------------------------------------
-            tokio::select!{
-                received_job = job_receiver.recv() => {
-                    if let Some(job) = received_job{
-                        info!("tokio::select > got the job: {:?}", job);
+                // ----------- tokio event loop
+                // ---------------------------------------------------------------
+                tokio::select!{
+                    received_job = job_receiver.recv() => {
+                        if let Some(job) = received_job{
+                            info!("tokio::select > got the job: {:?}", job);
+                        } else{
+                            break;
+                        }
                     }
                 }
+                
             }
-            
-            // ----------- while let some 
+            // ----------- while let some instead of loop{tokio::select!{}}
             // ---------------------------------------------------------------
             while let Some(job) = job_receiver.recv().await{
                 info!("while let some > got the job: {:?}", job);
@@ -256,7 +255,19 @@ impl TcpListenerActor{
             
         });
     
-        job_sender.clone().send(String::from("this data has sent from the bottom of start_streaming method")).await.unwrap();
+        job_sender
+            .clone()
+            .send(String::from("this data has sent from the bottom of start_streaming method"))
+            .await.unwrap();
+
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        job_sender
+            .clone()
+            .send(String::from("another data"))
+            .await.unwrap();
+
+
 
     }
 

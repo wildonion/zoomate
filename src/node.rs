@@ -135,7 +135,12 @@ async fn main()
         because of different version of multiple tokio runtimes
     */
     let (mut secure_cell, wallet) = SECURECELLCONFIG_TCPWALLET.to_owned(); //---- this must be shared between clients and server
-    let listener_actor = tcpactor::TcpListenerActor::new(wallet, secure_cell, "0.0.0.0:2458");
+    let tcp_addr = format!(
+            "{}:{}",
+            std::env::var("TCP_HOST").unwrap(),
+            std::env::var("TCP_PORT").unwrap()
+        );
+    let listener_actor = tcpactor::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
     listener_actor.start_streaming().await;
     
     
@@ -154,6 +159,6 @@ async fn main()
         computational result inside of those threads into the channel so we can receive it 
         outside of their scopes while the app is running
     */
-    loop{} //--- make the app to be ran constantly
+    loop{} //--- halt the in here and making it to be ran constantly, so sockets can be processed
 
 }
