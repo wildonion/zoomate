@@ -36,7 +36,29 @@ pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, 
     (aes256_config.to_owned(), wallet)
 });
 
-pub fn serding(){
+pub async fn serding(){
+
+    /* 
+        future objects must be pinned to the ram before they can be solved 
+        or polled the reason of doing this is first of all they're trait objects
+        and traits are dynamically sized means they're size will be known at runtime
+        second of all due to the fact that rust doesn’thave gc which allows us not 
+        to have a tracking reference counting process for a type at runtime cause it’ll 
+        move the type if the type goes of out of the scope hence in order to solve 
+        and poll a future in other scopes later on, we should pin it to the ram first 
+        which can be done once we await on the future but if we want to solve and poll 
+        a mutable reference of a future we should stick and pin it to the ram manually, 
+        first by pinning the future into the ram using Box::pin or tokio::pin!() then 
+        do an await on the mutable reference of the future object, so if it is required to call 
+        .await on a &mut _ reference, the caller is responsible for pinning the future
+        by pinning future objects manually we make them as an object before polling 
+        them like having a mutable reference to them or pass them into other parts
+        to solve them in different parts
+    */
+    let mut future = async move{};
+    tokio::pin!(future); // pinning the future object before solving/polling its mutable pointer
+    let mutable_pointer = &mut future;
+    mutable_pointer.await; // polling the mutable reference of the futuer object
 
     #[derive(Serialize, Deserialize, Debug)]
     struct DataBucket{data: String, age: i32}
@@ -186,10 +208,10 @@ pub fn serding(){
     eg: Lazy<std::sync::Arc<tokio::sync::RwLock<ZoomateResponse>>> + Send + Sync + 'static 
     as a mutable global data will be shared between apis to mutate it safely to avoid deadlocks 
     and race conditions and the sharing process can be done using mpsc jobq channel sender
-    so having this: 
-    	 // can't put the actual data in const since Arc and RwLock are none const types that can mutate data
-    	pub static MULTI_THREAD_THINGS: std::sync::Arc<tokio::sync::RwLock<Vec<u8>>> = 
-     		std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new()));
+    so having the following is wrong since the static value must be const and Arc and RwLock
+    are none const types hence we must put them inside Lazy<>: 
+        pub static MULTI_THREAD_THINGS: std::sync::Arc<tokio::sync::RwLock<Vec<u8>>> = 
+            std::sync::Arc::new(tokio::sync::RwLock::new(Vec::new()));
     is wrong and we should use the following syntaxes instead:
 */
 
@@ -246,7 +268,7 @@ pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
         };
 
     let fut_: std::pin::Pin<Box<dyn std::future::Future<Output=String>>>
-        = Box::pin(
+        = Box::pin( // pinning the future into the ram to make it as an on object before polling it
             fut 
         );
     HashMap::new()
@@ -257,11 +279,9 @@ thread_local!{
     pub static DB: std::cell::RefCell<std::collections::HashMap<String, String>> = 
         std::cell::RefCell::new(HashMap::new());
 }
-
 // DB.with_borrow_mut(|db| {
 //     db.insert("key".to_string(), "value".to_string())
 // });
-
 
 
 // following is incorrect since std::sync::Arc<tokio::sync::RwLock<Lazy<String>>>
