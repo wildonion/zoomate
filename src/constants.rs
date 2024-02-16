@@ -39,6 +39,9 @@ pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, 
 pub async fn serding(){
 
     /* 
+        trait objects like closures are dynamically sized means they're stored on the heap 
+        in order to act them as a separate object or type we need to either put them behind 
+        a pointer or box them, this would be true about the futures cause they're traits too
         future objects must be pinned to the ram before they can be solved 
         or polled the reason of doing this is first of all they're trait objects
         and traits are dynamically sized means they're size will be known at runtime
