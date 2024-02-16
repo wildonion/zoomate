@@ -35,7 +35,8 @@ mod cry;
     the tcp socket to either ckient or seerver
 */
 #[post("/api")]
-pub async fn api(req: HttpRequest, mut stream: Payload) -> Result<actix_web::HttpResponse, actix_web::Error>{
+pub async fn api(req: HttpRequest, mut stream: Payload) 
+    -> Result<actix_web::HttpResponse, actix_web::Error>{
 
     /* we have to fill a buffer on server with incoming bytes by streaming over `stream` object */
     let mut bytes = vec![];

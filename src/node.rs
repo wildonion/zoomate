@@ -22,7 +22,7 @@ use crate::grpc::server::NodeServer;
 use crate::redis4::*;
 use node::{NodeRequest, NodeResponse, node_service_client::NodeServiceClient, node_service_server::NodeServiceServer};
 use ::clap::{Parser};
-use utils::{api, ZoomateRequest, ZoomateResponse};
+use utils::{ZoomateRequest, ZoomateResponse};
 
 
 mod redis4;
@@ -169,9 +169,11 @@ async fn main()
                 std::env::var("TCP_PORT").unwrap()
             );
         let listener_actor = tcpactor::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
+        // --------------------
         // ERROR: `spawn_local` called from outside of a `task::LocalSet`
-        // SOLUTION: use #[actix_web::main] on top of main function
-        // listener_actor.start();
+        // SOLUTION: use #[actix_web::main] on top of main function since the actors must be executed from the context of actix_web runtime itself and outside of the tokio::spawn
+        // let tcp_listener_actor_address = listener_actor.start(); //--- this will be run but shows the above error
+        // --------------------
         listener_actor.start_streaming().await;
     });
     
@@ -189,13 +191,26 @@ async fn main()
     });
     
 
+    // async sleeping in the current thread without having 
+    // disruption in other code order execution
+    tokio::spawn(async move{
+        info!("sleeping in the background asnycly");
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        info!("waking up after 2 secs");
+    });
+
 
     //----------------------------------------------------------------------------------
     //---- file encryption using ed25519 wallet with aes256 themis secure cell signing
     //----------------------------------------------------------------------------------
-    let mut encrypted = cry::wannacry::encrypt_file("secret.txt").await;
-    let decrypted = cry::wannacry::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
-    constants::serding().await; // .await pins the future into the ram before polling it
+    // spawn the method in the background asyncly and concurrently
+    // without having any disruption in order execution with other
+    // aync methods
+    tokio::spawn(async move{
+        let mut encrypted = cry::wannacry::encrypt_file("secret.txt").await;
+        let decrypted = cry::wannacry::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
+        // constants::serding().await; // .await pins the future into the ram before polling it
+    });
     
     /* 
         we should make the app to be ran constantly like a real server, so we can monitor the
