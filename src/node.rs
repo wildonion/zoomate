@@ -27,7 +27,7 @@ use utils::{ZoomateRequest, ZoomateResponse};
 
 mod redis4;
 
-mod tcpactor;
+mod tcpserver;
 
 mod constants;
 
@@ -168,7 +168,7 @@ async fn main()
                 std::env::var("TCP_HOST").unwrap(),
                 std::env::var("TCP_PORT").unwrap()
             );
-        let listener_actor = tcpactor::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
+        let listener_actor = tcpserver::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
         // --------------------
         // ERROR: `spawn_local` called from outside of a `task::LocalSet`
         // SOLUTION: use #[actix_web::main] on top of main function since the actors must be executed from the context of actix_web runtime itself and outside of the tokio::spawn
@@ -219,6 +219,6 @@ async fn main()
         computational result inside of those threads into the channel so we can receive it 
         outside of their scopes while the app is running
     */
-    loop{} //--- halt the in here and making it to be ran constantly, so sockets can be processed
+    loop{} //--- halt the code in here and making it to be ran constantly, so sockets can be processed
 
 }
