@@ -170,6 +170,7 @@ async fn main()
             );
         let listener_actor = tcpserver::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
         // --------------------
+        // don't start actor inside tokio::spawn cause they must be executed from the context of actix runtime itself
         // ERROR: `spawn_local` called from outside of a `task::LocalSet`
         // SOLUTION: use #[actix_web::main] on top of main function since the actors must be executed from the context of actix_web runtime itself and outside of the tokio::spawn
         // let tcp_listener_actor_address = listener_actor.start(); //--- this will be run but shows the above error
@@ -177,7 +178,32 @@ async fn main()
         listener_actor.start_streaming().await;
     });
     
-    
+
+    /* ------------------------------------------- */
+    // NODEJS LIKE ASYNC METHOD ORDER OF EXECUTION
+    /* ------------------------------------------- */
+    // execution of async methods are not async we should put them in tokio::spawn
+    tokio::spawn(async move{
+        hello().await;
+    });
+
+    async fn request(){
+        for i in 0..10{
+            info!("i => {:?}", i);
+        }
+    }
+
+    async fn hello(){
+        info!("hello");
+        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        info!("waking up after 3 seconds in hello method");
+    } 
+
+    tokio::spawn(async move{
+        request().await;
+    });
+
+
     /* ------------------------------ */
     /*     start grpc server actor    */
     /* ------------------------------ */

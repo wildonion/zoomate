@@ -6,11 +6,11 @@
     "secp256k1_mnemonic": null,
     "secp256r1_secret_key": null,
     "secp256r1_public_key": null,
-    "ed25519_secret_key": "nGpVmGTNjfvJ9ojqijQwUMipZv3hchH2eh3iNuxiJxGUnSrUZzV9t3F9eUTZfDUPtNgHM1jwxqpFzZ3yfa9AuU5Ngm1Y25he8gLcN5GnUZY8UtyRQ",
-    "ed25519_public_key": "HGgiUDgu6pwhGZEAzGv3d3g7CoYMWTtEkNALUKEFWQLW"
+    "ed25519_secret_key": "nGpVmGTNjfvJ9ojqijQwUN6TbLZzAmRMS8d5cthyQJe7CpNdG2HpDUzd7D6Mba8FiCNwF5dJiG18npV5HWdvAGxUS36UWRNGcVFD1Wut2GeHPVonp",
+    "ed25519_public_key": "ADmCU3cUkzbLX5kirgyqKjsaKQyP1uTjUDZbcWU8faCx"
   },
   "secure_cell_config": {
-    "secret_key": "31c19db73e775465214b9e39b563d1682cb5e17357808f81fbff0d2028a83f5d",
+    "secret_key": "6ac29aefecf1b522df6c08d848c5df45496911b1e8f79d80ec628066aad39cd7",
     "passphrase": "",
     "data": []
   }
