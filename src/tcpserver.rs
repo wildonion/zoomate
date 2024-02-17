@@ -79,6 +79,16 @@ pub struct TcpListenerActor{
     pub secure_cell: wallexerr::misc::SecureCellConfig
 }
 
+impl Actor for TcpListenerActor{
+
+    type Context = Context<Self>;
+    
+    fn started(&mut self, ctx: &mut Self::Context) {
+        
+        info!("TcpListenerActor started");
+    }
+}
+
 impl TcpListenerActor{
 
     pub fn new(
