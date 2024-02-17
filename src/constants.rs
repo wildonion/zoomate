@@ -34,65 +34,7 @@ pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, 
     }).unwrap().as_bytes()).unwrap();
 
     (aes256_config.to_owned(), wallet)
-});
-
-pub async fn serding(){
-
-    /* 
-        trait objects like closures are dynamically sized means they're stored on the heap 
-        in order to act them as a separate object or type we need to either put them behind 
-        a pointer or box them, this would be true about the futures cause they're traits too
-        future objects must be pinned to the ram before they can be solved 
-        or polled the reason of doing this is first of all they're trait objects
-        and traits are dynamically sized means they're size will be known at runtime
-        second of all due to the fact that rust doesn’thave gc which allows us not 
-        to have a tracking reference counting process for a type at runtime cause it’ll 
-        move the type if the type goes of out of the scope hence in order to solve 
-        and poll a future in other scopes later on, we should pin it to the ram first 
-        which can be done once we await on the future but if we want to solve and poll 
-        a mutable reference of a future we should stick and pin it to the ram manually, 
-        first by pinning the future into the ram using Box::pin or tokio::pin!() then 
-        do an await on the mutable reference of the future object, so if it is required to call 
-        .await on a &mut _ reference, the caller is responsible for pinning the future
-        by pinning future objects manually we make them as an object before polling 
-        them like having a mutable reference to them or pass them into other parts
-        to solve them in different parts
-    */
-    let mut future = async move{};
-    tokio::pin!(future); // pinning the future object before solving/polling its mutable pointer
-    let mutable_pointer = &mut future;
-    mutable_pointer.await; // polling the mutable reference of the futuer object
-
-    #[derive(Serialize, Deserialize, Debug)]
-    struct DataBucket{data: String, age: i32}
-    let instance = DataBucket{data: String::from("wildonion"), age: 27};
-    ///// encoding
-    let instance_bytes = serde_json::to_vec(&instance);
-    let instance_json_string = serde_json::to_string_pretty(&instance);
-    let instance_str = serde_json::to_string(&instance);
-    let isntance_json_value = serde_json::to_value(&instance);
-    let instance_json_bytes = serde_json::to_vec_pretty(&instance);
-    let instance_hex = hex::encode(&instance_bytes.as_ref().unwrap());
-    ///// decoding
-    let instance_from_bytes = serde_json::from_slice::<DataBucket>(&instance_bytes.as_ref().unwrap());
-    let instance_from_json_string = serde_json::from_str::<DataBucket>(&instance_json_string.unwrap());
-    let instance_from_str = serde_json::from_str::<DataBucket>(&instance_str.unwrap());
-    let isntance_from_json_value = serde_json::from_value::<DataBucket>(isntance_json_value.unwrap());
-    let instance_from_hex = hex::decode(instance_hex.clone()).unwrap();
-    let instance_from_hex_vector_using_serde = serde_json::from_slice::<DataBucket>(&instance_from_hex);
-    let instance_from_hex_vector_using_stdstr = std::str::from_utf8(&instance_from_hex);
-    let instance_from_vector_using_stdstr = std::str::from_utf8(&instance_bytes.as_ref().unwrap());
-    
-    println!(">>>>>>> instance_hex {:?}", instance_hex);
-    println!(">>>>>>> instance_from_bytes {:?}", instance_from_bytes.as_ref().unwrap());
-    println!(">>>>>>> instance_from_json_string {:?}", instance_from_json_string.unwrap());
-    println!(">>>>>>> instance_from_str {:?}", instance_from_str.unwrap());
-    println!(">>>>>>> isntance_from_json_value {:?}", isntance_from_json_value.unwrap());
-    println!(">>>>>>> instance_from_hex_vector_using_serde {:?}", instance_from_hex_vector_using_serde.unwrap());
-    println!(">>>>>>> instance_from_vector_using_stdstr {:?}", instance_from_vector_using_stdstr.unwrap());
-    println!(">>>>>>> instance_from_hex_vector_using_stdstr {:?}", instance_from_hex_vector_using_stdstr.unwrap());
-
-} 
+}); 
 
 /*      
            --------------------------------------------------
@@ -238,44 +180,6 @@ Lazy::new(||{
     ) 
 });
 
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// s3 code order execution using sync objects: 
-// static lazy arced mutexed and pinned box future db type, send sync static
-// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-pub static Db: Lazy<std::sync::Arc<tokio::sync::Mutex<
-    std::pin::Pin<Box<dyn std::future::Future<Output = HashMap<u32, String>> + Send + Sync + 'static>>
-    >>> = 
-Lazy::new(||{
-
-    std::sync::Arc::new(
-        tokio::sync::Mutex::new(
-            Box::pin(async move{
-                HashMap::new()
-            })
-        )
-    )
-
-});
-
-/* 
-    an static global mutex must be in RwLock in order to be mutable safely in threadpool 
-    since static types can't be mutated since rust doesn't have gc and by mutating an static
-    type we might have race conditions in other scopes.
-*/
-pub static USER_RATELIMIT: Lazy<HashMap<u64, u64>> = Lazy::new(||{
-    // futures are trait that must be behind a valid pointer 
-    // and pinned to ram to solve them later in other scopes
-    let fut = 
-        async move{
-            String::from("")
-        };
-
-    let fut_: std::pin::Pin<Box<dyn std::future::Future<Output=String>>>
-        = Box::pin( // pinning the future into the ram to make it as an on object before polling it
-            fut 
-        );
-    HashMap::new()
-});
 
 // a single thread arena allocator
 thread_local!{
@@ -288,7 +192,8 @@ thread_local!{
 
 
 // following is incorrect since std::sync::Arc<tokio::sync::RwLock<Lazy<String>>>
-// is not constant and the whole type must be wrapped into the Lazy<>
+// is not constant and the whole type must be wrapped into the Lazy<> to be a const
+// value acceptable by the static cause static value must be const
 /* 
 pub static MUTABLE_USER_RATELIMIT: std::sync::Arc<tokio::sync::RwLock<Lazy<String>>> = 
     std::sync::Arc::new(
@@ -597,11 +502,6 @@ pub fn fire<'valid, N, T: 'valid + NodeReceptor>(cmd: N, cmd_receptor: impl Node
         }
     let another_name = AnotherNeuronam{data: name, new_data: ||{}};
 
-    let pinned_boxed_future: std::pin::Pin<Box<dyn std::future::Future<Output=String>>> = 
-        Box::pin(async move{
-            String::from("")
-        });
-
     let cls = |func: fn() -> String|{
         func()
     };
@@ -710,6 +610,17 @@ struct UserInfo<C: Send + Sync + 'static, F: Clone> where
 }
 impl<F: Interface + Clone, C: Send + Sync + 'static + FnOnce() -> String> UserInfo<C, F>{
     fn set_data(cls: impl FnOnce() -> String, clstopass: C, f: F) -> impl Interface{
+        
+        struct ExecuteMe;
+        struct MessageMe;
+        trait ExecuteMeExt<A, B>{
+            type Result;
+        }
+        impl ExecuteMeExt<MessageMe, String> for ExecuteMe 
+            where String: Send, MessageMe: Send + Sync{
+            type Result = MessageMe;
+        }
+        
         Self{
             data: f,
             __data: clstopass,

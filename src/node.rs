@@ -235,7 +235,6 @@ async fn main()
     tokio::spawn(async move{
         let mut encrypted = cry::wannacry::encrypt_file("secret.txt").await;
         let decrypted = cry::wannacry::decrypt_file("secret.txt.dec", &mut encrypted.1).await;
-        // constants::serding().await; // .await pins the future into the ram before polling it
     });
     
     /* 
@@ -245,6 +244,6 @@ async fn main()
         computational result inside of those threads into the channel so we can receive it 
         outside of their scopes while the app is running
     */
-    loop{} //--- halt the code in here and making it to be ran constantly, so sockets can be processed
+    loop{} //--- halt the code in here and making it to be ran constantly, so sockets can be processed while the app is running
 
 }
