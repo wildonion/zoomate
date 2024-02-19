@@ -67,26 +67,26 @@ struct ServerCli {
 }
 
 
-/*  
-    https://github.com/actix/actix-web/blob/master/actix-web/MIGRATION-4.0.md#actix_webmain-and-tokiomain
-    instead of addin' #[tokio::main] macro on top of the main method which will execute
-    the whole main method and all of its functions inside of it in a threadpool context 
-    we can remove the macro to have a none async main method but still in order to run 
-    async methods inside of it we can't just call them and put .await on them cause rust 
-    is not a async lang by nature and in order to solve async method we must be inside an 
-    async context thus we need an async env to do so which can be solved by sending the 
-    async method or job into the tokio::spawn() which is a async job or task handler in 
-    it's threadpool context behind the scene without having deadlocks and race conditions
-*/
-#[tokio::main]
+// https://github.com/actix/actix-web/blob/master/actix-web/MIGRATION-4.0.md#actix_webmain-and-tokiomain
+#[tokio::main(flavor="multi_thread", worker_threads=10)]
 async fn main() 
 // fn main() 
     
     /* 
         if we want to use Result<(), impl std::error::Error + Send + Sync + 'static>
-        as the return type thus the error variable must be sepecified also the Error trait
-        must be implemented for the error type (impl Error for ErrorType{}) since 
-        we're implementing the Error trait for the error type in return type   
+        as the return type of the error part, the exact error type instance must be 
+        sepecified also the Error trait must be implemented for the error type (impl 
+        Error for ErrorType{}) since we're implementing the Error trait for the error 
+        type in return type which insists that the instance of the type implements the 
+        Error trait. by returning a boxed error trait we're returning the Error trait 
+        as a heap object behind a valid pointer which handles all error type at runtime, 
+        this is the solution to return traits as an object cause we don't know what type 
+        causes the error at runtiem and is the implementor of the Error trait which 
+        forces us to return the trait as the error itself and since traits are dynamically
+        sized we can't treat them as a typed object directly we must put them behind 
+        pointer like &'valid dyn Trait or box them to send them on the heap, also by 
+        bounding the Error trait to Send + Sync + 'static we'll make it sefable, sendable 
+        and shareable to move it between different scopes and threads.
     */
     -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
     {
