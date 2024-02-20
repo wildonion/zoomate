@@ -300,7 +300,11 @@ using following flow:
 	    • udp and quic for packet sending   
 	    • argo routing to send packets to cloudflare gateways
 	    • ed25519 digital signature pubkey with chacha20 and aes256 in noise protocol for making vpn
-   • use warp to build a dns over https/tls vpn: hide dns queries inside the https traffic like client request the dns and the server respond him within the encrypted https packets
+   • use warp to build a dns over https/tls vpn: hide dns queries inside the https traffic like client requests the dns and the server respond him within the encrypted https packets:
+        • send https request to query the dns addrs
+        • update device dns endpoints with the new ones 
+        • request any websites and apis through those dns
+   • request geolocation info from ip
    • VPS configuration according to the source usage of each node 
         • like dpi to detect anomal packets to coiniXerr server and automatic load balancer and vps config using transformers and drl
         • OS and a security management app(malware detection) using RL
