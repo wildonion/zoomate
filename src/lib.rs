@@ -1,9 +1,6 @@
 
 
 use std::collections::HashMap;
-use actix::{Actor, Handler, Message, StreamHandler};
-use actix_web::{post, HttpRequest, HttpResponse};
-use actix_web::web::Payload;
 use aes256ctr_poly1305aes::aead::Buffer;
 use chacha20::cipher::typenum::Len;
 use futures_util::StreamExt;
@@ -281,39 +278,6 @@ pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
     secure_cell_signature
 }
 
-/* ----------------------------------------------------------------------- */
-/* --------- actix ws stream and message handler for Node struct --------- */
-/* ----------------------------------------------------------------------- */
-/* 
-    realtime networking and event driven coding using redispubsub, tokio stuffs 
-    and actix web/ws stream/event handler like aggregate streaming of resp.boy 
-    bytes into a buffer then decode the fulfilled into struct
-*/
-#[derive(Message)]
-#[rtype(result = "()")]
-pub struct NodeMsg(pub String);
-
-impl Actor for Node{
-    type Context = actix_web_actors::ws::WebsocketContext<Node>;
-}
-
-impl Handler<NodeMsg> for Node {
-   
-    type Result = ();
-
-    fn handle(&mut self, msg: NodeMsg, ctx: &mut Self::Context){
-        ctx.text(msg.0);
-    }
-}
-
-impl StreamHandler<Result<actix_web_actors::ws::Message, actix_web_actors::ws::ProtocolError>> for Node{
-    
-    fn handle(&mut self, item: Result<actix_web_actors::ws::Message, actix_web_actors::ws::ProtocolError>, ctx: &mut Self::Context) {
-        
-        todo!()
-    
-    }
-}
 
 // custom stream handler for an actor
 trait CustomStreamHandler{
@@ -379,6 +343,7 @@ pub struct Dns{
     pub id: String
 }
 
+struct HttpRequest;
 pub struct DnsRequest{
     pub http_req: HttpRequest 
 }
@@ -637,41 +602,6 @@ pub mod network{
 
     pub mod http{
 
-        pub use super::*;
-
-        /* 
-            the ok arm of return type is an HttpResponse object which can be 
-            parsed in any server or client application and can be sent through
-            the tcp socket to either ckient or seerver
-        */
-        #[post("/api")]
-        pub async fn api(req: HttpRequest, mut stream: Payload) 
-            -> Result<actix_web::HttpResponse, actix_web::Error>{
-
-            /* 
-                we have to fill a buffer on server with incoming bytes 
-                by streaming over `stream` object then we can map the
-                buffer into an tructure.
-            */
-            let mut bytes = vec![];
-            while let Some(item) = stream.next().await {
-                bytes.extend_from_slice(&item?);
-            }
-
-            tokio::spawn(async move{
-
-                // other api logics
-                // ...
-            
-            });
-        
-
-            return Ok(
-                HttpResponse::NotAcceptable().json("rate limited")
-            );
-
-
-        }
     }
 
     pub mod ws{

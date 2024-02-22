@@ -1,7 +1,6 @@
 
 
-use actix::prelude::*;
-use actix::Actor;
+
 use ring::signature;
 use tokio::io::AsyncReadExt; // for reading from socket asyncly allows us to call .read() method
 use tokio::net::TcpListener;
@@ -77,16 +76,6 @@ pub struct TcpListenerActor{
     pub addr: String,
     pub wallet: wallexerr::misc::Wallet,
     pub secure_cell: wallexerr::misc::SecureCellConfig
-}
-
-impl Actor for TcpListenerActor{
-
-    type Context = Context<Self>;
-    
-    fn started(&mut self, ctx: &mut Self::Context) {
-        
-        info!("TcpListenerActor started");
-    }
 }
 
 impl TcpListenerActor{

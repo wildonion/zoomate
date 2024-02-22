@@ -1,6 +1,5 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
-use actix::Actor;
 use constants::SECURECELLCONFIG_TCPWALLET;
 use env_logger::Env;
 use grpc::server;
@@ -39,7 +38,6 @@ use crate::raptor::*;
 mod bpf;
 use crate::bpf::*;
 
-mod extractor;
 
 mod cry;
 use crate::cry::*;

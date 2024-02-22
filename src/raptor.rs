@@ -5,7 +5,6 @@
     https://github.com/wildonion/gvm/
 */
 
-use actix::prelude::*;
 use crate::*;
 
 
@@ -13,11 +12,6 @@ use crate::*;
 struct Raptor{
 
 }
-
-impl Actor for Raptor{
-    type Context = Context<Raptor>;
-}
-
 
 pub mod codec{
 
