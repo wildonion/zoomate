@@ -343,7 +343,7 @@ pub async fn sharded_shared_state_storage(
                     // check that this is the largest data
                     if current_data_length < largest_data.len(){
                         
-                        // update the whole shards with the largest_data
+                        // update the whole shards with the largest_data, remove any fork issue
                         let new_shards = vec![Arc::new(tokio::sync::Mutex::new(largest_data)); SHARDS as usize];
 
                         // broadcast the new shards to the channel so all receivers can use the updated version

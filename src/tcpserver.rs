@@ -143,7 +143,7 @@ impl TcpListenerActor{
 
                 ////// cloning before going into second tokio::spawn scope
                 let mut cloned_aes256_config = cloned_aes256_config.clone();
-                let cloned_wallet = wallet.clone();
+                let mut cloned_wallet = wallet.clone();
                 let cloned_job_sender = cloned_job_sender.clone();
 
                 tokio::spawn(async move { // process each api_streamer concurrently and asyncly
@@ -169,7 +169,7 @@ impl TcpListenerActor{
                             /* -------- verifying and decrypting the tcp packet using ed25519 with aes256 signing -------- */
                             /* ------------------------------------------------------------------------------------------- */
                             let (is_verified, decrypted_data) = crate::cry::eddsa_with_symmetric_signing::ed25519_decrypt_and_verify_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), signature, aes256_config);
-                            let must_be_written_to_socket = if is_verified{
+                            let must_be_encrypted = if is_verified{
                                 info!("✅ decrypted aes256 hash data from client is => {:?}", decrypted_data);
                                 /* ----------------------------------------------------------------------------- */
                                 /* -------- encrypting the tcp packet using ed25519 with aes256 signing -------- */
@@ -194,12 +194,20 @@ impl TcpListenerActor{
                                 sending the decoded bytes into the mpsc channel so we could receive it  
                                 in other scopes or threads
                             */
-                            if let Err(why) = cloned_job_sender.send(must_be_written_to_socket.clone()).await{
+                            if let Err(why) = cloned_job_sender.send(must_be_encrypted.clone()).await{
                                 eprintln!("❌ failed to send to the mpsc channel; {}", why);
                             }
 
+                            // encrypting the signature and the hash of data using aes256 config
+                            // later on client must decrypt this data to extract the signature 
+                            // and the hash of data to start verification process.
+                            let pointer_to_secure_cell = &mut cloned_aes256_config.clone();
+                            pointer_to_secure_cell.data = must_be_encrypted.as_bytes().to_vec();
+                            let fully_encrypted_message_bytes = cloned_wallet.self_secure_cell_encrypt(pointer_to_secure_cell).unwrap();
+                            let fully_encrypted_message = std::str::from_utf8(&fully_encrypted_message_bytes).unwrap();
+
                             // writing the data into the socket 
-                            if let Err(why) = api_streamer.write_all(&must_be_written_to_socket.as_bytes()).await{
+                            if let Err(why) = api_streamer.write_all(&fully_encrypted_message.as_bytes()).await{
                                 error!("❌ failed to write data to api_streamer; {}", why);
                                 return;
                             } else{

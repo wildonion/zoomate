@@ -143,7 +143,7 @@ async fn main()
             Ok(
                 Response{}
             )
-        }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await
+        }, redis_pubsub_msg_sender.clone(), redis_client.clone()).await;
     });
 
 
@@ -160,6 +160,16 @@ async fn main()
         spawn the method in the background asyncly and concurrently
         without having any disruption in order execution with other
         aync methods
+
+        the SECURECELLCONFIG_TCPWALLET config must be shared between 
+        clients and server safely to encrypt the data and then sign 
+        the data with the ed25519 private key, each client must send
+        the signature of signing the hash data along with the aes256 
+        encrypted hash of data, in server these two params get verified
+        and based on the true result of the signature verification and 
+        data decryption we can accept the client connections cause it's
+        secure and safe.
+
     */
     tokio::spawn(async move{
         let (mut secure_cell, wallet) = SECURECELLCONFIG_TCPWALLET.to_owned(); //---- this must be shared between clients and server
@@ -170,7 +180,7 @@ async fn main()
             );
         let listener_actor = tcpserver::TcpListenerActor::new(wallet, secure_cell, &tcp_addr);
         // --------------------
-        // don't start actor inside tokio::spawn cause they must be executed from the context of actix runtime itself
+        // don't start actor inside tokio::spawn or the context of tokio::main runtime cause they must be executed from the context of actix_web::main runtime itself
         // ERROR: `spawn_local` called from outside of a `task::LocalSet`
         // SOLUTION: use #[actix_web::main] on top of main function since the actors must be executed from the context of actix_web runtime itself and outside of the tokio::spawn
         // let tcp_listener_actor_address = listener_actor.start(); //--- this will be run but shows the above error

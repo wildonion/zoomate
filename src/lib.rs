@@ -29,35 +29,6 @@ mod cry;
 
 
 
-/* 
-    the ok arm of return type is an HttpResponse object which can be 
-    parsed in any server or client application and can be sent through
-    the tcp socket to either ckient or seerver
-*/
-#[post("/api")]
-pub async fn api(req: HttpRequest, mut stream: Payload) 
-    -> Result<actix_web::HttpResponse, actix_web::Error>{
-
-    /* we have to fill a buffer on server with incoming bytes by streaming over `stream` object */
-    let mut bytes = vec![];
-    while let Some(item) = stream.next().await {
-        bytes.extend_from_slice(&item?);
-    }
-
-    tokio::spawn(async move{
-
-        // other api logics
-        // ...
-    
-    });
-   
-
-    return Ok(
-        HttpResponse::NotAcceptable().json("rate limited")
-    );
-
-
-}
 
 
 /* 
@@ -649,6 +620,8 @@ pub async fn race_condition_avoidance(){
 }
 
 pub mod network{
+    
+    pub use super::*;
 
     pub mod rpc{
         
@@ -664,6 +637,41 @@ pub mod network{
 
     pub mod http{
 
+        pub use super::*;
+
+        /* 
+            the ok arm of return type is an HttpResponse object which can be 
+            parsed in any server or client application and can be sent through
+            the tcp socket to either ckient or seerver
+        */
+        #[post("/api")]
+        pub async fn api(req: HttpRequest, mut stream: Payload) 
+            -> Result<actix_web::HttpResponse, actix_web::Error>{
+
+            /* 
+                we have to fill a buffer on server with incoming bytes 
+                by streaming over `stream` object then we can map the
+                buffer into an tructure.
+            */
+            let mut bytes = vec![];
+            while let Some(item) = stream.next().await {
+                bytes.extend_from_slice(&item?);
+            }
+
+            tokio::spawn(async move{
+
+                // other api logics
+                // ...
+            
+            });
+        
+
+            return Ok(
+                HttpResponse::NotAcceptable().json("rate limited")
+            );
+
+
+        }
     }
 
     pub mod ws{
