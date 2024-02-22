@@ -300,9 +300,6 @@ impl CustomStreamHandler for ActorStruct{
         self.start();
     }
 }
-/* ----------------------------------------------------------------------- */
-/* ----------------------------------------------------------------------- */
-/* ----------------------------------------------------------------------- */
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Container{
@@ -322,9 +319,7 @@ pub enum Balancer{
     WeightedRoundRobin,
     IpHash,
 }
-
-
-//// TODO - 
+ 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Pod{ //// a pod is a load balancer which can have one or more containers 
     pub id: String,
@@ -581,35 +576,5 @@ pub async fn race_condition_avoidance(){
     
         }
     });
-
-}
-
-pub mod network{
-    
-    pub use super::*;
-
-    pub mod rpc{
-        
-    }
-
-    pub mod tcp{
-
-    }
-
-    pub mod udp{
-
-    }
-
-    pub mod http{
-
-    }
-
-    pub mod ws{
-        
-    }
-
-    pub mod libp2p{
-        
-    }
 
 }

@@ -4,7 +4,7 @@ JSON, Multipart, Protobuf, Payload based http, tcp, ws and rpc server
 ---------------------------------------------------------------------
 
 WebRTC, ffmpeg and GStreamer for audio and video streaming, codec and compressing
-setup oauth2 with yew ssr feature for wasm based manit dashboard
+setup oauth2 with tauri+yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 contract based backend using the compiled wasm file to call its methods inside other rust crates
 

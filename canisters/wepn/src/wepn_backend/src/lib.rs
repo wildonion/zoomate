@@ -17,7 +17,7 @@ pub struct Disconnected;
 
 
 #[ic_cdk::query]
-fn start_actor(name: String) -> Result<Connected, Disconnected> {
+fn start_wepn_actor(name: String) -> Result<Connected, Disconnected> {
     
     Ok(
         Connected

@@ -1,6 +1,6 @@
 
 
-p2p, actor and distributed based proxy and balancer for audio and video realtiming process using ICP blockchain which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has a Oauth2 based dashboard for monitoring nodes and balancers written in Yew.
+p2p, actor and distributed based proxy and balancer for audio and video realtiming process using ICP blockchain which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has an Oauth2 based authentication in its dashboard for monitoring nodes and balancers written in Yew and Tauri.
 
 > refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 
@@ -41,9 +41,15 @@ compile `build.rs` codes which contains the `.proto` files in `proto` folder usi
 cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
 ```
 
-## 🪴 Setup and Run Yew Manit Dashboard
+## 🪴 Setup and Run Yew based Tauri Manit Dashboard
 
 ```bash
+# Yew based ui in Tauri
+cargo install create-tauri-app
+cargo install tauri-cli
+cargo install trunk
+cargo tauri dev
+# only Yew
 cargo install cargo-generate
 cargo generate --git https://github.com/yewstack/yew-trunk-minimal-template ###### build a new yew app
 rustup target add wasm32-unknown-unknown
