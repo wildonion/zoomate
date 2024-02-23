@@ -7,10 +7,6 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use borsh::{BorshDeserialize, BorshSerialize};
 use redis_async::{resp::FromResp, client::ConnectionBuilder};
-mod dp;
-use dp::*;
-mod acter;
-use acter::*;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use uuid::Uuid;
 use once_cell::sync::Lazy;
@@ -22,7 +18,6 @@ mod constants;
 use constants::*;
 mod misc;
 use misc::*; // load all macros
-mod cry;
 
 
 
@@ -269,11 +264,12 @@ impl Node{
 }
 
 
+mod helpers;
 // vpn streamer actor uses this signing method to ecnrypt data
 pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
-    let aes256_signature = cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
-    let secure_cell_signature = cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
-    let keccak256_signature = cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
+    let aes256_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
+    let secure_cell_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
+    let keccak256_signature = helpers::cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
 
     secure_cell_signature
 }

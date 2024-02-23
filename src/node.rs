@@ -18,30 +18,24 @@ use std::env;
 use sha2::{Sha256, Digest};
 use tonic::{transport::Server, Request as TonicRequest, Response as TonicResponse, Status};
 use crate::grpc::server::NodeServer;
-use crate::redis4::*;
+use crate::helpers::cry;
 use node::{NodeRequest, NodeResponse, node_service_client::NodeServiceClient, node_service_server::NodeServiceServer};
 use ::clap::{Parser};
 use utils::{ZoomateRequest, ZoomateResponse};
 
 
-mod redis4;
-
-mod tcpserver;
-
 mod constants;
-
 mod grpc;
-
-mod raptor;
-use crate::raptor::*;
-
-mod bpf;
-use crate::bpf::*;
-
-
-mod cry;
-use crate::cry::*;
-
+mod helpers;
+use crate::helpers::{
+    acter::*,
+    bpf::*,
+    cry::*,
+    dp::*,
+    raptor::*,
+    redis4::*,
+    tcpserver::{self, *},
+};
 
 
 /* ---------------------------------------------------------
@@ -96,8 +90,8 @@ async fn main()
     let redis_host = std::env::var("REDIS_HOST").expect("⚠️ no redis host variable set");
     let redis_conn_url = format!("redis://:{}@{}", redis_password, redis_host);
     let redis_client = redis::Client::open(redis_conn_url.as_str()).unwrap();
-    let (redis_pubsub_msg_sender, mut redis_pubsubs_msg_receiver) = tokio::sync::mpsc::channel::<String>(io_buffer_size);
     let mut redis_conn = redis_client.get_connection().unwrap();
+    let (redis_pubsub_msg_sender, mut redis_pubsubs_msg_receiver) = tokio::sync::mpsc::channel::<String>(io_buffer_size);
 
 
     /*  
@@ -211,7 +205,6 @@ async fn main()
         request().await;
     });
 
-
     /* ------------------------------ */
     /*     start grpc server actor    */
     /* ------------------------------ */
@@ -230,7 +223,7 @@ async fn main()
     tokio::spawn(async move{
         info!("sleeping in the background asnycly");
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-        info!("waking up after 2 secs");
+        info!("waking up after 2 secs asyncly");
     });
 
 

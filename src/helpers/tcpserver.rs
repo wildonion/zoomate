@@ -1,6 +1,7 @@
 
 
 
+use oauth2::helpers;
 use ring::signature;
 use tokio::io::AsyncReadExt; // for reading from socket asyncly allows us to call .read() method
 use tokio::net::TcpListener;
@@ -9,6 +10,8 @@ use log::{info, error};
 use wallexerr::misc::SecureCellConfig;
 use crate::constants::SECURECELLCONFIG_TCPWALLET;
 use crate::constants::gen_random_chars;
+use crate::*;
+use crate::helpers::*;
 
 
 /*   -------------------------- STREAMING NOTES --------------------------
@@ -157,7 +160,7 @@ impl TcpListenerActor{
                             /* ------------------------------------------------------------------------------------------- */
                             /* -------- verifying and decrypting the tcp packet using ed25519 with aes256 signing -------- */
                             /* ------------------------------------------------------------------------------------------- */
-                            let (is_verified, decrypted_data) = crate::cry::eddsa_with_symmetric_signing::ed25519_decrypt_and_verify_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), signature, aes256_config);
+                            let (is_verified, decrypted_data) = cry::eddsa_with_symmetric_signing::ed25519_decrypt_and_verify_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), signature, aes256_config);
                             let must_be_encrypted = if is_verified{
                                 info!("✅ decrypted aes256 hash data from client is => {:?}", decrypted_data);
                                 /* ----------------------------------------------------------------------------- */
@@ -165,7 +168,7 @@ impl TcpListenerActor{
                                 /* ----------------------------------------------------------------------------- */
                                 aes256_config.data = String::from("****a very important event data****").as_bytes().to_vec(); // filling it with the raw data for signing and encrypting
                                 // client must verify the signature using the hash of data and public key
-                                let sig = crate::cry::eddsa_with_symmetric_signing::ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), aes256_config);
+                                let sig = cry::eddsa_with_symmetric_signing::ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), aes256_config);
                                 let hash_of_data = aes256_config.clone().data; // data field now contains the hash of data
                                 let sig_and_hash_data = format!("{}|{}", sig, hex::encode(hash_of_data));
                                 /* ----------------------------------------------------------------------------- */
