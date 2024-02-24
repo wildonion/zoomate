@@ -187,7 +187,7 @@ impl TcpListenerActor{
                                 in other scopes or threads
                             */
                             if let Err(why) = cloned_job_sender.send(must_be_encrypted.clone()).await{
-                                eprintln!("❌ failed to send to the mpsc channel; {}", why);
+                                error!("❌ failed to send to the mpsc channel; {}", why);
                             }
 
                             // encrypting the signature and the hash of data using aes256 config
@@ -213,10 +213,10 @@ impl TcpListenerActor{
                             return;
                         }
                         
-                    }{}
+                    }{} // this belongs to the while match
             
                 });
-            }{}
+            }
         });
 
 
