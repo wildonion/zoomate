@@ -129,7 +129,7 @@ impl TcpListenerActor{
             info!("🚀 tcp listener is started at [{}] to accept streaming of utf8 bytes", "0.0.0.0:2247");
 
             // streaming over incoming bytes to fill the buffer and then map the buffer to structure
-            while let Ok((mut api_streamer, addr)) = api_listener.accept().await{
+            while let Ok((mut api_streamer, addr)) = api_listener.accept().await{ // execute the accepting process of a tcp listener asyncly inside a tokio threadpool
 
                 info!("🍐 new peer connection: [{}]", addr);
 
@@ -138,7 +138,7 @@ impl TcpListenerActor{
                 let mut cloned_wallet = wallet.clone();
                 let cloned_job_sender = cloned_job_sender.clone();
 
-                tokio::spawn(async move { // process each api_streamer concurrently and asyncly
+                tokio::spawn(async move { // execute the reading process from the socket stream asyncly inside a tokio threadpool
 
                     /* this buffer will be filled up with incoming bytes from the socket */
                     let mut buffer = vec![]; // or vec![0u8; 1024] // filling all the 1024 bytes with 0
@@ -226,7 +226,6 @@ impl TcpListenerActor{
         // first to receive the data from the sender, cause we've
         // sent some data right after this tokio::spawn 
         tokio::spawn(async move{
-
             // running a loop inside tokio::spawn() to receive constantly
             // from the mpsc channel it's like having while let Some
             loop{
@@ -261,7 +260,7 @@ impl TcpListenerActor{
 
         job_sender
             .clone()
-            .send(String::from("another data"))
+            .send(String::from("another data sent from the bottom of start_streaming method"))
             .await.unwrap();
 
 

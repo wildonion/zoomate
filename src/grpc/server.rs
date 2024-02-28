@@ -97,7 +97,7 @@ impl NodeService for NodeServer{
 
                 let data = node_rpc_request_body.message.clone();
                 let mut wallet = Wallet::new_ed25519();
-                let signature = utils::ed25519_with_aes_signing(&data, wallet);
+                let signature = utils::Node::ed25519_with_aes_signing(&data, wallet);
                 println!("base58 ed25519 signature >> {:?}", signature);
 
                 Ok(TonicResponse::new(node_resp))

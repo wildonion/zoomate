@@ -18,9 +18,7 @@ mod constants;
 use constants::*;
 mod misc;
 use misc::*; // load all macros
-
-
-
+mod helpers;
 
 
 /* 
@@ -60,6 +58,70 @@ pub struct Node{ //// this contains server info
     pub nodes: Vec<Node>,
     pub req: ZoomateRequest,
     pub res: ZoomateResponse
+}
+
+// custom stream handler for an actor
+trait CustomStreamHandler{
+    type Context;
+    fn handle(&self, ctx: &mut Self::Context) -> ();
+}
+enum EnumTor{}
+struct ActorStruct{
+    pub enumtor: EnumTor
+} 
+impl ActorStruct{
+    pub fn start(&self){
+        
+    }
+}
+impl CustomStreamHandler for ActorStruct{
+
+    type Context = ActorStruct;
+    fn handle(&self, ctx: &mut Self::Context) -> (){
+        self.start();
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Container{
+    pub id: String,
+    pub balancer: Balancer,
+    pub nodes: Vec<Node>,
+}
+
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum Balancer{
+    RoundRobin,
+    LeastConnection,
+    WeightedLeastConnection,
+    WeightedResponseTime,
+    ResourceBased,
+    WeightedRoundRobin,
+    IpHash,
+}
+ 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct Pod{ //// a pod is a load balancer which can have one or more containers 
+    pub id: String,
+    pub containers: Vec<Container>,
+}
+
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct ResponseObject{
+    data: String,
+}
+
+// a dns over httsp structures
+pub struct Dns{
+    pub queries: Vec<DnsRequest>,
+    pub id: String
+}
+
+struct HttpRequest;
+pub struct DnsRequest{
+    pub http_req: HttpRequest 
 }
 
 impl Node{
@@ -260,317 +322,168 @@ impl Node{
     
     }
 
+    pub async fn agent_simulation<N>() where N: Send + Sync + 'static + Clone{
 
-}
-
-
-mod helpers;
-// vpn streamer actor uses this signing method to ecnrypt data
-pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
-    let aes256_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
-    let secure_cell_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
-    let keccak256_signature = helpers::cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
-
-    secure_cell_signature
-}
-
-
-// custom stream handler for an actor
-trait CustomStreamHandler{
-    type Context;
-    fn handle(&self, ctx: &mut Self::Context) -> ();
-}
-enum EnumTor{}
-struct ActorStruct{
-    pub enumtor: EnumTor
-} 
-impl ActorStruct{
-    pub fn start(&self){
-        
-    }
-}
-impl CustomStreamHandler for ActorStruct{
-
-    type Context = ActorStruct;
-    fn handle(&self, ctx: &mut Self::Context) -> (){
-        self.start();
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Container{
-    pub id: String,
-    pub balancer: Balancer,
-    pub nodes: Vec<Node>,
-}
-
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub enum Balancer{
-    RoundRobin,
-    LeastConnection,
-    WeightedLeastConnection,
-    WeightedResponseTime,
-    ResourceBased,
-    WeightedRoundRobin,
-    IpHash,
-}
- 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Pod{ //// a pod is a load balancer which can have one or more containers 
-    pub id: String,
-    pub containers: Vec<Container>,
-}
-
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct ResponseObject{
-    data: String,
-}
-
-// a dns over httsp structures
-pub struct Dns{
-    pub queries: Vec<DnsRequest>,
-    pub id: String
-}
-
-struct HttpRequest;
-pub struct DnsRequest{
-    pub http_req: HttpRequest 
-}
-
-pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
-    /* since T is a FnMut closure, the cls param must be defined mutablly */
-    (mut cls: T){
-
-    {
-        let data = constants::IN_MEMORY_DB.clone();
-        let mut map = data.lock().await;
-        (*map).insert(100, "key".to_string());
-    }
-
-    /* T is a closure which returns G and can be shared between threads safely */
-    let callback = cls();
-
-    let mut res = ZOOMATE_RESPONE_STORAGE.lock().await;
-    let new_data = vec![1,2,4];
-    let strigified_data = serde_json::to_string_pretty(&new_data).unwrap();
+        let new_rt = tokio::runtime::Builder::new_multi_thread();
     
-    /* overriding the response object globally without having deadlocks and race conditions */
-    (*res).data = strigified_data;
-
-    // tokio crontab scheduler
-    let mut time = tokio::time::interval(tokio::time::Duration::from_secs(5));
-    loop{
-        time.tick().await;
-        println!("tick 1 sec");
-    }
-
-}
-
-
-pub async fn agent_simulation<N>() where N: Send + Sync + 'static + Clone{
-
-	let new_rt = tokio::runtime::Builder::new_multi_thread();
-
-    type Cls<G> = Box<dyn std::future::Future<Output=G> + Send + Sync + 'static>;
-    fn execute<V>(cls: Cls<V>) where V: Send + Sync + 'static + Clone{} 
-    let method: fn(Cls<N>) -> () = execute;
-    fn executeMe<N>(func: fn(Cls<N>) -> ()) -> Result<(), ()> 
-    {
-        
-        Ok(())
-    }
-    executeMe(method);
-    
-	
-    #[derive(Clone)]
-	struct BuildQueue{
-		pub agent_id: String,
-	}
-	#[derive(Clone)]
-	struct Pipeline{
-		pub pid: String, // keccak256 bits hash of the whole data and system usage
-	}
-    #[derive(Clone)]
-    /* trait objects are heap data and must be beind pointer, eiter Box<dyn or &dyn */
-    struct JobTor<'j>(pub &'j dyn FnMut() -> ());
-    struct JobTorBox<'j>(pub Box<&'j dyn FnMut() -> ()>);
-
-	/*
-	    interior mutablity, we can mutate the field at runtime
-	    it's usefull for mutating the content data inside an account
-	*/
-	#[derive(Clone)]
-	struct NodeData<'v>(pub std::sync::Arc<tokio::sync::Mutex<&'v [u8]>>); 
-	/* single thread version of NodeData */
-	// struct NodeData<'v>(pub std::rc::Rc<std::cell::RefCell<&'v [u8]>>); 
-	type Job<'validlifetime> = NodeData<'validlifetime>;
-	#[derive(Clone)]
-	struct Task{ /* job can be send between threads safely */
-	    pub task: NodeData<'static>
-	}
-	#[derive(Clone)]
-	struct Agent<'j> where Task: Send + Sync + 'static{
-	    pub aid: String, // keccak256 bist hash of the whole data
-	    pub jobs: &'j [Task],
-	    pub pipeline: Pipeline
-	}
-	impl<'j> Agent<'j>{
-
-	    async fn execute(&'static mut self, new_commit_data: &[u8]) -> Result<(), ()>{
-            let jobs = self.jobs.clone();
-            /* 
-                accessing element inside array must be done behind pointer cause by accessing
-                the element we're creating an slice which must be behind pointer cause they have
-                no fixed size at compile time
-            */
-            let t = &jobs[0].task.0;
-            tokio::spawn(async move{
-                let data = *t.lock().await;
-                // mutate data in here with new_commit_data
-                // ...
-            });
-        
-            Ok(())
-	    }
-
-	    async fn subscribe_to_new_commit(commit_id: &'static str) -> Result<(), ()>{
-		    
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(15));
-                
-            let mut redis_conn_builder = ConnectionBuilder::new("redis_host", 6379 as u16).unwrap();
-            redis_conn_builder.password("redis_password");
-            let async_redis_pubsub_conn = std::sync::Arc::new(redis_conn_builder.pubsub_connect().await.unwrap());
-
-            tokio::spawn(async move{
-			    
-			    loop{
-
-                    /* tick every 15 seconds */
-                    interval.tick().await;
-			
-				    // setup async redis subscription process to subscribe to 
-				    // ...
-                    
-				    let get_stream_messages = async_redis_pubsub_conn
-                        .subscribe(commit_id)
-                        .await;
-				    
-				    let Ok(mut get_stream_messages) = get_stream_messages else{
-					    
-					    return Err::<(), ()>(());
-			
-				    };
-				
-				    /* 
-                        iterating through the msg future object streams as they're 
-                        coming to the stream channel, we select the some ones
-				    */
-				    while let Some(message) = get_stream_messages.next().await{ 
-	
-                            let resp_val = message.unwrap();
-                            let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
-
-                            // self.execute(stringified_new_commit_topic.as_bytes()).await;
-				    
-				        }
-			   
-		    		}
-	    
-	    		});
-		    
-
-		    Ok(())
-		    
-	    
-	    }
-	}
-
-}
-
-pub async fn race_condition_avoidance(){
-
-    /* ---------------------------------------------------------------------- */
-    /* ---------------------- RACE CONDITION AVOIDANCE ---------------------- */
-    /*  more info in: https://github.com/wildonion/zoomate/blob/main/src/dp.rs
-    
-        race conditions means that two threads want to mutate the data 
-        at the same time, we have to use mutex so tell the other threads
-        wait there is a threads that is trying to mutate this type and 
-        will update you once the lock gets freed and in order to avoid blockcing 
-        issues in the current thread we have to lock inside a separate thread 
-        and mutate the type in there like tokio::spawn() then send it through 
-        the jobq channel to the other threads for reading and future mutations
-    */
-    
-    pub type ArcedMutexed<'lifetime> = std::sync::Arc<tokio::sync::Mutex<String>>;
-    
-    #[derive(Clone)]
-    pub struct Data<D: Send + Sync + 'static>{
-        /* we're using tokio mutex to avoid blocing issues inside the current thread since it locks asycnly */
-        pub actual: D
-    }
-    let mut data_instance = Data::<ArcedMutexed>{
-        actual: std::sync::Arc::new(
-            tokio::sync::Mutex::new(
-                String::from("a mutexed data")
-            )
-        ),
-    };
-    
-    println!("data instance actual value before getting mutated >>> [{}]", data_instance.actual.lock().await.to_owned());
-    
-    /* reading from the channel is a mutable process thus receiver must be mutable */
-    let (data_sender, mut data_receiver) = 
-        tokio::sync::mpsc::channel::<Data<ArcedMutexed>>(1024);
-    /*
-        since tokio spawn takes a closure which captures the env vars 
-        we have to use the cloned form of those types and pass them into
-        the closure scopes so we can use them in later scopes 
-    */
-    let sender = data_sender.clone();
-    tokio::spawn(async move{
-        
-        let new_string = String::from("an updated mutexed");
-        /* 
-            we're cloning data_instance and data_instance_cloned.actual to create a 
-            longer lifetime value to use the cloned form to mutate, since by sending 
-            data_instance_cloned to the channel its lifetime will be dropped and its 
-            ownership will be moved because we're borroing the actual field by locking 
-            on it so we can't move the data_instance_cloned into the mpsc channel using 
-            the sender, in other words we can't move out of the type if it's behind a 
-            shared reference we have to either pass a reference or clone the type and 
-            work on the cloned form like the followings which we're cloning the actual 
-            field to lock on its mutex and send the data_instance_cloned into 
-            the downside of the channel
-        */
-        let data_instance_cloned = data_instance.clone();
-        let data_instance_cloned_actual = data_instance_cloned.actual.clone();
-        let mut data_string = data_instance_cloned_actual.lock().await; /* lock the mutex to mutate it */
-        
-        /* 
-            mutating the locked mutex is done by dereferencing the guard 
-            we're mutating data string inside the actual field in data_instance_cloned
-            this will mutate the actual field inside data_instance_cloned 
-        */
-        *data_string = new_string; /* the actual field of the data_instance_cloned will be mutated too */
-
-        if let Err(why) = sender.send(data_instance_cloned).await{
-            println!("can't send because {:?}", why.to_string());
-        }
-
-    });
-
-    /* receiving asyncly inside other threads to avoid blocking issues on heavy computations */
-    tokio::spawn(async move{
-        /* receving data asyncly while they're comming to the end of mpsc jobq channle */
-        while let Some(data) = data_receiver.recv().await{
+        type Cls<G> = Box<dyn std::future::Future<Output=G> + Send + Sync + 'static>;
+        fn execute<V>(cls: Cls<V>) where V: Send + Sync + 'static + Clone{} 
+        let method: fn(Cls<N>) -> () = execute;
+        fn executeMe<N>(func: fn(Cls<N>) -> ()) -> Result<(), ()> 
+        {
             
-            let new_data_string = data.actual.lock().await.to_owned();
-            println!("data instance actual value after getting mutated >>> [{}]", new_data_string);
-    
+            Ok(())
         }
-    });
+        executeMe(method);
+        
+        
+        #[derive(Clone)]
+        struct BuildQueue{
+            pub agent_id: String,
+        }
+        #[derive(Clone)]
+        struct Pipeline{
+            pub pid: String, // keccak256 bits hash of the whole data and system usage
+        }
+        #[derive(Clone)]
+        /* trait objects are heap data and must be beind pointer, eiter Box<dyn or &dyn */
+        struct JobTor<'j>(pub &'j dyn FnMut() -> ());
+        struct JobTorBox<'j>(pub Box<&'j dyn FnMut() -> ()>);
+    
+        /*
+            interior mutablity, we can mutate the field at runtime
+            it's usefull for mutating the content data inside an account
+        */
+        #[derive(Clone)]
+        struct NodeData<'v>(pub std::sync::Arc<tokio::sync::Mutex<&'v [u8]>>); 
+        /* single thread version of NodeData */
+        // struct NodeData<'v>(pub std::rc::Rc<std::cell::RefCell<&'v [u8]>>); 
+        type Job<'validlifetime> = NodeData<'validlifetime>;
+        #[derive(Clone)]
+        struct Task{ /* job can be send between threads safely */
+            pub task: NodeData<'static>
+        }
+        #[derive(Clone)]
+        struct Agent<'j> where Task: Send + Sync + 'static{
+            pub aid: String, // keccak256 bist hash of the whole data
+            pub jobs: &'j [Task],
+            pub pipeline: Pipeline
+        }
+        impl<'j> Agent<'j>{
+    
+            async fn execute(&'static mut self, new_commit_data: &[u8]) -> Result<(), ()>{
+                let jobs = self.jobs.clone();
+                /* 
+                    accessing element inside array must be done behind pointer cause by accessing
+                    the element we're creating an slice which must be behind pointer cause they have
+                    no fixed size at compile time
+                */
+                let t = &jobs[0].task.0;
+                tokio::spawn(async move{
+                    let data = *t.lock().await;
+                    // mutate data in here with new_commit_data
+                    // ...
+                });
+            
+                Ok(())
+            }
+    
+            async fn subscribe_to_new_commit(commit_id: &'static str) -> Result<(), ()>{
+                
+                let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(15));
+                    
+                let mut redis_conn_builder = ConnectionBuilder::new("redis_host", 6379 as u16).unwrap();
+                redis_conn_builder.password("redis_password");
+                let async_redis_pubsub_conn = std::sync::Arc::new(redis_conn_builder.pubsub_connect().await.unwrap());
+    
+                tokio::spawn(async move{
+                    
+                    loop{
+    
+                        /* tick every 15 seconds */
+                        interval.tick().await;
+                
+                        // setup async redis subscription process to subscribe to 
+                        // ...
+                        
+                        let get_stream_messages = async_redis_pubsub_conn
+                            .subscribe(commit_id)
+                            .await;
+                        
+                        let Ok(mut get_stream_messages) = get_stream_messages else{
+                            
+                            return Err::<(), ()>(());
+                
+                        };
+                    
+                        /* 
+                            iterating through the msg future object streams as they're 
+                            coming to the stream channel, we select the some ones
+                        */
+                        while let Some(message) = get_stream_messages.next().await{ 
+        
+                                let resp_val = message.unwrap();
+                                let stringified_new_commit_topic = String::from_resp(resp_val).unwrap();
+    
+                                // self.execute(stringified_new_commit_topic.as_bytes()).await;
+                        
+                            }
+                   
+                        }
+            
+                    });
+                
+    
+                Ok(())
+                
+            
+            }
+        }
+    
+    }
+
+    // vpn streamer actor uses this signing method to ecnrypt data
+    pub fn ed25519_with_aes_signing(data: &str, mut wallet: Wallet) -> String{
+        let aes256_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_aes256_signing(data, wallet.clone());
+        let secure_cell_signature = helpers::cry::eddsa_with_symmetric_signing::ed25519_secure_cell_signing(data, wallet.clone());
+        let keccak256_signature = helpers::cry::eddsa_with_keccak256_signing::ed25519_keccak256_signing(data, wallet.clone());
+
+        secure_cell_signature
+    }
+
+    pub async fn set_response<'lifetime, G, T: Send + Sync + 'static + FnMut() -> G>
+        /* since T is a FnMut closure, the cls param must be defined mutablly */
+        (mut cls: T){
+
+        {
+            let data = constants::IN_MEMORY_DB.clone();
+            let mut map = data.lock().await;
+            (*map).insert(100, "key".to_string());
+        }
+
+        /* T is a closure which returns G and can be shared between threads safely */
+        let callback = cls();
+
+        let mut res = ZOOMATE_RESPONE_STORAGE.lock().await;
+        let new_data = vec![1,2,4];
+        let strigified_data = serde_json::to_string_pretty(&new_data).unwrap();
+        
+        /* overriding the response object globally without having deadlocks and race conditions */
+        (*res).data = strigified_data;
+
+        // tokio crontab scheduler
+        let mut time = tokio::time::interval(tokio::time::Duration::from_secs(5));
+        loop{
+            time.tick().await;
+            println!("tick 1 sec");
+        }
+
+    }
+
+
+
 
 }
+
+
+
