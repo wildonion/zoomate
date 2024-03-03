@@ -1,6 +1,6 @@
 
 
-p2p and actor based proxy and balancer for audio and video realtiming process on ICP blockchain which can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has an **Oauth2** based authentication in its dashboard (manit) for monitoring nodes and balancers written in **Yew** and **Tauri**.
+p2p and actor based proxy and workload-aware agent for realtiming process and streaming on distributed internt using ICP blockchain, the app can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has an **Oauth2** based authentication in its dashboard (manit) for monitoring nodes and balancers written in **Yew** and **Tauri**.
 
 > refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 
