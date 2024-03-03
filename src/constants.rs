@@ -160,6 +160,7 @@ pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, 
     is wrong and we should use the following syntaxes instead:
 */
 
+
 pub static ZOOMATE_RESPONE_STORAGE: Lazy<std::sync::Arc<tokio::sync::Mutex<ZoomateResponse>>> = 
 Lazy::new(||{
     std::sync::Arc::new(
@@ -171,13 +172,26 @@ Lazy::new(||{
     )
 });
 
-pub static IN_MEMORY_DB: Lazy<std::sync::Arc<tokio::sync::Mutex<HashMap<u32, String>>>> = 
-Lazy::new(||{ 
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// s3 code order execution using sync objects: 
+// static lazy arced mutexed and pinned box future db type, send sync static
+// -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+// static value must be const since we are not able to mutate its value because it's not safe
+// however sharing data between threads safely requires to borrow the data to share its ownership
+// using Arc and for mutation using Mutex, since these types are none const types we can use Lazy
+// to make them const so we can give the static type this value.
+type DbS3Type = Lazy<std::sync::Arc<tokio::sync::Mutex<
+    std::pin::Pin<Box<dyn std::future::Future<Output = HashMap<String, String>> + Send + Sync + 'static>>
+    >>>;
+pub static DbS3: DbS3Type = 
+Lazy::new(||{
     std::sync::Arc::new(
         tokio::sync::Mutex::new(
-            HashMap::new()
+            Box::pin(async move{ // pinning the future object into the ram before polling it to make it as a separate object type for future solvation
+                HashMap::new()
+            })
         )
-    ) 
+    )
 });
 
 

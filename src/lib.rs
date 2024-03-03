@@ -455,12 +455,6 @@ impl Node{
         /* since T is a FnMut closure, the cls param must be defined mutablly */
         (mut cls: T){
 
-        {
-            let data = constants::IN_MEMORY_DB.clone();
-            let mut map = data.lock().await;
-            (*map).insert(100, "key".to_string());
-        }
-
         /* T is a closure which returns G and can be shared between threads safely */
         let callback = cls();
 
