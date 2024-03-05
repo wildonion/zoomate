@@ -4,6 +4,7 @@
   |
   | dsl macros traits as plugin
 
+  https://github.com/wildonion/macrocosm
 
 
     ---------------- MACRO PATTERNS -----------------
@@ -336,6 +337,104 @@ macro_rules! contract {
             }
     }
 }
+
+#[macro_export]
+macro_rules! function {
+    ($name:ident, [$($param:ident: $type:ty),*]) => {
+        {   
+            // since macros extend ast at compile time, it's not possible 
+            // to return a function with an empty body to fill up the body
+            // later.
+            fn $name($($param:$type),*){
+                
+                $( // iterate through each parameter and include them in the function body
+
+                    println!("{}: {:?}", stringify!($param), $param);
+                )*
+
+            }
+
+            $name
+        }
+    };
+}
+// #[derive(Clone, Debug)]
+// pub struct ExecuteApi;
+// let func = function!(
+//     set_vals, // function name
+//     [msg: ExecuteApi, name: String] // params
+// );
+// let res = func(msg, String::from(""));
+
+/*
+    we can define as many as response object since once the scope
+    or method or the match arm gets executed the lifetime of the 
+    response object will be dropped from the ram due to the fact 
+    that rust doesn't have gc :) 
+*/
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct Response<'m, T>{
+//     pub data: Option<T>,
+//     pub message: &'m str, // &str are a slice of String thus they're behind a pointer and every pointer needs a valid lifetime which is 'm in here 
+//     pub status: u16,
+//     pub is_error: bool
+// }
+// #[macro_export]
+// macro_rules! resp {
+//     (   
+//         $data_type:ty,
+//         $data:expr,
+//         $msg:expr,
+//         $code:expr,
+//         $cookie:expr,
+//     ) => {
+
+//         {
+//             use actix_web::HttpResponse;
+//             use crate::helpers::misc::Response;
+            
+//             let code = $code.as_u16();
+//             let mut res = HttpResponse::build($code);
+            
+//             let response_data = Response::<$data_type>{
+//                 data: Some($data),
+//                 message: $msg,
+//                 status: code,
+//                 is_error: if code == 200 || code == 201 || code == 302{
+//                     false
+//                 } else{
+//                     true
+//                 }
+//             };
+            
+//             let resp = if let Some(cookie) = $cookie{
+//                 res
+//                     .cookie(cookie.clone())
+//                     .append_header(("cookie", cookie.value()))
+//                     .json(
+//                         response_data
+//                     )
+//             } else{
+//                 res
+//                     .json(
+//                         response_data
+//                     )
+//             }; 
+
+//             return Ok(resp);
+//         }
+//     }
+// }
+
+//////
+// resp!{
+//     &[u8], // the data type
+//     &[], // response data
+//     ACCESS_DENIED, // response message
+//     StatusCode::FORBIDDEN, // status code
+//     None::<Cookie<'_>>, // cookie
+// }
+//////
 
 /*  > -------------------------------------------
     |           proc macro functions 

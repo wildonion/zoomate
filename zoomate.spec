@@ -14,11 +14,11 @@ tauri, yew, wasm(async,multithreaded like spacetimedb) and merkle tree concepts 
         but can't use them so it's better not to pass them by reference instead of cloning or moving 
     - !Unping data must be pinned at a fixed position in the ram so we can move them safely, since they got fixed in the ram thus their pointer won't be updated after moving and remain valid and the old one
     - don't move if it's behind a pointer and to move pointer the borrow must last and live long enough once it’s moved, 
-    - can’t move pointer between different scopes unless the pointer lifetime is greater than the new scope lifetime after moving that's because a reference of a pinned value remains valid
+    - can't move pointer between different scopes unless the pointer lifetime is greater than the new scope lifetime after moving that's because a reference of a pinned value remains valid
     - pin the boxed future to move the future safely like awaiting on its mutable pointer cause awaits consumes it
     - use Box<dyn std::error::Error> to handle all possibel runtime errors for every type
     - use Result<(), impl Error> to return the exact type of error at runtime
-    - can’t start actor inside tokio spawn or the context of tokio::main it must be inside actix_web::main context
+    - can't start actor inside tokio spawn or the context of tokio::main it must be inside actix_web::main context
     - can't start tokio tcp inside the main function body of the actix_web::main context
     - tokio::spawn() and mpsc for nodejs like async execution
     - wallexerr::ed25519_with_aes_signing for checksum, file digital signature, secure communication and zk logics
