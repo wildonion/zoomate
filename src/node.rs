@@ -184,26 +184,45 @@ async fn main()
     /* ------------------------------------------- */
     // NODEJS LIKE ASYNC METHOD ORDER OF EXECUTION
     /* ------------------------------------------- */
-    // execution of async methods are not async we should put them in tokio::spawn
+    // execution of async methods are not purely async we should put them in tokio::spawn
+    // in the following each tokio::spawn() execute each task asyncly, concurrently and independently 
+    // in the background without specific ordering, having any disruption in execution other codes and 
+    // waiting for each other to be finished executing also once the http request received from client 
+    // the codes get executed asyncly in the bacground, the api body is executed and the response 
+    // sent to the client even if those async codes are not yet executed or are being exeucted
+    let (heavyme_sender, mut heavyme_receiver) = tokio::sync::mpsc::channel::<u128>(1024);
+    let (heavyyou_sender, mut heavyyou_receiver) = tokio::sync::mpsc::channel::<String>(1024);
+
     tokio::spawn(async move{
-        hello().await;
+        while let Some(data) = heavyyou_receiver.recv().await{
+            info!("received heavyyou data: {:?}", data);
+        }
     });
 
-    async fn request(){
-        for i in 0..10{
-            info!("i => {:?}", i);
+    async fn heavyme() -> u128{
+        let mut sum = 0;
+        for i in 0..10000000000{
+            sum += i;
         }
+        sum
     }
 
-    async fn hello(){
-        info!("hello");
-        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-        info!("waking up after 3 seconds in hello method");
-    } 
+    tokio::spawn(async move{
+        while let Some(data) = heavyme_receiver.recv().await{
+            info!("received heavyme data: {:?}", data);
+        }
+    });
 
     tokio::spawn(async move{
-        request().await;
+        let res = heavyyou().await;
+        heavyyou_sender.send(res).await;
     });
+
+    async fn heavyyou() -> String{
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        String::from("woke up after 2 secs")
+    }
+
 
     /* ------------------------------ */
     /*     start grpc server actor    */
