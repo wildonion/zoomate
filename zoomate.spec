@@ -22,7 +22,7 @@ tauri, yew, wasm(async,multithreaded like spacetimedb) and merkle tree concepts 
     - can't start tokio tcp inside the main function body of the actix_web::main context
     - tokio::spawn() and mpsc for nodejs like async execution
     - wallexerr::ed25519_with_aes_signing for checksum, file digital signature, secure communication and zk logics
-    - local based pubsub using mpsc, actixbroker and tcp based pubsub using libp2p and redis and grpc
+    - local based pubsub actor using mpsc, actixbroker and redis | tcp based pubsub actor using libp2p, redis, rpc and actixtelepathy or grpc
     - tokio::tcp,channels::mpsc,spawn,time,select,arcmutex,rwlock,asynciotraits,while let Some ::: #[tokio::main]
     - redis::queue,stream,set,get,pubsub 
     - actix http request, stream and ws stream handler also tokio::* ::: #[actix_web::main]
@@ -52,6 +52,8 @@ setup oauth2 with tauri+yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 contract based backend using the compiled wasm file to call its methods inside other rust crates
 
+https://refactoring.guru/design-patterns/catalog
+https://sourcemaking.com/design_patterns
 https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/
 https://internetcomputer.org/docs/current/developer-docs/backend/rust/
 https://github.com/wildonion/gem/wiki/Realtime-Push-Notification-Strategy

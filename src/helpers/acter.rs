@@ -114,6 +114,56 @@ use log::info;
 use crate::*;
 
 
+struct ActerMessage{
+    pub to: String,
+    pub from: String,
+    pub body: String,
+}
+
+struct Acter{
+    // std::sync::Mutex is not Send so we can't move it into tokio spawn
+    // we must use tokio Mutex
+    pub mailbox: Arc<tokio::sync::Mutex<tokio::sync::mpsc::Receiver<ActerMessage>>>,
+    pub communicator: tokio::sync::mpsc::Sender<ActerMessage>,
+}
+
+impl Acter{
+
+    pub async fn send<R>(&mut self) -> std::pin::Pin<Box<dyn std::future::Future<Output=R>>>{
+        todo!()
+    }
+
+    pub async fn execute(&mut self){
+        // PROBLEM: can't move out self because it's behind a mutable pointer
+        // some how we should move it to tokio scope without losing ownership
+        // passing its ref to tokio scope is not ok since the reference won't 
+        // be valid and must be static cause self is only valid inside the method
+        // body and by moving the &self.mailbox, the pointer will be in tokio scope 
+        // and the `self` itself will be dropped out once the method gets executed
+        // so it escapes the method body,
+        // SOLUTION: use clone, Box, Arc, (Rc is for single thread)
+        // we've used Arc and Mutex to make it sendable, shareable and safe to share
+        let arced_mutex_mailbox = self.mailbox.clone();
+        
+        // don't deref the arced_mutex_mailbox since Clone is not implemented for that
+        // and can't be move out of the type since derefing return the owned type it's 
+        // kinda like clone the type
+        tokio::spawn(async move{
+            let mut mailbox = arced_mutex_mailbox.lock().await;
+            while let Some(task) = mailbox.recv().await{
+                
+            }
+
+        });
+    }
+
+    pub async fn start(&mut self) -> Self {
+        // create mailbox and communicator
+        // ...
+        todo!()
+    }
+    
+}
 
 type ErrType = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub struct Agent<J, T> where J: FnMut(fn() -> T) -> Result<(), ErrType>{ //// generic `J` is a closure type that accept a function as its argument 
