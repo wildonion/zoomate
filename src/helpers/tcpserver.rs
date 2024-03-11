@@ -168,7 +168,7 @@ impl TcpListenerActor{
                                 /* ----------------------------------------------------------------------------- */
                                 aes256_config.data = String::from("****a very important event data****").as_bytes().to_vec(); // filling it with the raw data for signing and encrypting
                                 // client must verify the signature using the hash of data and public key
-                                let sig = cry::eddsa_with_symmetric_signing::ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), aes256_config);
+                                let sig = cry::eddsa_with_symmetric_signing::ed25519_encrypt_and_sign_tcp_packet_with_aes256_secure_cell(cloned_wallet.clone(), aes256_config);
                                 let hash_of_data = aes256_config.clone().data; // data field now contains the hash of data
                                 let sig_and_hash_data = format!("{}|{}", sig, hex::encode(hash_of_data));
                                 /* ----------------------------------------------------------------------------- */

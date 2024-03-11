@@ -7,6 +7,15 @@ use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
 
 
+/*  -------------------------------------------------------------------------
+    0 - generate ed25519 wallet and AES256 secure cell config and share between trusted parties
+    1 - encrypt data using AES256
+    2 - sign AES256 hash of data using pvkey
+    3 - send signatre to client
+    4 - use signature, pubkey and AES256 hash of data to verify the signature
+    5 - the connection between parties is now secured
+*/
+
 
 pub mod wannacry{
 
@@ -16,7 +25,7 @@ pub mod wannacry{
 
         let file = tokio::fs::File::open(fpath).await;
     
-        let mut buffer = vec![];
+        let mut buffer = vec![]; // file content in form of utf8
         file.unwrap().read_to_end(&mut buffer).await; // await on it to fill the buffer
     
         let mut wallet = wallexerr::misc::Wallet::new_ed25519();
@@ -80,7 +89,7 @@ pub mod eddsa_with_symmetric_signing{
 
     pub use super::*;
 
-    pub fn ed25519_encryp_and_sign_tcp_packet_with_aes256_secure_cell(mut wallet: Wallet, aes256_config: &mut SecureCellConfig) -> String{
+    pub fn ed25519_encrypt_and_sign_tcp_packet_with_aes256_secure_cell(mut wallet: Wallet, aes256_config: &mut SecureCellConfig) -> String{
 
         let raw_data_vec = aes256_config.clone().data;
         let raw_data_str = std::str::from_utf8(&raw_data_vec).unwrap();
