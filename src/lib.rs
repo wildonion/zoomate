@@ -16,8 +16,8 @@ use sha3::{Digest, Keccak256, Keccak256Core};
 use ring::rand as ring_rand;
 mod constants;
 use constants::*;
-mod misc;
-use misc::*; // load all macros
+mod plugins;
+use plugins::*; // load all macros
 mod helpers;
 
 
