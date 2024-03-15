@@ -269,6 +269,13 @@ pub mod workerthreadpool{
     // this scheduler is used for synchronous IO by blocking the thread using rust native std thread - alternative to this is rayon
     pub mod sync{
 
+
+        // --------------- GUIDE TO CREATE A MULTITHREADED WEB SERVER ---------------
+        // every worker is a thread with an id along with the thread itself, a threadpool is a vector containing the number 
+        // of spawned workers then we'll send the async job to the sender channel by calling the execute method and while we're 
+        // streaming over the arced mutexed receiver inside each thread we receives the task in on of those free threads and 
+        // finally call the async task
+
         use super::*;
 
         type Job = Box<dyn FnOnce() + Send + 'static>; // a job is of type closure which must be Send and static across all threads inside a Box on the heap
