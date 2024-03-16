@@ -223,6 +223,29 @@ async fn main()
         String::from("woke up after 2 secs")
     }
 
+    tokio::spawn(async move{
+        sleep4().await;
+    });
+
+    async fn sleep2(){
+        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+        println!("wake up after 2")
+    }
+
+    async fn sleep4(){
+        tokio::time::sleep(tokio::time::Duration::from_secs(4)).await;
+        println!("wake up after 4");
+    }
+
+    tokio::spawn(async move{
+        sleep2().await;
+    });
+
+    // ***************** IMPORTANT *****************
+    // there must be some sleep or loop{} to keeps the app awake
+    // so the background workers can do their jobs
+    // loop{}
+    // *********************************************
 
     /* ------------------------------ */
     /*     start grpc server actor    */
