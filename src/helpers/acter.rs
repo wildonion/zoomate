@@ -55,7 +55,7 @@ server.run(apis); // it starts sending each api using mpsc sender channel into a
 
 
 ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ 
-      task handler or worker threadpool implementations from scratch  
+  task handler or actor worker threadpool implementations from scratch  
 ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ --------- ⚈ 
  in worker threadpool we'll use tokio jobq channels 
  to share and schedule the Arc<Mutex<T>>: Send + Sync + 'static 
@@ -165,6 +165,10 @@ impl Acter{
     
 }
 
+struct Scheduler{
+    pub queue: Queue,
+}
+
 type ErrType = Box<dyn std::error::Error + Send + Sync + 'static>;
 pub struct Agent<J, T> where J: FnMut(fn() -> T) -> Result<(), ErrType>{ //// generic `J` is a closure type that accept a function as its argument 
     job: J, //// the job itself
@@ -184,6 +188,18 @@ pub struct JobHandler; // a threadpool structure to handle the poped-out job fro
 
 
 pub mod workerthreadpool{
+
+    // --------------- GUIDE TO CREATE A MULTITHREADED WEB SERVER ---------------
+    // every worker is a thread with an id along with the thread itself, a threadpool is a vector containing the number 
+    // of spawned workers then we'll send the async job to the sender channel by calling the execute method and while we're 
+    // streaming over the arced mutexed receiver inside each thread we receives the task in on of those free threads and 
+    // finally call the async task, the spawning threads in the background part are done inside the spawn() method also every 
+    // worker threadpool needs a channel and multiple spawned threads in the background so we could send the task to the 
+    // channel and receives it in one of the free spawned thread so the steps would be:
+    // 1 - create channel and spawn threads in the background waiting to receive from the channel by calling new() method
+    // 2 - pass the task to spawn() or execute() method then send it to channel
+    // 3 - make sure receiver is of type Arc<Mutex<Receiver>>
+
 
     pub use super::*;
 
@@ -269,12 +285,6 @@ pub mod workerthreadpool{
     // this scheduler is used for synchronous IO by blocking the thread using rust native std thread - alternative to this is rayon
     pub mod sync{
 
-
-        // --------------- GUIDE TO CREATE A MULTITHREADED WEB SERVER ---------------
-        // every worker is a thread with an id along with the thread itself, a threadpool is a vector containing the number 
-        // of spawned workers then we'll send the async job to the sender channel by calling the execute method and while we're 
-        // streaming over the arced mutexed receiver inside each thread we receives the task in on of those free threads and 
-        // finally call the async task
 
         use super::*;
 

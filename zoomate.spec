@@ -70,8 +70,8 @@ https://github.com/wildonion/cs-concepts#-blogs-and-books
 https://github.com/wildonion/cs-concepts/blob/main/backend-roadmap.pdf
 https://connectivity.libp2p.io/
 https://blog.cloudflare.com/rust-nginx-module/
-https://github.com/wildonion/cs-concepts?tab=readme-ov-file#-concepts => graph alsog
-https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs => graph and math algos with libp2p::kademliadht,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
+https://github.com/wildonion/cs-concepts?tab=readme-ov-file#-concepts => graph algos for searching actor nodes in distributed network and clusters on wan and lan using p2p kademlia and mdns
+https://github.com/wildonion/uniXerr/blob/master/infra/valhalla/coiniXerr/src/tlps/p2p.pubsub.rs => graph and math algos with libp2p::kademliadht,mdns,gossipsub,noise protocol,quic,tokio::tcp,p2pwebsocketwebrtc
 https://github.com/libp2p/rust-libp2p/tree/master/examples
 https://github.com/foniod/build-imageshttps://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/RaptorQ_Technical_Overview.pdf
 https://docs.peer5.com/guides/production-ready-hls-vod/

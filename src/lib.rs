@@ -336,7 +336,6 @@ impl Node{
         }
         executeMe(method);
         
-        
         #[derive(Clone)]
         struct BuildQueue{
             pub agent_id: String,
@@ -348,7 +347,7 @@ impl Node{
         #[derive(Clone)]
         /* trait objects are heap data and must be beind pointer, eiter Box<dyn or &dyn */
         struct JobTor<'j>(pub &'j dyn FnMut() -> ());
-        struct JobTorBox<'j>(pub Box<&'j dyn FnMut() -> ()>);
+        struct JobTorBox<'j>(pub Box<&'j dyn FnMut() -> ()>); // closure object safe traits
     
         /*
             interior mutablity, we can mutate the field at runtime

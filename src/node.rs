@@ -95,10 +95,9 @@ async fn main()
 
 
     /*  
-         -------------------------------------------------------------------------------------------
-        |                    NOTE ON CODE ORDER EXECUTION OF ASYNC METHODS
-        |-------------------------------------------------------------------------------------------
-        | 
+         -----------------------------------------------------------------
+        |          NOTE ON CODE ORDER EXECUTION OF ASYNC METHODS
+        |-----------------------------------------------------------------
         | in rust the order of execution is not async by default but rather it's thread safe 
         | and without having race conditions due to its rules of mutable and immutable pointers 
         | of types although if there might be async methods but it's not expected that they must 
@@ -116,11 +115,21 @@ async fn main()
         | to catch any result data inside the tokio::spawn() we would have to use mpsc channel to
         | send the data to the channel inside the tokio::spawn() and receive it outside of tokio
         | scope and do the rest of the logics with that.
+        | notice of putting .await after async task call, it consumes the future objcet by pinning
+        | it into the ram for future solvation also it suspend the function execution until the future
+        | gets compeleted allows other parts of the app get executed without having any disruption,
+        | later once the future has completed waker sends the value back to the caller to update the 
+        | state and its value, this behaviour is called none blocking completion but based on the 
+        | beginning notes the order of async task execution is not async by itself and if we have 
+        | async_task1 first followed by async_task2 the order of executing them is regular and it's 
+        | not pure async like goroutines in Go or event loop in NodeJS, to achive this we should spawn 
+        | them insie tokio::spawn which runs all the futures in the background like what goroutines 
+        | and NodeJS event loop do
         |
         | conclusion: 
         | use tokio::spawn() to execute any async task in the background without having
         | any disruption in other order execution of async methods.
-        |
+        | 
     */
 
 
@@ -243,7 +252,9 @@ async fn main()
 
     // ***************** IMPORTANT *****************
     // there must be some sleep or loop{} to keeps the app awake
-    // so the background workers can do their jobs
+    // so the background workers can do their jobs, tokio scheduler
+    // can only schedule the execution of the app while the app is 
+    // running by consuming the resources while the app is executing...
     // loop{}
     // *********************************************
 
