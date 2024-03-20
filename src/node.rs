@@ -1,3 +1,5 @@
+
+
 use std::net::SocketAddr;
 use std::sync::Arc;
 use constants::SECURECELLCONFIG_TCPWALLET;
@@ -24,6 +26,8 @@ use ::clap::{Parser};
 use utils::{ZoomateRequest, ZoomateResponse};
 
 
+mod Lactors;
+mod Ractors;
 mod constants;
 mod grpc;
 mod helpers;
@@ -60,8 +64,9 @@ struct ServerCli {
 
 
 // https://github.com/actix/actix-web/blob/master/actix-web/MIGRATION-4.0.md#actix_webmain-and-tokiomain
-#[tokio::main(flavor="multi_thread", worker_threads=10)]
-async fn main() 
+// #[tokio::main(flavor="multi_thread", worker_threads=10)]
+#[actix_web::main]
+async fn main() -> std::io::Result<()>
 // fn main() 
     
     /* 
@@ -80,7 +85,7 @@ async fn main()
         bounding the Error trait to Send + Sync + 'static we'll make it sefable, sendable 
         and shareable to move it between different scopes and threads.
     */
-    -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
+    // -> Result<(), Box<dyn std::error::Error + Send + Sync + 'static>>
     {
 
     dotenv().expect("⚠️ .env file not found");
@@ -299,5 +304,7 @@ async fn main()
         outside of their scopes while the app is running
     */
     loop{} //--- halt the code in here and making it to be ran constantly, so sockets can be processed while the app is running
+
+    Ok(())
 
 }

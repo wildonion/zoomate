@@ -10,6 +10,11 @@ serde = {version = "1", features = ["derive"] }
 redis = { version = "0.24.0", features = ["tokio-comp", "cluster-async", "json"] }
 redis-async = "0.16.1"
 actix-redis = "0.13.0"
+actix = "0.13"
+actix-telepathy = "0.6.0"
+actix-web-actors = "4.3"
+actix-broker = "0.4.3"
+actix-web = { version = "4", features = ["openssl"] }
 oauth2 = "4.4.2"
 futures = "0.3"
 futures-util = "0.3"
