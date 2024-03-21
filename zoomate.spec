@@ -52,6 +52,7 @@ setup oauth2 with tauri+yew ssr feature for wasm based manit dashboard
 compile to wasm using: wasm-bindgen, wasmer, wasi, wasmtime
 contract based backend using the compiled wasm file to call its methods inside other rust crates
 
+https://github.com/cossacklabs/themis/tree/master/docs/examples/rust => themis sample codes
 https://refactoring.guru/design-patterns/catalog
 https://sourcemaking.com/design_patterns
 https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/

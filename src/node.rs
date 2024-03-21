@@ -31,6 +31,7 @@ mod Ractors;
 mod constants;
 mod grpc;
 mod helpers;
+mod zkp;
 use crate::helpers::{
     acter::*,
     bpf::*,
