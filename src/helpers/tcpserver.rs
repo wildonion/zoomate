@@ -220,11 +220,12 @@ impl TcpListenerActor{
         });
 
 
-        // receiving the data from the channel using while let some 
-        // and tokio select event loop in the background also 
-        // the receiver of the tokio event loop will be executed 
-        // first to receive the data from the sender, cause we've
-        // sent some data right after this tokio::spawn 
+        // receiving the data from the channel using while let some and tokio select event loop 
+        // in the background also the receiver of the tokio event loop will be executed first to 
+        // receive the data from the sender, cause we've sent some data right after this tokio::spawn 
+        // which is not inside a tokio::spawn or in the background, aslo note that putting loop{}
+        // outside of the tokio::spawn makes the app to get halted cause any code after that will 
+        // be unreachable hence it must be in the background
         tokio::spawn(async move{
             // running a loop inside tokio::spawn() to receive constantly
             // from the mpsc channel it's like having while let Some

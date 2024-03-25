@@ -11,9 +11,10 @@ use tokio::io::AsyncWriteExt;
     0 - generate ed25519 wallet and AES256 secure cell config and share between trusted parties
     1 - encrypt data using AES256
     2 - sign AES256 hash of data using pvkey
-    3 - send signatre to client
-    4 - use signature, pubkey and AES256 hash of data to verify the signature
-    5 - the connection between parties is now secured
+    3 - send the AES256 hash of signatre to client
+    4 - use the secure cell config to decrypt the signature
+    5 - use signature, pubkey and AES256 hash of data to verify the signature
+    6 - the connection between parties is now secured
 */
 
 
