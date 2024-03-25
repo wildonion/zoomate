@@ -28,15 +28,15 @@ mod helpers;
 unsafe impl Send for ZoomateResponse{}
 unsafe impl Sync for ZoomateResponse{}
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug , Default)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug , Default, PartialEq)]
 pub struct ZoomateRequest; //// it can be Option<Vec<actix_web::HttpResponse>> which all the incoming actix http requests to this node that must be handled
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default, PartialEq)]
 pub struct ZoomateResponse{
     pub data: String,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, Debug)]
+#[derive(Serialize, Deserialize, Copy, Clone, Debug, PartialEq)]
 pub struct Weight{
     pub n: u16,
     pub requests: ZoomateRequest,
@@ -47,7 +47,7 @@ pub struct Streamer<'s>{
     pub body: &'s [u8]
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default, PartialEq)]
 pub struct Node{ //// this contains server info 
     pub dns: String,
     pub peer_id: String, 
@@ -119,9 +119,32 @@ pub struct Dns{
     pub id: String
 }
 
+pub struct Cluster{
+    pub nodes: Vec<Node>
+}
+
 struct HttpRequest;
 pub struct DnsRequest{
     pub http_req: HttpRequest 
+}
+
+impl Cluster{
+
+    // scan the whole libp2p network on every new joining node to detect intruders
+    pub async fn scan(&self, new_node: Node){
+        let cluster = Cluster{nodes: vec![]};
+        for node in cluster.nodes{
+            if node == new_node{
+                continue;
+            } else{
+
+                // is the new node an intruder?
+                // ...
+            }
+        }
+
+    }
+
 }
 
 impl Node{
