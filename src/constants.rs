@@ -147,7 +147,7 @@ pub static SECURECELLCONFIG_TCPWALLET: Lazy<(wallexerr::misc::SecureCellConfig, 
     since we can't return none const from a static type thus we have to 
     put it inside the lazy as a closure which returns the actual type 
     because Arc and RwLock are none const types although we can implement 
-    this logic using thread_local!{}, see https://github.com/wildonion/gvm/edit/main/src/lib.rs
+    this logic using thread_local!{},
 
     note that the data we want to share it between threads must be Send + Sync + 'static
     eg: Lazy<std::sync::Arc<tokio::sync::RwLock<ZoomateResponse>>> + Send + Sync + 'static 
