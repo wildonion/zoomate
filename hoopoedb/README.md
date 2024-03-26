@@ -1,0 +1,3 @@
+
+
+## hoopoe spacetimedb contracts

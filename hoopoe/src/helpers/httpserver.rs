@@ -4,7 +4,6 @@
 
 use crate::*;
 
-
 pub struct AppState;
 
 #[macro_export]
