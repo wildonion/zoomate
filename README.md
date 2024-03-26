@@ -56,4 +56,10 @@ rustup target add wasm32-unknown-unknown
 cargo install trunk wasm-bindgen-cli
 trunk serve --port 9837
 ```
+## 🧱 WIPs
 
+- update crates, new rust edition, concetps spec
+- ocg, icp contract, manit(yew,tauri,wasm), ed25519_with_aes_signing, zoomate.spec
+- lib, acter, dp, redis4, raptor, tcpserver, misc dsl macros, bpf, zkp
+- bootstrap http server with app_state
+- compile to .so, .wasm

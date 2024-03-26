@@ -3,7 +3,17 @@ name = "zoomate"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+members = [ 
+  "walletreq",
+  "s3req",
+  "multipartreq"
+]
+
 [dependencies]
+walletreq = { path = "walletreq", name = "walletreq"}
+s3req = { path = "s3req", name = "s3req"}
+multipartreq = { path = "multipartreq", name = "multipartreq" }
 async-std = "1"
 tokio = { version = "1", features = ["full"] }
 serde = {version = "1", features = ["derive"] }
@@ -40,12 +50,21 @@ tonic = "0.10.2"
 clap = { version = "4.4.8", features = ["derive"] }
 prost = "0.12"
 prost-types = "0.12"
-# -------------------------------------
-# ---- proc macro butter and bread ----
 syn = { version = "*", features = ["full"] }
 quote = "*"
 proc-macro2 = "*"
-# -------------------------------------
+thiserror = "1.0"
+sqlx = { version = "0.7", features = [ 
+  "runtime-tokio-rustls",
+  "postgres",
+  "macros",
+  "chrono",
+  "migrate",
+  "json",
+  "uuid"
+  ]}
+trait-variant = "0.1.1"
+
 
 # ------------------
 #    crypto libs
@@ -81,7 +100,7 @@ path = "src/node.rs"
 
 [profile.release]
 panic = "abort"
-opt-level = "z"
+opt-level = 3
 lto = true
 codegen-units = 1
 overflow-checks = true # panic on any overflow

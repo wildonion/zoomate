@@ -139,6 +139,7 @@ impl Cluster{
             } else{
 
                 // is the new node an intruder?
+                // use a symmetric key 
                 // ...
             }
         }
