@@ -7,6 +7,10 @@ use s3req::*;
 use multipartreq::*;
 
 mod helpers;
+mod events;
+mod models;
+mod apis;
+mod services;
 
 
 
