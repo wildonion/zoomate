@@ -23,7 +23,7 @@ use crate::grpc::server::NodeServer;
 use crate::helpers::cry;
 use node::{NodeRequest, NodeResponse, node_service_client::NodeServiceClient, node_service_server::NodeServiceServer};
 use ::clap::{Parser};
-use utils::{ZoomateRequest, ZoomateResponse};
+use models::{ZoomateRequest, ZoomateResponse};
 
 
 mod Lactors;
@@ -31,6 +31,8 @@ mod Ractors;
 mod constants;
 mod grpc;
 mod helpers;
+mod models;
+mod impls;
 mod zkp;
 use crate::helpers::{
     acter::*,
@@ -39,9 +41,9 @@ use crate::helpers::{
     dp::*,
     raptor::*,
     redis4::*,
+    config::*,
     tcpserver::{self, *},
 };
-
 
 /* ---------------------------------------------------------
     loading the compiled proto file into rust code in here 

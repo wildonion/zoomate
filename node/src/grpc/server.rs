@@ -3,7 +3,7 @@
 
 use crate::{*, node::node_service_server::NodeService};
 use tonic::transport::Server as TonicServer;
-use utils::Node;
+use models::Node;
 use wallexerr::misc::Wallet;
 
 /* > ------------------------------------------------------------------
@@ -97,7 +97,7 @@ impl NodeService for NodeServer{
 
                 let data = node_rpc_request_body.message.clone();
                 let mut wallet = Wallet::new_ed25519();
-                let signature = utils::Node::ed25519_with_aes_signing(&data, wallet);
+                let signature = models::Node::ed25519_with_aes_signing(&data, wallet);
                 println!("base58 ed25519 signature >> {:?}", signature);
 
                 Ok(TonicResponse::new(node_resp))

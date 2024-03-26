@@ -38,7 +38,7 @@ compile `build.rs` codes which contains the `.proto` files in `proto` folder usi
 
 ```bash
 # run node + gRPC server
-cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
+cd node && cargo run --bin zoomate -- --server 0.0.0.0 --port 50051
 ```
 
 ## 🪴 Setup and Run Yew based Tauri Manit Dashboard
@@ -59,8 +59,7 @@ trunk serve --port 9837
 ## 🧱 WIPs
 
 - update crates, new rust edition, concetps spec
-- ocg, icp contract, manit(yew,tauri,wasm), ed25519_with_aes_signing, zoomate.spec
+- hoopoe, icp contract, manit(yew,tauri,wasm), ed25519_with_aes_signing, zoomate.spec
 - lib, acter, dp, redis4, raptor, tcpserver, misc dsl macros, bpf, zkp
-- bootstrap http server with app_state
 - secure_session method
 - compile to .so, .wasm

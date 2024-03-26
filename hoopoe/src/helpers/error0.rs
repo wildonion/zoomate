@@ -84,23 +84,22 @@
 */
 
 use crate::*;
-use crate::constants::LOGS_FOLDER_ERROR_KIND;
 use std::error::Error;
 use std::io::{Write, Read};
-use serenity::model::misc;
-use tokio::fs::OpenOptions;
-use tokio::io::ReadBuf;
+use actix_web::HttpResponse;
+use actix_web_actors::ws;
+use hyper::StatusCode;
 use thiserror::Error;
 
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 thiserror impls Display (log the error variant into human readable format), Error and From traits for 
 the type to display an error message for the variant causes the error in the source method then we could 
-debug the source using our own Debug implementation also note that if we want to return the PanelErrorResponse 
+debug the source using our own Debug implementation also note that if we want to return the ZoomateErrorResponse 
 as the error part of Result which allows us to use ? operator on the error type, the Error, Display, Debug 
 and From traits must be implemented for that also the From trait must be implemented for every single error 
-variant that makes the PanelErrorResponse like if we want to use ? to unwrap a file opening process the From<std::io::Error> 
-must be implemented for the PanelErrorResponse struct.
+variant that makes the ZoomateErrorResponse like if we want to use ? to unwrap a file opening process the From<std::io::Error> 
+must be implemented for the ZoomateErrorResponse struct.
 
 ? needs to create error from the type so the From trait must be implemented for the 
 type to build the instance contains the caused error Rust uses the type passed to from() 
@@ -117,7 +116,7 @@ that wants to be used as the error part in Result type.
 */
 
 #[derive(Error, Debug)]
-pub struct PanelErrorResponse{
+pub struct ZoomateErrorResponse{
     pub code: u16,
     pub msg: Vec<u8>, // reason 
     pub kind: ErrorKind, // due to what service 
@@ -175,8 +174,6 @@ pub enum StorageError{
     Redis(#[from] redis::RedisError),
     #[error("[REDIS ASYNC] - failed to subscribe to channel")]
     RedisAsync(#[from] redis_async::error::Error), 
-    #[error("[DIESEL] - failed to do postgres db operation")]
-    Diesel(#[from] diesel::result::Error) 
 }
 #[derive(Error)]
 pub enum ServerError{
@@ -253,30 +250,30 @@ impl std::fmt::Debug for ThirdPartyApiError{
     the current crate thus can't be implemented for actix_web::HttpResponse
 */
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-unsafe impl Send for PanelErrorResponse{}
-unsafe impl Sync for PanelErrorResponse{}
+unsafe impl Send for ZoomateErrorResponse{}
+unsafe impl Sync for ZoomateErrorResponse{}
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 /* 
-    implementing an actix error responder for the PanelErrorResponse struct, 
-    allows us to use PanelErrorResponse as the error part of the http response 
+    implementing an actix error responder for the ZoomateErrorResponse struct, 
+    allows us to use ZoomateErrorResponse as the error part of the http response 
     result instead of actix_web::Error to avoid unknown runtime actix
     crashes
 */
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-impl actix_web::ResponseError for PanelErrorResponse{
+impl actix_web::ResponseError for ZoomateErrorResponse{
     
     // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
     // when we use ? operator on the result type to unwrap the error Rust
     // get started looking for the From implementation for the type that
     // caused the error like if we're using ? to unwrap the error on a file
     // reading process there must be From<std::io::Error> implementation for
-    // the PanelErrorResponse with some error message, since it allows Rust to log 
+    // the ZoomateErrorResponse with some error message, since it allows Rust to log 
     // the error to the console, in the following we're creating a response 
     // object from the error detected by ? to send it back to the client, 
     // note that in the place of the message we've used the error message
     // inside the From implementation, also since we're handling possible errors
-    // using PanelErrorResponse there is no need to match over ok or the err part
+    // using ZoomateErrorResponse there is no need to match over ok or the err part
     // of any result, we can directly use ? operator Rust will take care of 
     // the rest process and then if there is an error an http response containing 
     // the error will be returned back to the client.
@@ -300,7 +297,6 @@ impl actix_web::ResponseError for PanelErrorResponse{
         match &self.kind{
             ErrorKind::Server(ServerError::ActixWeb(s)) => StatusCode::INTERNAL_SERVER_ERROR,
             ErrorKind::Server(ServerError::Ws(s)) => StatusCode::INTERNAL_SERVER_ERROR,
-            ErrorKind::Storage(StorageError::Diesel(s)) => StatusCode::INTERNAL_SERVER_ERROR,
             ErrorKind::Storage(StorageError::RedisAsync(s)) => StatusCode::INTERNAL_SERVER_ERROR,
             ErrorKind::Storage(StorageError::Redis(s)) => StatusCode::INTERNAL_SERVER_ERROR,
             ErrorKind::ThirdPartyApi(ThirdPartyApiError::Reqwest(s)) => StatusCode::EXPECTATION_FAILED,
@@ -310,28 +306,28 @@ impl actix_web::ResponseError for PanelErrorResponse{
     }
 
 }
-impl std::fmt::Display for PanelErrorResponse{
+impl std::fmt::Display for ZoomateErrorResponse{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self) // write the PanelErrorResponse instance into the buffer
+        write!(f, "{:?}", self) // write the ZoomateErrorResponse instance into the buffer
     }
 }
 
 /*  -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     From implementations to make the error from the a source error like std::io::Error, when used to return 
-    an instance of PanelErrorResponse which contains an error variant, it mainly allows us to use ? operator 
-    to convert the type into instance of PanelErrorResponse by calling the from method to return the error 
+    an instance of ZoomateErrorResponse which contains an error variant, it mainly allows us to use ? operator 
+    to convert the type into instance of ZoomateErrorResponse by calling the from method to return the error 
     caused by an unsuccessful related operations like when we're using ? operator on opening a file result, 
-    if the operation goes wrong like the file doesn't get found it eventually build a PanelErrorResponse 
+    if the operation goes wrong like the file doesn't get found it eventually build a ZoomateErrorResponse 
     instance which contains the io error by calling from() method then the code gets panicked in there which 
-    causes to return an instance of PanelErrorResponse to the caller, albeit to log the error the Dispaly and 
-    Debug traits must be implemented for the PanelErrorResponse. basically to return type E as error part in
+    causes to return an instance of ZoomateErrorResponse to the caller, albeit to log the error the Dispaly and 
+    Debug traits must be implemented for the ZoomateErrorResponse. basically to return type E as error part in
     Result in order to be able to use ? operator on the process contains a result, the From trait must be 
     implemented for each error variant (that we've detected might happened at runtime) of type E 
     NOTE => in the following methods, error param is the exact source of the error in which the app gets
             crashed at runtime due to 
   -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 */
-impl From<std::io::Error> for PanelErrorResponse{
+impl From<std::io::Error> for ZoomateErrorResponse{
     fn from(error: std::io::Error) -> Self {
         Self{ 
             code: 0, 
@@ -342,7 +338,7 @@ impl From<std::io::Error> for PanelErrorResponse{
     }
 }
 
-impl From<ws::ProtocolError> for PanelErrorResponse{
+impl From<ws::ProtocolError> for ZoomateErrorResponse{
     fn from(error: ws::ProtocolError) -> Self {
         Self{ 
             code: 0, 
@@ -353,7 +349,7 @@ impl From<ws::ProtocolError> for PanelErrorResponse{
     }
 }
 
-impl From<redis::RedisError> for PanelErrorResponse{
+impl From<redis::RedisError> for ZoomateErrorResponse{
     fn from(error: redis::RedisError) -> Self {
         Self{ 
             code: 0, 
@@ -364,7 +360,7 @@ impl From<redis::RedisError> for PanelErrorResponse{
     }
 }
 
-impl From<redis_async::error::Error> for PanelErrorResponse{
+impl From<redis_async::error::Error> for ZoomateErrorResponse{
     fn from(error: redis_async::error::Error) -> Self {
         Self{ 
             code: 0, 
@@ -375,29 +371,18 @@ impl From<redis_async::error::Error> for PanelErrorResponse{
     }
 }
 
-impl From<diesel::result::Error> for PanelErrorResponse{
-    fn from(error: diesel::result::Error) -> Self {
-        Self{ 
-            code: 0, 
-            msg: error.to_string().as_bytes().to_vec(), // this is the exact source of error and is being used to build an http response with message so we need to have an error string
-            kind: ErrorKind::Storage(StorageError::Diesel(error)),
-            method_name: String::from("") 
-        }
-    }
-}
-
-impl From<(Vec<u8>, u16, ErrorKind, String)> for PanelErrorResponse{
-    fn from(msg_code_kind_method: (Vec<u8>, u16, ErrorKind, String)) -> PanelErrorResponse{
-        PanelErrorResponse { code: msg_code_kind_method.1, msg: msg_code_kind_method.0, kind: msg_code_kind_method.2, method_name: msg_code_kind_method.3 }
+impl From<(Vec<u8>, u16, ErrorKind, String)> for ZoomateErrorResponse{
+    fn from(msg_code_kind_method: (Vec<u8>, u16, ErrorKind, String)) -> ZoomateErrorResponse{
+        ZoomateErrorResponse { code: msg_code_kind_method.1, msg: msg_code_kind_method.0, kind: msg_code_kind_method.2, method_name: msg_code_kind_method.3 }
     }
 }
 
 
-impl PanelErrorResponse{
+impl ZoomateErrorResponse{
 
     pub fn new(code: u16, msg: Vec<u8>, kind: ErrorKind, method_name: &str) -> Self{
         
-        let err = PanelErrorResponse::from((msg, code, kind, method_name.to_string()));
+        let err = ZoomateErrorResponse::from((msg, code, kind, method_name.to_string()));
 
         err
     }

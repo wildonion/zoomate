@@ -15,10 +15,12 @@ walletreq = { path = "walletreq", name = "walletreq"}
 s3req = { path = "s3req", name = "s3req"}
 multipartreq = { path = "multipartreq", name = "multipartreq" }
 async-std = "1"
+reqwest = { version = "0.12", features = ["json", "blocking", "stream", "multipart"] }
 tokio = { version = "1", features = ["full"] }
 serde = {version = "1", features = ["derive"] }
 redis = { version = "0.24.0", features = ["tokio-comp", "cluster-async", "json"] }
 redis-async = "0.16.1"
+hyper = { version = "0.14", features = ["full"] }
 actix-redis = "0.13.0"
 actix = "0.13"
 actix-telepathy = "0.6.0"
@@ -63,7 +65,7 @@ sqlx = { version = "0.7", features = [
   "json",
   "uuid"
   ]}
-trait-variant = "0.1.1"
+trait-variant = "0.1"
 
 
 # ------------------
@@ -87,16 +89,13 @@ aes256ctr_poly1305aes = "0.2.0"
 # ------------------
 
 
-[lib]
-# libraries don't have entry points, you can't run them,they're used for functionality sharing like binding a .wasm into js codes
-# we need lib.rs and crate type of cdylib for none binary like .wasm, .so, .dylib and .dll files or for tests
-crate-type = ["cdylib", "rlib"]
-path = "src/lib.rs"
-name = "utils"
+[[bin]]
+name = "node"
+path = "node/src/app.rs"
 
 [[bin]]
-name = "zoomate"
-path = "src/node.rs"
+name = "hoopoe"
+path = "hoopoe/src/app.rs"
 
 [profile.release]
 panic = "abort"
