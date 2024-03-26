@@ -22,6 +22,13 @@ pub mod wannacry{
 
     pub use super::*;
 
+    pub async fn secure_session(){
+
+        // use to secure the communication between client and server
+        // ...
+
+    }
+
     pub async fn encrypt_file(fpath: &str) -> (Vec<u8>, SecureCellConfig){
 
         let file = tokio::fs::File::open(fpath).await;

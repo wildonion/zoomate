@@ -62,4 +62,5 @@ trunk serve --port 9837
 - ocg, icp contract, manit(yew,tauri,wasm), ed25519_with_aes_signing, zoomate.spec
 - lib, acter, dp, redis4, raptor, tcpserver, misc dsl macros, bpf, zkp
 - bootstrap http server with app_state
+- secure_session method
 - compile to .so, .wasm
