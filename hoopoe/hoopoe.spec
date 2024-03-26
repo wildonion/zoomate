@@ -1,9 +1,8 @@
 
 
 
-hoopoe : s3req, thiserror, spacetimedb, http ws actors, 
-redis pubsub notifd actors, secure sessions and wallexerr, 
-notify peers when a user updates his porfile
+hoopoe : s3req, thiserror, spacetimedb and secure sessions and wallexerr, 
+http ws actors, redis pubsub notif actors, notify peers when a user updates his porfile
 
 </> ram and cpu concepts: redispubsub and libp2p, ?async realtime pubsub streaming and push notif with aws, docker, rust and go:
     === app state, lib crates, static lazy arc mutex, ownbor wiki + ltg, zero copy, null pointer opt, serding function
