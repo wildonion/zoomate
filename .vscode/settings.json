@@ -1,3 +1,22 @@
 {
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#151a3c",
+        "titleBar.activeBackground": "#151a3c",
+        "titleBar.activeForeground": "#107d53",
+        "checkbox.background": "#19241b",
+        "checkbox.foreground": "#19241b",
+        "checkbox.border": "#288bb3",
+        "input.background": "#1b2601",
+        "input.border": "#288bb3",
+        "scrollbar.shadow": "#288bb3",
+        "scrollbar.background": "#19241b",
+        "scrollbarSlider.activeBackground": "#288bb3",
+        "scrollbarSlider.background": "#19241b",
+        "scrollbarSlider.hoverBackground": "#288bb3"
+    },
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml"
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.checkOnSave": true
 }

@@ -11,7 +11,7 @@ mod events;
 mod models;
 mod apis;
 mod services;
-
+mod consts;
 
 
 #[actix_web::main]
@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()>{
     let tcp_listener = std::net::TcpListener::bind(
     format!("{}:{}", 
             std::env::var("HOST").expect("⚠️ no host variable set"), 
-            std::env::var("PANEL_PORT").expect("⚠️ no panel port variable set").parse::<u16>().unwrap()
+            std::env::var("HOOPOE_PORT").expect("⚠️ no panel port variable set").parse::<u16>().unwrap()
     )).unwrap();
 
     let server = bootsteap!

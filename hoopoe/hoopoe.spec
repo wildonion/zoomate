@@ -1,9 +1,5 @@
 
 
-
-hoopoe : s3req, thiserror, spacetimedb and secure sessions and wallexerr, auth strategy
-http ws actors, redis pubsub notif actors, notify peers when a user updates his porfile
-
 </> ram and cpu concepts: redispubsub and libp2p, ?async realtime pubsub streaming and push notif with aws, docker, rust and go:
     === app state, lib crates, static lazy arc mutex, ownbor wiki + ltg, zero copy, null pointer opt, serding function
     === ltg pointers, &'v, box, rc, refcell, arc, mutex, pin to break cycle and borrow types in graph, thread_local, unique storage key

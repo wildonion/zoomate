@@ -78,18 +78,23 @@
 
     final note: Box<dyn std::error::Error> is a boxed object safe trait which is used for dynamic dispatch at runtime 
                 this would be called on any object that implements the Error trait to return the source of the error, 
-                we've to make sure this is an object safe trait to dispatch the call dynamically cause the compiler must 
-                not be aware of the implementor size in order to do the call at runtime.
+                we have to make sure this is an object safe trait to dispatch it dynamically cause the compiler must 
+                not be aware of the implementor size info in order to do the call at runtime.
 
 */
 
 use crate::*;
 use std::error::Error;
 use std::io::{Write, Read};
+use actix_web::cookie::Cookie;
 use actix_web::HttpResponse;
 use actix_web_actors::ws;
 use hyper::StatusCode;
 use thiserror::Error;
+use tokio::fs::OpenOptions;
+use tokio::io::AsyncWriteExt;
+
+use self::consts::LOGS_FOLDER_ERROR_KIND;
 
 
 /* -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -153,10 +158,9 @@ pub enum ErrorKind{
 }
 
 // -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-// in the following enums, From is impelemented directly 
-// for each variant to convert the type caused the error 
-// into the error by calling from() method when we use ? 
-// operator 
+// in the following enums, From is impelemented directly for each variant to 
+// convert the type caused the error into the error by calling from() method 
+// when we use ? operator 
 // NOTE => we get the message inside the #[error] if we use unwrap() or match over the result to cover the error part unless we call the source() method on the error variant to get the source message of the exact error
 // NOTE => #[from] will be used to unwrap the error using ? so it contains the exact error message inside the source() method of std::error::Error trait
 // NOTE => message inside the #[error] is used to log into the console using Display trait 
@@ -382,8 +386,69 @@ impl ZoomateErrorResponse{
 
     pub fn new(code: u16, msg: Vec<u8>, kind: ErrorKind, method_name: &str) -> Self{
         
-        let err = ZoomateErrorResponse::from((msg, code, kind, method_name.to_string()));
+        ZoomateErrorResponse::from((msg, code, kind, method_name.to_string()))
 
-        err
     }
+
+    // write the error into the file
+    pub async fn wirte(&mut self){
+
+        let this = self; // self is a mutable reference to the its underlying data
+        let Self { code, msg, kind, method_name } = this; // unpacking this contains &mut of every field
+
+        // let e = match self{
+        //     ZoomateErrorResponse{
+        //         code: ecode,
+        //         ..
+        //     } => if *ecode <= 400{},
+        //     _ => ()
+        // };
+        
+        let mut zoomate_error_log;
+        tokio::fs::create_dir_all(LOGS_FOLDER_ERROR_KIND).await.unwrap();
+        let filepath = format!("{}/zerlog.log", LOGS_FOLDER_ERROR_KIND);
+
+        let msg_str = std::str::from_utf8(msg).unwrap();
+        let error_content = format!(
+                "code: {} | due to: {} | time: {} | method_name: {}",
+                code, kind, chrono::Local::now().timestamp(), method_name
+            );
+
+        /* writing to file, try to find the file then append otherwise create it and write into it */
+        match tokio::fs::metadata(filepath.clone()).await{
+            Ok(_) => {
+                /* ------- we found the file, append to it ------- */
+                let mut file = OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(filepath.as_str())
+                    .await.unwrap();
+                file.write_all(error_content.as_bytes()).await.unwrap(); // Write the data to the file
+            },
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                /* ------- we didn't found the file, create a new one ------- */
+                zoomate_error_log = tokio::fs::File::create(filepath.clone().as_str()).await.unwrap();
+                zoomate_error_log.write_all(error_content.as_bytes()).await.unwrap();
+            },
+            Err(e) => {
+                /* ------- can't create a new file or append to it ------- */
+                let log_name = format!("[{}]", chrono::Local::now());
+                let filepath = format!("{}/{}-error0.log", log_name, LOGS_FOLDER_ERROR_KIND);
+                let mut error_kind_log = tokio::fs::File::create(filepath.as_str()).await.unwrap();
+                error_kind_log.write_all(e.to_string().as_bytes()).await.unwrap();
+            }
+        }
+
+        /* writing to buffer using write macro and serde */
+        let mut buffer = Vec::new(); 
+        let _: () = write!(&mut buffer, "{}", error_content).unwrap();
+        
+        /* OR */
+        // serde_json::to_writer_pretty(buffer, &error_content);
+        
+        // buffer is now fulfilled
+        // ...
+
+    }
+
 }

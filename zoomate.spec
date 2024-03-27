@@ -3,7 +3,7 @@
 ________________
 >>> concepts <<<
 ----------------
-https://github.com/wildonion/courtokm/wiki/Ownership-and-Borrowing-Rules
+https://github.com/wildonion/gvm/wiki/Ownership-and-Borrowing-Rules
 actix actor(acter.rs) worker pubsub concepts to build p2p app like ai based nft game market and 
 graph(adjmat,gvm) (gvm) allocation engine with oauth2, noir, sui, mdp, mlx, dag, thiserror, 
 tauri, yew, wasm(async,multithreaded like spacetimedb) and merkle tree concepts by building graphs using 

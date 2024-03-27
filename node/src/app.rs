@@ -272,8 +272,10 @@ async fn main() -> std::io::Result<()>
         the result of the await expression is the resolved value of the Future appeared in form of a placeholder, which 
         you can use in later scopes, this means if you need the result of a future in other async codes or scopes you
         can use its placeholder to do the operations once the suspension gets ended the waker poll the actual value 
-        and continues processing where it left off results in updating the caller state with the solved value, meanwhile 
-        other scopes and codes got executed and compiled and are waiting to fill the placeholder with the solved value.
+        and continues processing where it left off, results in updating the caller state with the solved value, meanwhile 
+        other scopes and codes got executed and compiled and are waiting to fill the placeholder with the solved value,
+        however thanks to the static type based langs allows other scopes know the exact type of the result of the future
+        before it gets solved.
     */
     let (heavyme_sender, mut heavyme_receiver) = tokio::sync::mpsc::channel::<u128>(1024);
     let (heavyyou_sender, mut heavyyou_receiver) = tokio::sync::mpsc::channel::<String>(1024);
