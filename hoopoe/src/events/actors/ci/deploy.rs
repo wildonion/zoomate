@@ -16,9 +16,17 @@ use redis_async::resp::FromResp;
 use actix::*;
 use log::*;
 
+
+pub enum AgentStatus{
+    Executed,
+    Halted,
+    Inited
+}
+
 pub struct DeployAgentActor{
     pub port: u16,
-    pub path: std::path::PathBuf // use to store the path of deploy service script
+    pub path: std::path::PathBuf, // use to store the path of deploy service script
+    pub status: AgentStatus
 }
 
 impl Actor for DeployAgentActor{
@@ -35,7 +43,7 @@ impl Actor for DeployAgentActor{
 impl DeployAgentActor{
 
     pub fn new(port: u16, path: std::path::PathBuf) -> Self{
-        Self { port, path}
+        Self { port, path, status: AgentStatus::Inited}
     }
 
     // automatic deploy: run redeoploy.sh or rebuildpanel.sh scripes

@@ -6,6 +6,6 @@
 - redis pubsub actors over ws
 - http based sse (broadcaster.rs)
 - spacetimedb to store chats and notifs
-- aws and gem auth strategy
+- aws and gem auth per device strategy
 - cmq to start the chat randomly between two online peers
 - ci actors, middlewares, http api component actors

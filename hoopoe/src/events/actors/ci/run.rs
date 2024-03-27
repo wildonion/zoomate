@@ -16,9 +16,17 @@ use redis_async::resp::FromResp;
 use actix::*;
 use log::*;
 
+
+pub enum AgentStatus{
+    Executed,
+    Halted,
+    Inited
+}
+
 pub struct RunAgentActor{
     pub port: u16,
     pub path: std::path::PathBuf, // use to store the path of run service script
+    pub status: AgentStatus
 }
 
 impl Actor for RunAgentActor{
@@ -34,7 +42,7 @@ impl Actor for RunAgentActor{
 impl RunAgentActor{
 
     pub fn new(port: u16, path: std::path::PathBuf) -> Self{
-        Self { port, path}
+        Self { port, path, status: AgentStatus::Inited}
     }
 
     pub fn cid_cd(){

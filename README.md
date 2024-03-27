@@ -4,6 +4,8 @@ p2p and actor based proxy and workload-aware agent for realtiming process and st
 
 > refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 
+> current nginx password for `logs` dir: `zoomate@1234`
+
 first clone the repo then install the followings:
 
 ```bash

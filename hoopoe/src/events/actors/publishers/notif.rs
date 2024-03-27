@@ -41,7 +41,6 @@ pub trait UserNotifExt{
     fn extend_notifs(&mut self) -> Vec<NotifData>;
 }
 
-
 pub async fn emit(){
 
     // publish a NotifData event to redis channel

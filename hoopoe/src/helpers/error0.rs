@@ -3,7 +3,7 @@
 
 /* 
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-        CONSE PANEL CUSTOM ERROR HELPER USING THISERROR CRATE
+        ZOOMATE PANEL CUSTOM ERROR HELPER USING THISERROR CRATE
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
    https://fettblog.eu/rust-enums-wrapping-errors/
    https://betterprogramming.pub/a-simple-guide-to-using-thiserror-crate-in-rust-eee6e442409b
