@@ -15,6 +15,7 @@ mod models;
 mod apis;
 mod services;
 mod consts;
+mod adapters;
 mod interfaces;
 
 #[actix_web::main]
