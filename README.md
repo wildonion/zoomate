@@ -1,10 +1,18 @@
 
 
-p2p and actor based proxy and workload-aware agent for realtiming process and streaming on distributed internt using ICP blockchain, the app can be loaded from the linux kernel and browsers using **BPF** and **WASM** technologies. It also has an **Oauth2** based authentication in its dashboard (manit) for monitoring nodes and balancers written in **Yew** and **Tauri**.
+distributed internet on ICP:
 
-> refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
+- zoomate node actors: p2p, tcp and grpc actor based proxy and workload-aware agent
+
+- manit dashboard for monitoring nodes and balancers written in **Yew** and **Tauri**.
+
+- hoopoe, the platform for social events
+
+- ICP networking canisters
 
 > current nginx password for `logs` dir: `zoomate@1234`
+
+> refer to https://docs.cossacklabs.com/themis/installation/installation-from-packages/ if you don't want to build themis from source.
 
 first clone the repo then install the followings:
 

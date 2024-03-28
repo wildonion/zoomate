@@ -34,9 +34,10 @@ pub struct NotifData{
     pub is_seen: bool,
 }
 
-
+// make the trait Sendable cause it has async methods
+#[trait_variant::make(UserNotifExtSend: Send)] 
 pub trait UserNotifExt{
-    fn get_notifs(&self) -> Vec<NotifData>;
+    async fn get_notifs(&self) -> Vec<NotifData>;
     fn set_notifs(&mut self) -> Vec<NotifData>;
     fn extend_notifs(&mut self) -> Vec<NotifData>;
 }

@@ -69,19 +69,26 @@ macro_rules! resp {
             // response expiration in client, the Expire gives the date/time after 
             // which the response is considered stale.
             let expiration = SystemTime::now() + Duration::from_secs(60); 
+            // let redirect_url = format!("{}?data={}", state, jwt);
             let resp = if let Some(cookie) = $cookie{
                 res
                     .cookie(cookie.clone())
                     .append_header(("cookie", cookie.value()))
                     .insert_header(Expires(expiration.into()))
-                    // .append_header((actix_web::http::header::LOCATION, actix_web::http::header::HeaderValue::from_str(&format!("{}", state)).unwrap()))
+                    // --------------- redirect client setup ---------------
+                    // .status(StatusCode::TEMPORARY_REDIRECT)
+                    // .append_header((actix_web::http::header::LOCATION, redirect_url))
+                    // -----------------------------------------------------
                     .json(
                         response_data
                     )
             } else{
                 res
                     .insert_header(Expires(expiration.into()))
-                    // .append_header((actix_web::http::header::LOCATION, actix_web::http::header::HeaderValue::from_str(&format!("{}", state)).unwrap()))
+                    // --------------- redirect client setup ---------------
+                    // .status(StatusCode::TEMPORARY_REDIRECT)
+                    // .append_header((actix_web::http::header::LOCATION, redirect_url))
+                    // -----------------------------------------------------
                     .json(
                         response_data
                     )

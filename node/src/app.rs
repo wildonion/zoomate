@@ -202,6 +202,12 @@ async fn main() -> std::io::Result<()>
     /* ------------------------------------------- */
     // NODEJS LIKE ASYNC METHOD ORDER OF EXECUTION
     /* ------------------------------------------- */
+    // future objects needs to live longer with 'satatic lifetime also they must be send sync so 
+    // we can move them between threads and scope for future solvation also they need to be pinned 
+    // into the ram cause they're self-ref types and pointers of self-ref types won't be updated 
+    // by Rust after moving to break the cycle we need to add some indirection using rc, arc, box, 
+    // pin, futures are placeholders with a default value which gets solved as soon as the result
+    // was ready then waker poll the result to update caller
     /* 
         ----------------------------------------------------------------------
                         order of async methods execution

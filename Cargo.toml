@@ -18,8 +18,8 @@ async-std = "1"
 reqwest = { version = "0.12", features = ["json", "blocking", "stream", "multipart"] }
 tokio = { version = "1", features = ["full"] }
 serde = {version = "1", features = ["derive"] }
-redis = { version = "0.24.0", features = ["tokio-comp", "cluster-async", "json"] }
-redis-async = "0.16.1"
+redis = { version = "0.25", features = ["tokio-comp", "cluster-async", "json"] }
+redis-async = "0.17.1"
 hyper = { version = "0.14", features = ["full"] }
 actix-redis = "0.13.0"
 actix = "0.13"
@@ -41,15 +41,14 @@ log = "0.4"
 dotenv = "0.15"
 pretty_env_logger = "0.4.0"
 log4rs = "1.2.0"
-tokio-cron-scheduler = "0.9.1"
 env_logger = "0.10.0"
 bytes = { version = "1", features = ["serde"] }
 hex = "0.4"
 is_type = "0.2.1"
 wasmer = "4"
 wasmer-wasi = "3.1.1"
-tonic = "0.10.2"
-clap = { version = "4.4.8", features = ["derive"] }
+tonic = "0.11.0"
+clap = { version = "4.5.4", features = ["derive"] }
 prost = "0.12"
 prost-types = "0.12"
 syn = { version = "*", features = ["full"] }

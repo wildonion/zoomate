@@ -15,7 +15,7 @@ mod models;
 mod apis;
 mod services;
 mod consts;
-
+mod interfaces;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{

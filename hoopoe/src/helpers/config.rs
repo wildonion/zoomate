@@ -12,8 +12,19 @@ pub struct Env{
     pub REDIS_PASSWORD: String,  
     pub IO_BUFFER_SIZE: String,  
     pub FILE_SIZE: String,  
-    pub TCP_HOST: String,  
+    pub HOST: String,  
     pub TCP_PORT: String,  
+    pub GRPC_PORT: String,  
+    pub HOOPOE_PORT: String,  
+    pub SECRET_KEY: String,  
+    pub ENVIRONMENT: String,  
+    pub MACHINE_ID: String,  
+    pub NODE_ID: String,  
+    pub POSTGRES_HOST: String,  
+    pub POSTGRES_PORT: String,  
+    pub POSTGRES_USERNAME: String,  
+    pub POSTGRES_PASSWORD: String,  
+    pub POSTGRES_ENGINE: String,  
 }
 
 
@@ -42,8 +53,19 @@ impl EnvExt for Env{
                 REDIS_PASSWORD: std::env::var("REDIS_PASSWORD").unwrap(),
                 IO_BUFFER_SIZE: std::env::var("IO_BUFFER_SIZE").unwrap(),
                 FILE_SIZE: std::env::var("FILE_SIZE").unwrap(),
-                TCP_HOST: std::env::var("TCP_HOST").unwrap(),
+                HOST: std::env::var("HOST").unwrap(),
                 TCP_PORT: std::env::var("TCP_PORT").unwrap(),
+                GRPC_PORT: std::env::var("GRPC_PORT").unwrap(),
+                HOOPOE_PORT: std::env::var("HOOPOE_PORT").unwrap(),
+                SECRET_KEY: std::env::var("SECRET_KEY").unwrap(),
+                ENVIRONMENT: std::env::var("ENVIRONMENT").unwrap(),
+                MACHINE_ID: std::env::var("MACHINE_ID").unwrap(),
+                NODE_ID: std::env::var("NODE_ID").unwrap(),
+                POSTGRES_HOST: std::env::var("POSTGRES_HOST").unwrap(),
+                POSTGRES_PORT: std::env::var("POSTGRES_PORT").unwrap(),
+                POSTGRES_USERNAME: std::env::var("POSTGRES_USERNAME").unwrap(),
+                POSTGRES_PASSWORD: std::env::var("POSTGRES_PASSWORD").unwrap(),
+                POSTGRES_ENGINE: std::env::var("POSTGRES_ENGINE").unwrap(),
             }
         };
 

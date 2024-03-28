@@ -1,3 +1,7 @@
 
 
-## hoopoe spacetimedb contracts
+## hoopoe spacetimedb wasm contracts
+
+- notifs
+- chats
+- events
